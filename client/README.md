@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎨 Salenova Client (Web Application)
 
-## Getting Started
+The official web application and marketing portal for **Salenova**, built with Next.js 16, React 19, and Tailwind CSS v4.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🛠️ Tech Stack & Architecture
+
+- **Framework**: [Next.js 16 (App Router)](https://nextjs.org/)
+- **UI Library**: [React 19](https://react.dev/) with React Compiler optimizations enabled
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Visuals & Effects**: Canvas Confetti, CSS 3D perspective transforms, frosted-glass backdrop blur filters
+- **Language**: TypeScript 5.x
+
+---
+
+## 📂 Directory Structure
+
+```
+client/src/
+├── app/
+│   ├── (auth)/
+│   │   └── signup/            # Workspace owner onboarding & signup page
+│   ├── (marketing)/           # Marketing route layout & pages
+│   ├── globals.css            # Tailwind CSS v4 imports and theme definitions
+│   ├── layout.tsx             # Root layout with fonts and metadata
+│   └── page.tsx               # Entry home page route (renders MarketingLandingPage)
+│
+├── features/                  # Feature-Sliced domain modules
+│   ├── auth/                  # Authentication & Onboarding
+│   │   ├── components/        # AuthSideBanner, SignupForm
+│   │   ├── hooks/             # Auth-specific client hooks
+│   │   ├── schemas/           # Validation schemas
+│   │   ├── services/          # API communication services
+│   │   └── store/             # Client-side auth state
+│   │
+│   └── marketing/             # Marketing landing page
+│       ├── components/        # Hero, FeaturesGrid, TryIt, Pricing, FAQ, Navbar, Footer
+│       └── utils/             # Marketing formatting helpers
+│
+└── shared/                    # Cross-cutting reusable assets
+    ├── components/ui/         # Atomic UI primitives (Button, Input, Checkbox)
+    └── lib/                   # Utility helpers (cn, clsx, tailwind-merge)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Install Dependencies
 
-## Learn More
+From the `client/` directory:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm install
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 2. Configure Environment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Copy the example environment file:
 
-## Deploy on Vercel
+```bash
+cp .env.example .env.local
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Default variables:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 3. Launch the Development Server
+
+```bash
+pnpm dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000) to view the application.
+
+---
+
+## 📜 Available Scripts
+
+| Script | Purpose |
+| :--- | :--- |
+| `pnpm dev` | Starts local Next.js development server with hot-reload |
+| `pnpm build` | Compiles and optimizes production bundle |
+| `pnpm start` | Runs the compiled production server |
+| `pnpm lint` | Runs ESLint 9 against TypeScript and JSX files |
+
+---
+
+## 🎨 Key Features Implemented
+
+1. **Interactive Form Playground (`TryIt` Component)**:
+   - Users can test sample submissions live.
+   - Switch between HTML, JavaScript fetch, and cURL snippets.
+   - Live simulated lead feed with instant spam filter dispositions (`Accepted`, `Rate limit`, `Disposable email`, `Honeypot`).
+2. **Interactive 3D Feature Cards (`FeaturesGrid` Component)**:
+   - Dynamic 3D perspective transforms on hover.
+3. **High-Converting Signup Page (`/signup`)**:
+   - Split layout with value proposition side-banner and frosted-glass auth card.

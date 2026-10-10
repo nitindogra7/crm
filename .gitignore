@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.*
+
+# Build and Production Artifacts
+.next/
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Environment and Secrets
+.env
+.env*.local
+*.env
+
+# Logs and Debugging
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE and Editor Cache
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# Docker and Database Local Storage
+pgdata/

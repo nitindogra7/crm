@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Icon } from "./icons";
-import { Pill, Orb } from "./ui";
+import { Pill } from "./ui";
 import { cn } from "@/shared/lib/utils";
 
 interface SpotlightCardProps {
@@ -32,18 +32,21 @@ function SpotlightCard({ children, className, style }: SpotlightCardProps) {
       onPointerLeave={handlePointerLeave}
       style={style}
       className={cn(
-        "group relative p-[28px_24px] text-center flex flex-col items-center min-h-[196px] rounded-[16px] border border-white/[0.08] hover:border-white/[0.17] transition-[border-color] duration-400 overflow-hidden bg-[linear-gradient(150deg,rgba(255,255,255,0.07),rgba(255,255,255,0.012)_38%,rgba(255,255,255,0.025))] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_50px_-24px_#000]",
+        "group relative p-[22px] sm:p-[24px] rounded-[16px] border border-white/[0.09] hover:border-emerald-500/35 transition-all duration-300 overflow-hidden bg-[#1c1c1c] hover:bg-[#232323] shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(52,211,153,0.1)] flex flex-col justify-between",
         className
       )}
     >
-      {/* Spotlight highlight */}
+      {/* Top subtle specular edge */}
+      <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+      {/* Subtle emerald green cursor spotlight */}
       {coords && (
         <div
-          className="pointer-events-none absolute w-[200px] h-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity duration-400 opacity-100"
+          className="pointer-events-none absolute w-[280px] h-[280px] -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity duration-200 opacity-100"
           style={{
             left: `${coords.x}px`,
             top: `${coords.y}px`,
-            background: "radial-gradient(circle, rgba(255,255,255,0.1), transparent 65%)",
+            background: "radial-gradient(circle, rgba(52,211,153,0.14) 0%, rgba(16,185,129,0.04) 50%, transparent 70%)",
           }}
         />
       )}
@@ -52,89 +55,82 @@ function SpotlightCard({ children, className, style }: SpotlightCardProps) {
   );
 }
 
+const BENEFITS = [
+  {
+    icon: "shield" as const,
+    title: "Smart Spam Defense",
+    desc: "Silent honeypots, disposable email filters, and IP reputation heuristics screen out bot crawlers automatically.",
+    tag: "Heuristics",
+  },
+  {
+    icon: "cpu" as const,
+    title: "Zero Package Setup",
+    desc: "No npm packages, CLI commands, or heavy SDKs. Connect your workspace API key to any form using standard HTTP POST.",
+    tag: "Zero Config",
+  },
+  {
+    icon: "bell" as const,
+    title: "Instant Inbound Alerts",
+    desc: "Formatted notifications land in your inbox in under 200ms with full submission payload context and origin details.",
+    tag: "<200ms",
+  },
+  {
+    icon: "db" as const,
+    title: "Workspace CRM Stream",
+    desc: "Every submission streams into your organisation's dashboard. Search leads, monitor spam drops, or export to CSV.",
+    tag: "Live Stream",
+  },
+];
+
 export function BenefitsCross() {
   return (
-    <section className="pt-[40px] md:pt-[96px] pb-[80px] md:pb-[96px]" id="benefits">
-      <div className="max-w-[1040px] mx-auto px-[16px] sm:px-[24px]">
+    <section className="py-[56px] md:py-[72px] relative z-10" id="benefits">
+      <div className="max-w-[1100px] mx-auto px-[16px] sm:px-[24px]">
         {/* Section Heading */}
-        <div className="text-center mb-[52px]">
-          <Pill icon="star">Why developers choose Salenova</Pill>
-          <h2 className="text-[clamp(26px,3.4vw,38px)] font-extralight tracking-[-0.04em] leading-[1.1] mt-[20px] text-white">
-            Never build a form backend again
+        <div className="text-center max-w-[560px] mx-auto mb-[40px] sm:mb-[48px]">
+          <Pill icon="star">Why Developers Choose Salenova</Pill>
+          <h2 className="text-[26px] sm:text-[34px] md:text-[40px] font-heading font-medium tracking-[-0.025em] leading-[1.2] mt-4 mb-3 text-white text-balance">
+            Built for modern frontend teams <br className="hidden sm:inline" />
+            <span className="text-zinc-400">and automated conversion pipelines.</span>
           </h2>
+          <p className="text-zinc-400 font-p font-normal mt-3 text-[13.5px] sm:text-[14.5px] leading-[1.65] max-w-[520px] mx-auto text-pretty">
+            Everything is engineered to be frictionless, reliable, and completely out of the way of your application code.
+          </p>
         </div>
 
-        {/* Cross Grid */}
-        <div className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[8px]">
-          {/* Subtle background radial glows on desktop */}
-          <div
-            className="hidden md:block absolute -inset-[60px] pointer-events-none z-0"
-            style={{
-              background:
-                "radial-gradient(circle at 33.3% 33.3%, rgba(255,255,255,0.09), transparent 17%), radial-gradient(circle at 66.6% 33.3%, rgba(255,255,255,0.09), transparent 17%), radial-gradient(circle at 33.3% 66.6%, rgba(255,255,255,0.09), transparent 17%), radial-gradient(circle at 66.6% 66.6%, rgba(255,255,255,0.09), transparent 17%)",
-            }}
-          />
+        {/* 4 Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[14px]">
+          {BENEFITS.map((item, idx) => (
+            <SpotlightCard key={idx}>
+              <div>
+                {/* Header: Emerald Green Icon & Tag */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-[38px] h-[38px] rounded-xl grid place-items-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 transition-all group-hover:border-emerald-500/40 group-hover:shadow-[0_0_16px_rgba(52,211,153,0.25)]">
+                    <Icon name={item.icon} className="w-[18px] h-[18px]" />
+                  </div>
+                  <span className="text-[10px] font-sans px-2 py-0.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 font-medium">
+                    {item.tag}
+                  </span>
+                </div>
 
-          {/* Cell A (Top on desktop: col 2, row 1) */}
-          <SpotlightCard className="md:col-start-2 md:row-start-1 z-10">
-            <div className="w-[44px] h-[44px] rounded-full grid place-items-center bg-[radial-gradient(circle_at_32%_26%,#4a4a4a,#0c0c0c_70%)] border border-[#333] shadow-[inset_0_1px_3px_rgba(255,255,255,0.2),0_0_0_5px_rgba(255,255,255,0.025),0_0_0_6px_rgba(255,255,255,0.08)] text-white mb-[16px] flex-none">
-              <Icon name="shield" className="w-[17px] h-[17px]" />
-            </div>
-            <h3 className="text-[12.5px] font-normal tracking-[-0.01em] mb-[6px] text-white">
-              Smart Spam Filtering
-            </h3>
-            <p className="text-[#8c8c8c] text-[11.5px] max-w-[220px] leading-[1.6]">
-              Honeypots, rate limiting, and disposable email filters catch bots before they clutter your inbox.
-            </p>
-          </SpotlightCard>
+                <h3 className="text-[15px] font-heading font-medium text-white mb-2 tracking-tight group-hover:text-white transition-colors">
+                  {item.title}
+                </h3>
+                <p className="text-zinc-400 font-p font-normal text-[12px] leading-[1.65]">
+                  {item.desc}
+                </p>
+              </div>
 
-          {/* Cell B (Left on desktop: col 1, row 2) */}
-          <SpotlightCard className="md:col-start-1 md:row-start-2 z-10">
-            <div className="w-[44px] h-[44px] rounded-full grid place-items-center bg-[radial-gradient(circle_at_32%_26%,#4a4a4a,#0c0c0c_70%)] border border-[#333] shadow-[inset_0_1px_3px_rgba(255,255,255,0.2),0_0_0_5px_rgba(255,255,255,0.025),0_0_0_6px_rgba(255,255,255,0.08)] text-white mb-[16px] flex-none">
-              <Icon name="cpu" className="w-[17px] h-[17px]" />
-            </div>
-            <h3 className="text-[12.5px] font-normal tracking-[-0.01em] mb-[6px] text-white">
-              Zero Server Setup
-            </h3>
-            <p className="text-[#8c8c8c] text-[11.5px] max-w-[220px] leading-[1.6]">
-              No Node.js boilerplate, no database connections, no SMTP configs. Just one clean endpoint.
-            </p>
-          </SpotlightCard>
-
-          {/* Cell Core (Center on desktop: col 2, row 2) */}
-          <div className="hidden md:flex md:col-start-2 md:row-start-2 z-10 justify-center items-center rounded-[16px] border border-white/[0.08] min-h-[196px] bg-[radial-gradient(circle,rgba(255,255,255,0.07),rgba(255,255,255,0.01)_70%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_50px_-24px_#000]">
-            <div className="relative">
-              {/* Outer spinning dashed ring */}
-              <div className="absolute -inset-[34px] rounded-full border border-dashed border-white/10 animate-[spin_40s_linear_infinite]" />
-              <Orb size={84} />
-            </div>
-          </div>
-
-          {/* Cell C (Right on desktop: col 3, row 2) */}
-          <SpotlightCard className="md:col-start-3 md:row-start-2 z-10">
-            <div className="w-[44px] h-[44px] rounded-full grid place-items-center bg-[radial-gradient(circle_at_32%_26%,#4a4a4a,#0c0c0c_70%)] border border-[#333] shadow-[inset_0_1px_3px_rgba(255,255,255,0.2),0_0_0_5px_rgba(255,255,255,0.025),0_0_0_6px_rgba(255,255,255,0.08)] text-white mb-[16px] flex-none">
-              <Icon name="bell" className="w-[17px] h-[17px]" />
-            </div>
-            <h3 className="text-[12.5px] font-normal tracking-[-0.01em] mb-[6px] text-white">
-              Instant Email Delivery
-            </h3>
-            <p className="text-[#8c8c8c] text-[11.5px] max-w-[220px] leading-[1.6]">
-              Formatted notifications land in your inbox in under 500ms for every real inquiry.
-            </p>
-          </SpotlightCard>
-
-          {/* Cell D (Bottom on desktop: col 2, row 3) */}
-          <SpotlightCard className="md:col-start-2 md:row-start-3 z-10">
-            <div className="w-[44px] h-[44px] rounded-full grid place-items-center bg-[radial-gradient(circle_at_32%_26%,#4a4a4a,#0c0c0c_70%)] border border-[#333] shadow-[inset_0_1px_3px_rgba(255,255,255,0.2),0_0_0_5px_rgba(255,255,255,0.025),0_0_0_6px_rgba(255,255,255,0.08)] text-white mb-[16px] flex-none">
-              <Icon name="db" className="w-[17px] h-[17px]" />
-            </div>
-            <h3 className="text-[12.5px] font-normal tracking-[-0.01em] mb-[6px] text-white">
-              Structured Storage & APIs
-            </h3>
-            <p className="text-[#8c8c8c] text-[11.5px] max-w-[220px] leading-[1.6]">
-              Every submission is saved securely. Search past leads, export to CSV, or trigger webhooks.
-            </p>
-          </SpotlightCard>
+              {/* Bottom Subtle Status */}
+              <div className="mt-5 pt-3 border-t border-white/[0.05] flex items-center justify-between text-[10.5px] text-zinc-500 font-sans">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  Production Ready
+                </span>
+                <span className="text-zinc-500 group-hover:text-emerald-300 group-hover:translate-x-0.5 transition-all">→</span>
+              </div>
+            </SpotlightCard>
+          ))}
         </div>
       </div>
     </section>

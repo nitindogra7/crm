@@ -6,7 +6,7 @@
   --dim: #565656;
   --line: rgba(255, 255, 255, 0.08);
   --line2: rgba(255, 255, 255, 0.17);
-  --background: #000000;
+  --background: #121212;
   --foreground: #f2f2f2;
 }
 
@@ -16,10 +16,786 @@
   --color-dim: var(--dim);
   --color-line: var(--line);
   --color-line2: var(--line2);
-  --font-sans: var(--font-inter), Inter, system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif;
+  --font-heading: var(--font-figtree), "Figtree", sans-serif;
+  --font-p: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif;
+  --font-mono: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif;
+}
+
+/* Inter Display local/web alias */
+@font-face {
+  font-family: 'Inter Display';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: local('Inter Display'), local('InterDisplay'), local('InterVariable');
+}
+
+/* Global Strict Typography Enforcement: Only Inter Display and Figtree */
+html,
+body,
+button,
+input,
+textarea,
+select,
+table,
+th,
+td,
+div,
+span,
+a,
+label {
+  font-family: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif;
 }
 
 html {
-  scroll-behavior: smooth;
   color-scheme: dark;
+}
+
+/* Lenis Smooth Scroll Styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* Prevent browser autofill dark blue/yellow background in dark mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #141414 inset !important;
+  -webkit-text-fill-color: #f2f2f2 !important;
+  caret-color: #ffffff;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Headings: Figtree strictly */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-heading {
+  font-family: var(--font-figtree), "Figtree", sans-serif !important;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+h1 {
+  line-height: 1.14;
+}
+
+h2 {
+  line-height: 1.2;
+}
+
+h3 {
+  line-height: 1.28;
+}
+
+/* Paragraphs & body: Inter Display strictly */
+p,
+.font-p {
+  font-family: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif !important;
+  font-weight: 400;
+  line-height: 1.65;
+  letter-spacing: -0.006em;
+}
+
+/* Any code, pre, or monospace utility strictly mapped to Inter Display with tabular figures */
+.font-mono,
+code,
+pre,
+kbd,
+samp {
+  font-family: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif !important;
+  font-feature-settings: "tnum" 1, "cv05" 1, "cv11" 1;
+}
+
+/* Keyframe Animations for Hero Section & SaaS Aesthetics */
+@keyframes textShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes auroraFloat1 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 0.65;
+  }
+
+  33% {
+    transform: translate(35px, -30px) scale(1.18) rotate(4deg);
+    opacity: 0.85;
+  }
+
+  66% {
+    transform: translate(-25px, 25px) scale(0.92) rotate(-3deg);
+    opacity: 0.6;
+  }
+}
+
+@keyframes auroraFloat2 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.1) rotate(0deg);
+    opacity: 0.55;
+  }
+
+  33% {
+    transform: translate(-40px, 30px) scale(0.9) rotate(-6deg);
+    opacity: 0.75;
+  }
+
+  66% {
+    transform: translate(30px, -20px) scale(1.15) rotate(5deg);
+    opacity: 0.5;
+  }
+}
+
+@keyframes auroraFloat3 {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.45;
+  }
+
+  50% {
+    transform: translate(15px, -35px) scale(1.22);
+    opacity: 0.7;
+  }
+}
+
+@keyframes gridFlow {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 0 50px;
+  }
+}
+
+@keyframes floatBadge1 {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-9px) rotate(0.8deg);
+  }
+}
+
+@keyframes floatBadge2 {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(8px) rotate(-0.8deg);
+  }
+}
+
+@keyframes floatBadge3 {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-6px) rotate(-0.5deg);
+  }
+}
+
+@keyframes floatBadge4 {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(7px) rotate(0.6deg);
+  }
+}
+
+@keyframes horizonFlare {
+
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scaleX(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scaleX(1.08);
+  }
+}
+
+@keyframes beamScan {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 0.9;
+  }
+
+  80% {
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: translateY(200%);
+    opacity: 0;
+  }
+}
+
+@keyframes pulseBeacon {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.97);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.03);
+  }
+}
+
+/* =========================================================================
+   Auth Screen Lock & Scroll Containment (Form is the ONLY scrollable element)
+   ========================================================================= */
+html:has(.auth-scroll-panel),
+body:has(.auth-scroll-panel) {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  height: 100% !important;
+  width: 100% !important;
+  position: fixed !important;
+}
+
+.auth-scroll-panel {
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent !important;
+}
+
+.auth-scroll-panel::-webkit-scrollbar {
+  width: 5px !important;
+}
+
+.auth-scroll-panel::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.auth-scroll-panel::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+  border-radius: 9999px !important;
+}
+
+.auth-scroll-panel::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+/* =========================================================================
+   Clerk Authentication Theme Overrides to Match Salenova Reference Design
+   ========================================================================= */
+.cl-rootBox {
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+.cl-cardBox {
+  width: 100% !important;
+  box-shadow: none !important;
+  border: none !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+.cl-card {
+  width: 100% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+/* Step-aware Clerk header: displays title, subtitle, back link & identity preview */
+.cl-header {
+  margin-bottom: 1rem !important;
+  padding: 0 !important;
+  text-align: left !important;
+  width: 100% !important;
+  display: block !important;
+}
+
+.cl-headerTitle {
+  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.02em !important;
+  margin-bottom: 0.25rem !important;
+  display: block !important;
+  line-height: 1.25 !important;
+}
+
+.cl-headerSubtitle {
+  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-size: 0.8125rem !important;
+  color: #a1a1aa !important;
+  margin-top: 0 !important;
+  display: block !important;
+  line-height: 1.4 !important;
+}
+
+.cl-headerBackLink {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.375rem !important;
+  color: #a1a1aa !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  margin-bottom: 0.625rem !important;
+  transition: color 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.cl-headerBackLink:hover {
+  color: #ffffff !important;
+}
+
+.cl-headerBackIcon {
+  width: 0.875rem !important;
+  height: 0.875rem !important;
+  color: #a1a1aa !important;
+}
+
+.cl-socialButtons {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  margin-top: 0 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.cl-socialButtonsBlockButton {
+  background-color: #141414 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 0.6875rem !important;
+  color: #f4f4f5 !important;
+  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  height: 2.625rem !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  justify-content: center !important;
+}
+
+.cl-socialButtonsBlockButton:hover {
+  background-color: #222222 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35) !important;
+}
+
+.cl-socialButtonsBlockButtonText {
+  color: #f4f4f5 !important;
+  font-weight: 500 !important;
+  font-size: 0.8125rem !important;
+}
+
+.cl-dividerRow {
+  margin: 0.625rem 0 !important;
+}
+
+.cl-dividerLine {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.cl-dividerText {
+  color: #71717a !important;
+  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-size: 0.6875rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  background-color: #181818 !important;
+  padding: 0 0.5rem !important;
+}
+
+.cl-form {
+  margin-top: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  overflow: visible !important;
+}
+
+.cl-formField {
+  margin-bottom: 0.375rem !important;
+  overflow: visible !important;
+}
+
+/* Ensure label rows never clip text on left or right */
+.cl-formFieldLabelRow {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 0.25rem !important;
+  width: 100% !important;
+  padding: 0 2px !important;
+  overflow: visible !important;
+}
+
+.cl-formFieldLabel {
+  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  color: #d4d4d8 !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+}
+
+.cl-formFieldAction {
+  color: #a1a1aa !important;
+  font-size: 0.71875rem !important;
+  font-weight: 400 !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+.cl-formFieldAction:hover {
+  color: #34d399 !important;
+  text-decoration: underline !important;
+}
+
+/* Outer input container (handles password eye icon properly without clipping) */
+.cl-formFieldInputGroup {
+  background-color: #141414 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 0.6875rem !important;
+  transition: all 0.2s ease !important;
+  overflow: hidden !important;
+  height: 2.625rem !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.cl-formFieldInputGroup:focus-within {
+  border-color: rgba(52, 211, 153, 0.75) !important;
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.3), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  background-color: #1c1c1c !important;
+}
+
+.cl-formFieldInput {
+  background-color: #141414 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0.6875rem !important;
+  color: #ffffff !important;
+  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-size: 0.8125rem !important;
+  height: 2.625rem !important;
+  padding: 0 0.8125rem !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+.cl-formFieldInputGroup .cl-formFieldInput {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  flex: 1 !important;
+  height: 100% !important;
+}
+
+.cl-formFieldInput:focus {
+  border-color: rgba(52, 211, 153, 0.75) !important;
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.3), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  outline: none !important;
+}
+
+.cl-formFieldInputShowPasswordButton {
+  color: #71717a !important;
+  padding: 0 0.75rem !important;
+  transition: color 0.15s ease !important;
+}
+
+.cl-formFieldInputShowPasswordButton:hover {
+  color: #ffffff !important;
+}
+
+/* Error states for input and group */
+.cl-formFieldInputGroup[data-invalid="true"],
+.cl-formFieldInputGroup:has(.cl-formFieldInput[aria-invalid="true"]),
+.cl-formFieldInputGroup:has(.cl-formFieldErrorText),
+.cl-formFieldInput[aria-invalid="true"],
+.cl-formFieldInput[data-invalid="true"] {
+  border-color: rgba(248, 113, 113, 0.75) !important;
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.25) !important;
+}
+
+.cl-formFieldErrorText {
+  color: #f87171 !important;
+  font-size: 0.71875rem !important;
+  font-family: var(--font-inter), "Inter", sans-serif !important;
+  line-height: 1.25 !important;
+  margin-top: 0.25rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.3125rem !important;
+  overflow: visible !important;
+  word-break: break-word !important;
+}
+
+.cl-formFieldSuccessText {
+  color: #34d399 !important;
+  font-size: 0.71875rem !important;
+  font-family: var(--font-inter), "Inter", sans-serif !important;
+  margin-top: 0.25rem !important;
+}
+
+/* Alert / Warning callouts */
+.cl-alert,
+.cl-alertDanger {
+  background-color: rgba(244, 63, 94, 0.1) !important;
+  border: 1px solid rgba(244, 63, 94, 0.3) !important;
+  border-radius: 0.6875rem !important;
+  padding: 0.5rem 0.75rem !important;
+  margin-bottom: 0.5rem !important;
+  color: #fca5a5 !important;
+  font-size: 0.75rem !important;
+}
+
+.cl-alertText {
+  color: #fca5a5 !important;
+  font-size: 0.75rem !important;
+  font-family: var(--font-inter), "Inter", sans-serif !important;
+}
+
+.cl-formButtonPrimary {
+  background-color: #ffffff !important;
+  color: #0b0b0e !important;
+  border-radius: 0.6875rem !important;
+  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-size: 0.8125rem !important;
+  font-weight: 550 !important;
+  height: 2.625rem !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), 0 0 20px rgba(255, 255, 255, 0.08) !important;
+  margin-top: 0.5rem !important;
+  cursor: pointer !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background-color: #f4f4f5 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 24px rgba(255, 255, 255, 0.14) !important;
+}
+
+.cl-formButtonPrimary:active {
+  transform: scale(0.99) !important;
+}
+
+/* Identity Preview on multi-step sign in (e.g. user email display + Edit button) */
+.cl-identityPreview {
+  background-color: #141414 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0.6875rem !important;
+  padding: 0.625rem 0.875rem !important;
+  margin: 0.5rem 0 0.875rem 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+.cl-identityPreviewText {
+  color: #f4f4f5 !important;
+  font-size: 0.8125rem !important;
+  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-weight: 500 !important;
+}
+
+.cl-identityPreviewEditButton {
+  color: #34d399 !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  transition: color 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.cl-identityPreviewEditButton:hover {
+  color: #6ee7b7 !important;
+  text-decoration: underline !important;
+}
+
+/* =========================================================================
+   OTP 6-Digit Code Verification Screen Styling
+   ========================================================================= */
+.cl-otpCodeField {
+  margin: 1.125rem 0 !important;
+}
+
+.cl-otpCodeFieldInputs {
+  display: flex !important;
+  gap: 0.5rem !important;
+  justify-content: center !important;
+  padding: 0.25rem 0 !important;
+}
+
+.cl-otpCodeFieldInput {
+  width: 3rem !important;
+  height: 3.25rem !important;
+  border-radius: 0.75rem !important;
+  background-color: #141414 !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  font-family: var(--font-mono), monospace !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+}
+
+.cl-otpCodeFieldInput:focus,
+.cl-otpCodeFieldInput[data-status="focused"] {
+  border-color: rgba(52, 211, 153, 0.85) !important;
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.35) !important;
+  outline: none !important;
+}
+
+.cl-formResendCodeLink {
+  color: #a1a1aa !important;
+  font-size: 0.75rem !important;
+  transition: color 0.15s ease !important;
+  margin-top: 0.5rem !important;
+  display: block !important;
+  text-align: center !important;
+}
+
+.cl-formResendCodeLink:hover {
+  color: #ffffff !important;
+}
+
+/* =========================================================================
+   Eliminate Clerk Footer, Branding, Watermarks & Development Badges
+   (We render our own luxury, stitched, 100% watermark-free navigation link)
+   ========================================================================= */
+.cl-footer,
+.cl-footerAction,
+.cl-footerPages,
+.cl-footerPagesLink,
+.cl-internal-b3fm6y,
+.cl-internal-badge,
+.cl-badge,
+.cl-development-mode-badge,
+.cl-dev-mode-warning,
+div[data-localization-key="developmentMode"],
+[class*="developmentMode"],
+[class*="devMode"],
+[class*="watermark"],
+[class*="branding"],
+[class*="poweredBy"],
+a[href*="clerk.com"],
+a[href*="clerk.dev"],
+a[aria-label*="Clerk"],
+div:has(> a[href*="clerk"]),
+div:has(> [data-localization-key="developmentMode"]),
+svg[aria-label*="Clerk"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Ensure no residual background, border or box-shadow at the bottom of the Clerk card */
+.cl-card,
+.cl-cardBox,
+.cl-rootBox {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* =========================================================================
+   Skeleton Shimmer Animation for Clerk Loading States
+   ========================================================================= */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: skeletonShimmer 1.8s ease-in-out infinite !important;
 }

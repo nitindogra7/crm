@@ -23,12 +23,12 @@ export type IconName =
   | "x"
   | "plus"
   | "vercel"
-  | "supabase"
   | "openai"
   | "linear"
   | "github"
   | "tailwind"
-  | "astro";
+  | "astro"
+  | "rupee";
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   name: IconName;
@@ -375,17 +375,6 @@ export function Icon({ name, className = "w-[14px] h-[14px]", ...props }: IconPr
           <path d="M12 2L22 19.5H2L12 2Z" />
         </svg>
       );
-    case "supabase":
-      return (
-        <svg
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className={className}
-          {...props}
-        >
-          <path d="M12.5 2L4 13.5H11L9.5 22L19 9.5H11.5L12.5 2Z" />
-        </svg>
-      );
     case "openai":
       return (
         <svg
@@ -457,6 +446,25 @@ export function Icon({ name, className = "w-[14px] h-[14px]", ...props }: IconPr
         >
           <path d="M12 3L7 19l5-3 5 3L12 3z" />
           <path d="M9.5 14h5" />
+        </svg>
+      );
+    case "rupee":
+      return (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+          {...props}
+        >
+          <path d="M6 3h12" />
+          <path d="M6 8h12" />
+          <path d="m6 13 8.5 8" />
+          <path d="M6 13h3" />
+          <path d="M9 13a5 5 0 0 0 0-10" />
         </svg>
       );
     default:

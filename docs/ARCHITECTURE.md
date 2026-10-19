@@ -48,13 +48,13 @@ crm/
 ### 3.1 Client Architecture (`/client`)
 
 The frontend application adopts a **Feature-Driven Design** pattern:
-- **`src/app/`**: Next.js App Router route groups:
-  - `(marketing)`: The high-converting public landing page, interactive try-it playground, feature matrix, and pricing calculator.
-  - `(auth)`: Owner and workspace onboarding (signup/login flows) styled with frosted-glass dark aesthetic.
+- **`src/app/`**: Next.js App Router route structure:
+  - Landing page, interactive try-it playground, feature matrix, and pricing calculator.
+  - Clerk authentication routes (`/sign-in`, `/sign-up`) with dark theme and custom styling.
 - **`src/features/`**: Self-contained domain modules:
   - `marketing/`: Feature components (`hero.tsx`, `features-grid.tsx`, `benefits-cross.tsx`, `try-it.tsx`, `pricing.tsx`, `faq.tsx`).
-  - `auth/`: Forms, validation schemas, and onboarding banners.
-- **`src/shared/`**: Common cross-cutting UI elements (`Button`, `Input`, `Checkbox`) and utility helpers (`cn` / class merging).
+- **`src/proxy.ts`**: Next.js 16 Proxy layer running Clerk authentication middleware (`clerkMiddleware`).
+- **`src/shared/`**: Common cross-cutting utility helpers (`cn` / class merging).
 
 ### 3.2 Server Architecture (`/server`)
 

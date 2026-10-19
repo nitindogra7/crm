@@ -2,42 +2,64 @@
 
 import React, { useState } from "react";
 import { Icon } from "./icons";
-import { Pill, Card, Avatar, Button } from "./ui";
+import { Pill, Avatar, Button } from "./ui";
 import { cn } from "@/shared/lib/utils";
 
 const SNIPPETS = {
-  html: `<form action="https://api.salenova.com/f/abc123" method="POST">
-  <input name="email" type="email" required>
-  <input name="website" tabindex="-1" hidden> <!-- honeypot -->
-  <button>Send</button>
+  html: `<!-- 1. Point standard HTML form to Salenova with your API key -->
+<form action="https://api.salenova.com/v1/leads?apiKey=sln_live_acme_9f2k" method="POST">
+  <input name="name" type="text" placeholder="Full name" required />
+  <input name="email" type="email" placeholder="work@acme.com" required />
+  <input name="company" type="text" placeholder="Company name" />
+  <input name="_gotcha" tabindex="-1" hidden /> <!-- silent honeypot -->
+  <button type="submit">Submit Lead</button>
 </form>`,
-  js: `await fetch("https://api.salenova.com/f/abc123", {
+  js: `// 2. Or send POST with your workspace x-api-key header
+const res = await fetch("https://api.salenova.com/v1/leads", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email: "john@acme.com" })
-});`,
-  curl: `curl -X POST https://api.salenova.com/f/abc123 \\
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": "sln_live_acme_9f2k"
+  },
+  body: JSON.stringify({
+    name: "Maya Lin",
+    email: "maya@studio.co",
+    company: "Studio Labs",
+    message: "Interested in pro plan"
+  })
+});
+const lead = await res.json(); // { id: "lead_89a", status: "delivered" }`,
+  curl: `# 3. Direct HTTP POST from cURL, Python, or Webhooks
+curl -X POST https://api.salenova.com/v1/leads \\
   -H "Content-Type: application/json" \\
-  -d '{"email":"john@acme.com"}'`,
+  -H "x-api-key: sln_live_acme_9f2k" \\
+  -d '{
+    "name": "Alex Vance",
+    "email": "alex@startup.io",
+    "source": "Landing Page Form"
+  }'`,
 };
 
 type TabType = "html" | "js" | "curl";
 
 interface LeadItem {
   id: string;
+  name: string;
   email: string;
   status: "ok" | "no";
   reason: string;
   avatarIndex: number;
+  time: string;
+  isNew?: boolean;
 }
 
-const LEADS_DATA: Array<{ email: string; status: "ok" | "no"; reason: string; avatarIndex: number }> = [
-  { email: "maya@studio.co", status: "ok", reason: "Accepted", avatarIndex: 0 },
-  { email: "bot.crawler@test.com", status: "no", reason: "Rate limit", avatarIndex: 1 },
-  { email: "dev@startup.io", status: "ok", reason: "Accepted", avatarIndex: 2 },
-  { email: "fake@disposable.com", status: "no", reason: "Disposable", avatarIndex: 3 },
-  { email: "lena@agency.com", status: "ok", reason: "Accepted", avatarIndex: 4 },
-  { email: "x7@spam.net", status: "no", reason: "Honeypot", avatarIndex: 5 },
+const LEADS_DATA: Array<{ name: string; email: string; status: "ok" | "no"; reason: string; avatarIndex: number }> = [
+  { name: "Maya Lin", email: "maya@studio.co", status: "ok", reason: "Verified lead", avatarIndex: 0 },
+  { name: "Bot Crawler", email: "bot.crawler@test.com", status: "no", reason: "Rate limited", avatarIndex: 1 },
+  { name: "Dev Patel", email: "dev@startup.io", status: "ok", reason: "Verified lead", avatarIndex: 2 },
+  { name: "Disposable User", email: "fake@tempmail.com", status: "no", reason: "Disposable email", avatarIndex: 3 },
+  { name: "Lena Rossi", email: "lena@agency.com", status: "ok", reason: "Verified lead", avatarIndex: 4 },
+  { name: "Spam Bot 7", email: "x7@spam.net", status: "no", reason: "Honeypot hit", avatarIndex: 5 },
 ];
 
 interface TryItProps {
@@ -57,8 +79,8 @@ export function TryIt({
   const [copied, setCopied] = useState(false);
   const [leadsIndex, setLeadsIndex] = useState(2);
   const [feedItems, setFeedItems] = useState<LeadItem[]>([
-    { id: "1", email: "bot.crawler@test.com", status: "no", reason: "Rate limit", avatarIndex: 1 },
-    { id: "0", email: "maya@studio.co", status: "ok", reason: "Accepted", avatarIndex: 0 },
+    { id: "1", name: "Bot Crawler", email: "bot.crawler@test.com", status: "no", reason: "Rate limited", avatarIndex: 1, time: "Just now" },
+    { id: "0", name: "Maya Lin", email: "maya@studio.co", status: "ok", reason: "Verified lead", avatarIndex: 0, time: "1m ago" },
   ]);
 
   const handleCopySnippet = () => {
@@ -75,10 +97,13 @@ export function TryIt({
 
     const newItem: LeadItem = {
       id: `${Date.now()}-${Math.random()}`,
+      name: nextLead.name,
       email: nextLead.email,
       status: nextLead.status,
       reason: nextLead.reason,
       avatarIndex: nextLead.avatarIndex,
+      time: "Just now",
+      isNew: true,
     };
 
     setFeedItems((prev) => [newItem, ...prev.slice(0, 3)]);
@@ -91,106 +116,179 @@ export function TryIt({
   };
 
   return (
-    <section className="pt-0 pb-[80px] md:pb-[96px]" id="try">
-      <div className="max-w-[1040px] mx-auto px-[16px] sm:px-[24px]">
+    <section className="py-[56px] md:py-[76px] relative z-10" id="try">
+      {/* Subtle deep emerald ambient lighting */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-[450px] w-full max-w-[900px] mx-auto rounded-full blur-[150px] opacity-20 -z-10"
+        style={{
+          background: "radial-gradient(ellipse at 50% 50%, rgba(52,211,153,0.15) 0%, rgba(16,185,129,0.08) 50%, transparent 70%)",
+        }}
+      />
+
+      <div className="max-w-[1100px] mx-auto px-[16px] sm:px-[24px]">
         {/* Head */}
-        <div className="text-center mb-[52px]">
-          <Pill icon="code">Live interactive test</Pill>
-          <h2 className="text-[clamp(26px,3.4vw,38px)] font-extralight tracking-[-0.04em] leading-[1.1] mt-[20px] text-white">
-            Post a form. Watch it land.
+        <div className="text-center max-w-[560px] mx-auto mb-[40px] sm:mb-[48px]">
+          <Pill icon="code">Live Interactive Sandbox</Pill>
+          <h2 className="text-[26px] sm:text-[34px] md:text-[40px] font-heading font-medium tracking-[-0.025em] leading-[1.2] mt-4 mb-3 text-white text-balance">
+            Send a test submission <br className="hidden sm:inline" />
+            <span className="text-zinc-400">and watch it land live in your CRM.</span>
           </h2>
-          <p className="text-[#8c8c8c] mt-[14px] text-[12.5px] max-w-[440px] mx-auto leading-[1.7]">
-            Copy an integration snippet or send a test submission below to see how Salenova validates, inspects, and delivers data.
+          <p className="text-zinc-400 font-p font-normal mt-3 text-[13.5px] sm:text-[14.5px] leading-[1.65] max-w-[520px] mx-auto text-pretty">
+            Pick your frontend syntax below. Hit the test submission button to simulate an inbound POST request with automated spam inspection.
           </p>
         </div>
 
-        {/* Try Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-[10px]">
+        {/* Dual Sandbox Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-[14px]">
           {/* Left: Code Terminal */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center gap-[4px] py-[10px] px-[12px] border-b border-white/[0.08]">
-              <button
-                type="button"
-                onClick={() => setActiveTab("html")}
-                className={cn(
-                  "font-sans text-[11px] rounded-full py-[4px] px-[12px] cursor-pointer transition-colors duration-300",
-                  activeTab === "html" ? "bg-[#222] text-white" : "text-[#8c8c8c] hover:text-white"
-                )}
-              >
-                HTML
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("js")}
-                className={cn(
-                  "font-sans text-[11px] rounded-full py-[4px] px-[12px] cursor-pointer transition-colors duration-300",
-                  activeTab === "js" ? "bg-[#222] text-white" : "text-[#8c8c8c] hover:text-white"
-                )}
-              >
-                fetch
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("curl")}
-                className={cn(
-                  "font-sans text-[11px] rounded-full py-[4px] px-[12px] cursor-pointer transition-colors duration-300",
-                  activeTab === "curl" ? "bg-[#222] text-white" : "text-[#8c8c8c] hover:text-white"
-                )}
-              >
-                curl
-              </button>
+          <div className="rounded-[18px] border border-white/[0.09] bg-[#1c1c1c] shadow-[0_16px_45px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col justify-between relative group">
+            {/* Top specular edge */}
+            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent pointer-events-none" />
 
-              <button
-                type="button"
-                onClick={handleCopySnippet}
-                aria-label="Copy snippet"
-                className="ml-auto flex items-center gap-[6px] text-[11px] text-[#8c8c8c] hover:text-white transition-colors cursor-pointer"
-              >
-                {copied ? (
-                  <>
-                    <Icon name="chk" className="w-[12px] h-[12px] text-white" />
-                    <span>Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon name="copy" className="w-[14px] h-[14px]" />
-                    <span>Copy</span>
-                  </>
-                )}
-              </button>
+            <div>
+              {/* Terminal Window Header */}
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-white/[0.02] flex-wrap gap-2">
+                <div className="flex items-center gap-3">
+                  {/* macOS dots */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                  </div>
+                  <span className="h-3 w-[1px] bg-white/[0.1]" />
+                  {/* Language Tabs */}
+                  <div className="flex items-center gap-1 bg-black/40 p-0.5 rounded-lg border border-white/[0.06]">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("html")}
+                      className={cn(
+                        "px-2.5 py-1 rounded-md text-[11px] font-sans transition-all cursor-pointer",
+                        activeTab === "html" ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium shadow-sm" : "text-zinc-400 hover:text-white"
+                      )}
+                    >
+                      HTML Form
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("js")}
+                      className={cn(
+                        "px-2.5 py-1 rounded-md text-[11px] font-sans transition-all cursor-pointer",
+                        activeTab === "js" ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium shadow-sm" : "text-zinc-400 hover:text-white"
+                      )}
+                    >
+                      fetch (POST)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("curl")}
+                      className={cn(
+                        "px-2.5 py-1 rounded-md text-[11px] font-sans transition-all cursor-pointer",
+                        activeTab === "curl" ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium shadow-sm" : "text-zinc-400 hover:text-white"
+                      )}
+                    >
+                      cURL
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCopySnippet}
+                  aria-label="Copy code snippet"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/[0.08] hover:border-emerald-500/30 bg-white/[0.03] hover:bg-white/[0.06] text-[11px] text-zinc-300 hover:text-white transition-all cursor-pointer select-none"
+                >
+                  <Icon name={copied ? "chk" : "copy"} className="w-3 h-3 text-zinc-300" />
+                  <span>{copied ? "Copied" : "Copy"}</span>
+                </button>
+              </div>
+
+              {/* Code Display */}
+              <div className="p-4 font-sans text-[11.5px] leading-[1.75] text-zinc-300 overflow-x-auto min-h-[220px]">
+                <pre className="whitespace-pre">{SNIPPETS[activeTab]}</pre>
+              </div>
             </div>
 
-            <pre className="font-mono font-light text-[11px] leading-[1.9] p-[16px_18px] text-[#b9b9b9] overflow-x-auto min-h-[196px] whitespace-pre">
-              {SNIPPETS[activeTab]}
-            </pre>
-          </Card>
+            {/* Bottom Status */}
+            <div className="px-4 py-2.5 border-t border-white/[0.06] bg-[#141414] text-[11px] text-zinc-400 flex items-center justify-between">
+              <span className="flex items-center gap-2 font-sans">
+                <span className="text-zinc-500">Target Endpoint:</span>
+                <span className="text-emerald-400 font-medium">POST /v1/leads</span>
+              </span>
+              <span className="flex items-center gap-1.5 text-emerald-400 font-sans text-[10.5px] bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                x-api-key authorized
+              </span>
+            </div>
+          </div>
 
-          {/* Right: Live Feed Simulator */}
-          <Card className="p-[16px] flex flex-col justify-between">
+          {/* Right: Workspace CRM Dashboard Simulator */}
+          <div className="rounded-[18px] border border-white/[0.09] bg-[#1c1c1c] shadow-[0_16px_45px_rgba(0,0,0,0.6)] p-[22px] flex flex-col justify-between relative group">
+            {/* Top specular edge */}
+            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent pointer-events-none" />
+
             <div>
-              <div className="flex justify-between items-center mb-[12px] text-[11px] text-[#8c8c8c]">
-                <span>Inbox</span>
-                <span>
-                  <b className="text-white font-normal mr-1 tabular-nums">{kept}</b> kept ·{" "}
-                  <b className="text-white font-normal ml-1 mr-1 tabular-nums">{blocked}</b> blocked
+              {/* Header */}
+              <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-white/[0.06]">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded-md bg-emerald-500/15 border border-emerald-500/30 grid place-items-center text-emerald-300 text-[11px] font-semibold">
+                    A
+                  </span>
+                  <div>
+                    <span className="text-[13px] font-medium text-white block leading-tight">Acme Workspace CRM</span>
+                    <span className="text-[10px] text-zinc-400 font-sans">key: sln_live_acme_••••</span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[10px] text-emerald-400 font-sans flex items-center gap-1.5 justify-end bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Live Intake Active
+                  </span>
+                </div>
+              </div>
+
+              {/* Feed Stats Bar */}
+              <div className="flex items-center justify-between mb-3 text-[11px] text-zinc-300 bg-[#141414] p-2 rounded-lg border border-white/[0.06] shadow-inner">
+                <span className="font-sans text-zinc-400">Telemetry Feed</span>
+                <span className="space-x-2 font-sans text-[10.5px]">
+                  <span>
+                    <b className="text-emerald-400 font-semibold tabular-nums">{kept}</b> delivered
+                  </span>
+                  <span className="text-zinc-600">•</span>
+                  <span>
+                    <b className="text-zinc-400 font-semibold tabular-nums">{blocked}</b> spam blocked
+                  </span>
                 </span>
               </div>
 
-              {/* Feed items */}
-              <ul className="list-none grid gap-[6px] min-h-[170px] content-start">
+              {/* Lead Feed Items */}
+              <ul className="space-y-2 min-h-[170px]">
                 {feedItems.map((item) => (
                   <li
                     key={item.id}
-                    className="flex items-center gap-[9px] border border-white/[0.08] rounded-[10px] p-[8px_10px] text-[11px] bg-black/40 animate-[slideDown_0.6s_cubic-bezier(0.2,0.8,0.2,1)]"
+                    className={cn(
+                      "flex items-center gap-2.5 p-2.5 rounded-lg border bg-[#141414] text-[11.5px] transition-all",
+                      item.status === "ok"
+                        ? "border-emerald-500/20 hover:border-emerald-500/40"
+                        : "border-white/[0.06] hover:border-white/[0.14]",
+                      item.isNew && "bg-emerald-500/[0.06] ring-1 ring-emerald-500/25"
+                    )}
                   >
-                    <Avatar size={18} index={item.avatarIndex} alt={item.email} />
-                    <span className="truncate text-[#f2f2f2]">{item.email}</span>
+                    <Avatar size={22} index={item.avatarIndex} alt={item.email} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-white text-[11.5px] truncate">{item.name}</span>
+                        <span className="text-[9.5px] text-zinc-500 font-sans">{item.time}</span>
+                      </div>
+                      <span className="truncate text-zinc-400 text-[10px] block font-sans">{item.email}</span>
+                    </div>
+
                     <em
                       className={cn(
-                        "ml-auto not-italic text-[10px] py-[1px] px-[9px] rounded-full border border-white/[0.17] whitespace-nowrap",
+                        "ml-auto not-italic text-[9.5px] py-0.5 px-2 rounded-full font-sans border whitespace-nowrap font-medium",
                         item.status === "ok"
-                          ? "bg-white text-black border-white"
-                          : "text-[#8c8c8c]"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : "bg-white/[0.03] text-zinc-400 border-white/[0.08]"
                       )}
                     >
                       {item.reason}
@@ -200,15 +298,17 @@ export function TryIt({
               </ul>
             </div>
 
+            {/* Inbound Simulator CTA */}
             <Button
               id="send"
               variant="solid"
               onClick={handleSendTestLead}
-              className="mt-[12px] w-full"
+              className="mt-4 w-full justify-center py-2.5 text-[12.5px] shadow-[0_0_24px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)]"
             >
-              Send a test lead
+              <Icon name="bolt" className="w-3.5 h-3.5 text-black" />
+              <span>Simulate Inbound POST Lead</span>
             </Button>
-          </Card>
+          </div>
         </div>
       </div>
     </section>

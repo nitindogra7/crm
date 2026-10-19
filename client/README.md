@@ -27,20 +27,20 @@ client/src/
 │   ├── layout.tsx             # Root layout with fonts and metadata
 │   └── page.tsx               # Entry home page route (renders MarketingLandingPage)
 │
+├── app/                       # Next.js App Router
+│   ├── sign-in/               # Clerk Sign-in page
+│   ├── sign-up/               # Clerk Sign-up page
+│   ├── globals.css            # Tailwind CSS styling & tokens
+│   ├── layout.tsx             # Root layout with ClerkProvider
+│   └── page.tsx               # Landing page route
+│
 ├── features/                  # Feature-Sliced domain modules
-│   ├── auth/                  # Authentication & Onboarding
-│   │   ├── components/        # AuthSideBanner, SignupForm
-│   │   ├── hooks/             # Auth-specific client hooks
-│   │   ├── schemas/           # Validation schemas
-│   │   ├── services/          # API communication services
-│   │   └── store/             # Client-side auth state
-│   │
 │   └── marketing/             # Marketing landing page
 │       ├── components/        # Hero, FeaturesGrid, TryIt, Pricing, FAQ, Navbar, Footer
-│       └── utils/             # Marketing formatting helpers
+│       └── index.ts           # Marketing module exports
 │
+├── proxy.ts                   # Next.js 16 Proxy / Clerk Middleware
 └── shared/                    # Cross-cutting reusable assets
-    ├── components/ui/         # Atomic UI primitives (Button, Input, Checkbox)
     └── lib/                   # Utility helpers (cn, clsx, tailwind-merge)
 ```
 
@@ -68,6 +68,13 @@ Default variables:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 ```
 
 ### 3. Launch the Development Server

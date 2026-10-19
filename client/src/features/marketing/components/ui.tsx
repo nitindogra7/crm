@@ -27,13 +27,13 @@ export function Pill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-[7px] border border-white/[0.08] rounded-full py-[4px] pr-[11px] pl-[5px] text-[10.5px] text-[#8c8c8c] bg-white/[0.03] transition-all duration-300",
+        "inline-flex items-center gap-[7px] border border-white/[0.14] rounded-full py-[4.5px] pr-[12px] pl-[6px] text-[11px] font-sans font-medium text-neutral-200 bg-white/[0.05] hover:border-white/30 hover:bg-white/[0.08] backdrop-blur-md shadow-sm transition-all duration-300",
         className
       )}
     >
       {icon && (
-        <b className="w-[15px] h-[15px] rounded-full grid place-items-center bg-[radial-gradient(circle_at_35%_30%,#555,#151515)] border border-white/[0.17] text-white flex-none">
-          <Icon name={icon} className="w-[8px] h-[8px]" />
+        <b className="w-[17px] h-[17px] rounded-full grid place-items-center bg-white/[0.08] border border-white/[0.14] text-zinc-200 flex-none shadow-sm">
+          <Icon name={icon} className="w-[9px] h-[9px]" />
         </b>
       )}
       {children}
@@ -232,7 +232,7 @@ export function Card({
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
       className={cn(
-        "relative border border-white/[0.08] rounded-[16px] bg-[linear-gradient(150deg,rgba(255,255,255,0.07),rgba(255,255,255,0.012)_38%,rgba(255,255,255,0.025))] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_50px_-24px_#000]",
+        "relative border border-white/[0.08] rounded-[16px] bg-[#1c1c1c] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_50px_-24px_#000]",
         className
       )}
     >

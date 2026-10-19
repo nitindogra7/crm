@@ -9,250 +9,247 @@ export function Pricing() {
   const [isMonthly, setIsMonthly] = useState(true);
 
   return (
-    <section className="pt-0 pb-[80px] md:pb-[96px]" id="pricing">
-      <div className="max-w-[1040px] mx-auto px-[16px] sm:px-[24px]">
+    <section className="py-[56px] md:py-[76px] relative z-10" id="pricing">
+      {/* Subtle Sapphire Atmospheric Aura */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden -z-10">
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[360px] rounded-full blur-[140px] opacity-15"
+          style={{
+            background: "radial-gradient(ellipse at center, rgba(52,211,153,0.20) 0%, rgba(16,185,129,0.10) 50%, transparent 75%)",
+          }}
+        />
+      </div>
+
+      <div className="max-w-[1100px] mx-auto px-[16px] sm:px-[24px]">
         {/* Head */}
-        <div className="text-center mb-[52px]">
-          <Pill icon="layers">Pricing for everyone</Pill>
-          <h2 className="text-[clamp(26px,3.4vw,38px)] font-extralight tracking-[-0.04em] leading-[1.1] mt-[20px] text-white">
-            Simple and transparent pricing
+        <div className="text-center max-w-[560px] mx-auto mb-[40px] sm:mb-[48px]">
+          <Pill icon="layers">Transparent Pricing</Pill>
+          <h2 className="text-[26px] sm:text-[34px] md:text-[40px] font-heading font-medium tracking-[-0.025em] leading-[1.2] mt-4 mb-3 text-white text-balance">
+            Simple, honest pricing in INR <br className="hidden sm:inline" />
+            <span className="text-zinc-400">with zero hidden overages or surprise fees.</span>
           </h2>
-          <p className="text-[#8c8c8c] mt-[14px] text-[12.5px] max-w-[420px] mx-auto leading-[1.7]">
-            Start free for side projects. Upgrade when your business inquiries scale.
+          <p className="text-zinc-400 font-p font-normal mt-3 text-[13.5px] sm:text-[14.5px] leading-[1.65] max-w-[520px] mx-auto text-pretty">
+            Start free for side projects. Scale smoothly as your client inquiries and organization workspaces grow.
           </p>
 
-          {/* Monthly / Yearly Toggle */}
-          <div className="inline-flex border border-white/[0.08] rounded-full p-[3px] mt-[18px] bg-white/[0.02]">
+          {/* Monthly / Yearly Switcher */}
+          <div className="inline-flex border border-white/[0.08] rounded-full p-[3px] mt-[24px] bg-[#141414] shadow-inner">
             <button
               type="button"
               onClick={() => setIsMonthly(true)}
               className={cn(
-                "font-sans text-[11px] rounded-full py-[5px] px-[16px] cursor-pointer transition-all duration-300",
+                "font-sans text-[12px] rounded-full py-[5px] px-[16px] cursor-pointer transition-all duration-200 select-none",
                 isMonthly
-                  ? "bg-[linear-gradient(180deg,#2a2a2a,#161616)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
-                  : "text-[#8c8c8c] hover:text-white"
+                  ? "bg-white text-black font-semibold shadow-sm"
+                  : "text-zinc-400 hover:text-white"
               )}
             >
-              Monthly
+              Monthly billing
             </button>
             <button
               type="button"
               onClick={() => setIsMonthly(false)}
               className={cn(
-                "font-sans text-[11px] rounded-full py-[5px] px-[16px] cursor-pointer transition-all duration-300",
+                "font-sans text-[12px] rounded-full py-[5px] px-[16px] cursor-pointer transition-all duration-200 select-none flex items-center gap-2",
                 !isMonthly
-                  ? "bg-[linear-gradient(180deg,#2a2a2a,#161616)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
-                  : "text-[#8c8c8c] hover:text-white"
+                  ? "bg-white text-black font-semibold shadow-sm"
+                  : "text-zinc-400 hover:text-white"
               )}
             >
-              Yearly
+              <span>Annual billing</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-sans font-medium">
+                Save 20%
+              </span>
             </button>
           </div>
         </div>
 
         {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-[10px] max-w-[420px] md:max-w-none mx-auto items-stretch">
-          {/* Plan 1: Free (With Frosted Glass Hover Effect) */}
-          <div className="group relative rounded-[16px] p-[26px_24px] flex flex-col border border-white/[0.08] bg-[linear-gradient(150deg,rgba(255,255,255,0.07),rgba(255,255,255,0.012)_38%,rgba(255,255,255,0.025))] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_50px_-24px_#000] backdrop-blur-xl transition-all duration-500 ease-out hover:bg-[linear-gradient(145deg,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0.03)_50%,rgba(255,255,255,0.07)_100%)] hover:border-white/30 hover:shadow-[0_24px_50px_-12px_rgba(0,0,0,0.8),inset_0_1px_1px_0_rgba(255,255,255,0.35),inset_0_0_24px_0_rgba(255,255,255,0.05),0_0_30px_rgba(255,255,255,0.06)] hover:-translate-y-[4px] overflow-hidden">
-            {/* Top specular reflection bevel on hover */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-t-[16px]" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-[16px] items-stretch">
+          {/* Plan 1: Free */}
+          <div className="rounded-[18px] p-[26px_22px] flex flex-col justify-between border border-white/[0.08] hover:border-emerald-500/30 bg-[#1c1c1c] hover:bg-[#232323] backdrop-blur-sm shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300 relative group overflow-hidden">
+            <div className="absolute top-0 inset-x-8 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:via-emerald-400/30 transition-all" />
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[14px] font-medium text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-md bg-white/[0.04] border border-white/[0.08] grid place-items-center">
+                    <Icon name="bolt" className="w-3 h-3 text-zinc-300" />
+                  </span>
+                  Free Tier
+                </span>
+                <span className="text-[10.5px] text-zinc-400 font-sans bg-white/[0.03] px-2 py-0.5 rounded-full border border-white/[0.08]">
+                  Free Forever
+                </span>
+              </div>
 
-            <div className="flex items-center gap-[9px] text-[12.5px] font-normal mb-[16px] text-white">
-              <span className="w-[24px] h-[24px] rounded-full grid place-items-center bg-[radial-gradient(circle_at_32%_26%,#4a4a4a,#0c0c0c_70%)] border border-[#333] shadow-[inset_0_1px_3px_rgba(255,255,255,0.2),0_0_0_5px_rgba(255,255,255,0.025),0_0_0_6px_rgba(255,255,255,0.08)] text-white">
-                <Icon name="bolt" className="w-[11px] h-[11px]" />
-              </span>
-              Free
+              {/* Price */}
+              <div className="flex items-baseline gap-1 text-[34px] font-heading font-medium tracking-tight leading-none mb-3 text-white">
+                <Icon name="rupee" className="w-[18px] h-[18px] text-zinc-400 self-center -mt-0.5" />
+                <span className="tabular-nums">0</span>
+                <span className="text-[11px] font-sans text-zinc-400 ml-1">INR</span>
+                <span className="text-[12px] text-zinc-500 ml-1 font-normal font-sans">/ mo</span>
+              </div>
+
+              <p className="text-zinc-400 font-p font-normal text-[12.5px] leading-[1.6] mb-5">
+                Perfect for static sites, landing pages, and developer side projects.
+              </p>
+
+              <Button href="/sign-up?plan=free" className="w-full justify-center mb-5 py-[8.5px] text-[12px] hover:border-emerald-500/40">
+                Get started free
+              </Button>
+
+              <div className="pt-4 border-t border-white/[0.06]">
+                <div className="text-[10.5px] font-sans text-zinc-500 uppercase tracking-wider mb-2.5">Included:</div>
+                <ul className="space-y-2.5 text-[12px] text-zinc-300">
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>1 organisation workspace</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>Scoped workspace API key</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>100 submissions / month</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>Real-time CRM dashboard</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>Silent spam heuristics</span>
+                  </li>
+                </ul>
+              </div>
             </div>
-
-            <div className="text-[32px] font-thin tracking-[-0.05em] leading-none mb-[16px] text-white">
-              $<span className="tabular-nums">0</span>
-              <small className="text-[10px] text-[#565656] tracking-normal font-light ml-[5px]">
-                per month
-              </small>
-            </div>
-
-            <Button href="/signup?plan=free" className="w-full mb-[16px]">
-              Get started free
-            </Button>
-
-            <div className="text-center text-[#444] text-[13px] mb-[12px] relative">
-              <span className="absolute top-1/2 left-0 w-[42%] h-[1px] bg-white/[0.08]" />
-              +
-              <span className="absolute top-1/2 right-0 w-[42%] h-[1px] bg-white/[0.08]" />
-            </div>
-
-            <ul className="list-none grid gap-[10px] text-[#8c8c8c] text-[11.5px]">
-              <li className="flex items-center gap-[9px]">
-                <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                  <Icon name="chk" className="w-[7px] h-[7px]" />
-                </i>
-                Up to 3 active forms
-              </li>
-              <li className="flex items-center gap-[9px]">
-                <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                  <Icon name="chk" className="w-[7px] h-[7px]" />
-                </i>
-                100 submissions / month
-              </li>
-              <li className="flex items-center gap-[9px]">
-                <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                  <Icon name="chk" className="w-[7px] h-[7px]" />
-                </i>
-                Instant email notifications
-              </li>
-              <li className="flex items-center gap-[9px]">
-                <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                  <Icon name="chk" className="w-[7px] h-[7px]" />
-                </i>
-                Invisible spam filtering
-              </li>
-            </ul>
           </div>
 
-          {/* Plan 2: Pro (Middle Card - Revolving Glowing Line ONLY, NO Glass Effect) */}
-          <div className="relative rounded-[16px] p-[1.5px] overflow-hidden order-first md:order-none transition-all duration-400 hover:-translate-y-[3px] shadow-[0_24px_50px_-24px_#000]">
-            {/* Revolving Glowing Line */}
-            <div
-              className="absolute -inset-[150%] aspect-square m-auto pointer-events-none animate-[spin_4s_linear_infinite]"
-              style={{
-                background:
-                  "conic-gradient(from 0deg, transparent 0deg, transparent 260deg, rgba(255,255,255,0.15) 290deg, rgba(255,255,255,0.7) 325deg, #ffffff 350deg, transparent 360deg)",
-              }}
-            />
-            {/* Diffused Glow Blur behind revolving line */}
-            <div
-              className="absolute -inset-[150%] aspect-square m-auto pointer-events-none blur-[10px] opacity-80 animate-[spin_4s_linear_infinite]"
-              style={{
-                background:
-                  "conic-gradient(from 0deg, transparent 0deg, transparent 260deg, rgba(255,255,255,0.2) 290deg, rgba(255,255,255,0.9) 330deg, #ffffff 350deg, transparent 360deg)",
-              }}
-            />
+          {/* Plan 2: Pro (Elevated Emerald Centerpiece) */}
+          <div className="rounded-[18px] p-[26px_22px] flex flex-col justify-between border border-emerald-500/40 bg-gradient-to-b from-[#222222] to-[#181818] shadow-[0_16px_50px_rgba(0,0,0,0.6)] relative overflow-hidden">
+            {/* Top Specular Edge */}
+            <div className="absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent pointer-events-none" />
 
-            {/* Inner Pro Card Content (Solid dark background with NO glass hover effect) */}
-            <div className="relative h-full w-full rounded-[14.5px] p-[26px_24px] flex flex-col bg-[linear-gradient(150deg,rgba(32,32,32,0.98),rgba(12,12,12,0.98))] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-              <div className="flex items-center gap-[9px] text-[12.5px] font-normal mb-[16px] text-white">
-                <span className="w-[24px] h-[24px] rounded-full grid place-items-center bg-[radial-gradient(circle_at_32%_26%,#4a4a4a,#0c0c0c_70%)] border border-[#333] shadow-[inset_0_1px_3px_rgba(255,255,255,0.2),0_0_0_5px_rgba(255,255,255,0.025),0_0_0_6px_rgba(255,255,255,0.08)] text-white">
-                  <Icon name="layers" className="w-[11px] h-[11px]" />
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[14px] font-medium text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-md bg-emerald-500/10 border border-emerald-500/25 grid place-items-center">
+                    <Icon name="layers" className="w-3.5 h-3.5 text-emerald-400" />
+                  </span>
+                  Pro Plan
                 </span>
-                Pro
-                <em className="ml-auto not-italic text-[9px] bg-white text-black rounded-full py-[1px] px-[8px] font-medium shadow-[0_0_10px_rgba(255,255,255,0.4)]">
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-400 text-black font-semibold shadow-[0_0_12px_rgba(52,211,153,0.4)]">
                   Most Popular
-                </em>
+                </span>
               </div>
 
-              <div className="text-[32px] font-thin tracking-[-0.05em] leading-none mb-[16px] text-white">
-                $<span className="tabular-nums">{isMonthly ? "15" : "12"}</span>
-                <small className="text-[10px] text-[#565656] tracking-normal font-light ml-[5px]">
-                  per month
-                </small>
+              {/* Price */}
+              <div className="flex items-baseline gap-1 text-[34px] font-heading font-medium tracking-tight leading-none mb-3 text-white">
+                <Icon name="rupee" className="w-[18px] h-[18px] text-zinc-300 self-center -mt-0.5" />
+                <span className="tabular-nums font-semibold">{isMonthly ? "499" : "399"}</span>
+                <span className="text-[11px] font-sans text-zinc-300 ml-1">INR</span>
+                <span className="text-[12px] text-zinc-400 ml-1 font-normal font-sans">/ mo</span>
               </div>
 
-              <Button href="/signup?plan=pro" variant="solid" className="w-full mb-[16px]">
+              <p className="text-zinc-300 font-p font-normal text-[12.5px] leading-[1.6] mb-5">
+                For growing startups, agencies, and businesses scaling client inbounds.
+              </p>
+
+              <Button
+                href="/sign-up?plan=pro"
+                variant="solid"
+                className="w-full justify-center mb-5 py-[8.5px] text-[12px] font-semibold shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_25px_rgba(52,211,153,0.4)]"
+              >
                 Upgrade to Pro
               </Button>
 
-              <div className="text-center text-[#444] text-[13px] mb-[12px] relative">
-                <span className="absolute top-1/2 left-0 w-[42%] h-[1px] bg-white/[0.08]" />
-                +
-                <span className="absolute top-1/2 right-0 w-[42%] h-[1px] bg-white/[0.08]" />
+              <div className="pt-4 border-t border-white/[0.08]">
+                <div className="text-[10.5px] font-sans text-emerald-300 uppercase tracking-wider mb-2.5 font-medium">Everything in Free, plus:</div>
+                <ul className="space-y-2.5 text-[12px] text-white">
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>Up to 5 organisation workspaces</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>Unlimited forms & scoped API keys</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>5,000 submissions / month</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>Signed webhooks & Slack alerts</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>REST API & CSV export</span>
+                  </li>
+                </ul>
               </div>
-
-              <ul className="list-none grid gap-[10px] text-[#8c8c8c] text-[11.5px]">
-                <li className="flex items-center gap-[9px]">
-                  <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                    <Icon name="chk" className="w-[7px] h-[7px]" />
-                  </i>
-                  Unlimited forms
-                </li>
-                <li className="flex items-center gap-[9px]">
-                  <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                    <Icon name="chk" className="w-[7px] h-[7px]" />
-                  </i>
-                  5,000 submissions / month
-                </li>
-                <li className="flex items-center gap-[9px]">
-                  <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                    <Icon name="chk" className="w-[7px] h-[7px]" />
-                  </i>
-                  Signed webhooks & Slack alerts
-                </li>
-                <li className="flex items-center gap-[9px]">
-                  <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                    <Icon name="chk" className="w-[7px] h-[7px]" />
-                  </i>
-                  Spam inspection & rescue
-                </li>
-                <li className="flex items-center gap-[9px]">
-                  <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                    <Icon name="chk" className="w-[7px] h-[7px]" />
-                  </i>
-                  REST API & CSV export
-                </li>
-              </ul>
             </div>
           </div>
 
-          {/* Plan 3: Studio (With Frosted Glass Hover Effect) */}
-          <div className="group relative rounded-[16px] p-[26px_24px] flex flex-col border border-white/[0.08] bg-[linear-gradient(150deg,rgba(255,255,255,0.07),rgba(255,255,255,0.012)_38%,rgba(255,255,255,0.025))] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_50px_-24px_#000] backdrop-blur-xl transition-all duration-500 ease-out hover:bg-[linear-gradient(145deg,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0.03)_50%,rgba(255,255,255,0.07)_100%)] hover:border-white/30 hover:shadow-[0_24px_50px_-12px_rgba(0,0,0,0.8),inset_0_1px_1px_0_rgba(255,255,255,0.35),inset_0_0_24px_0_rgba(255,255,255,0.05),0_0_30px_rgba(255,255,255,0.06)] hover:-translate-y-[4px] overflow-hidden">
-            {/* Top specular reflection bevel on hover */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-t-[16px]" />
+          {/* Plan 3: Studio */}
+          <div className="rounded-[18px] p-[26px_22px] flex flex-col justify-between border border-white/[0.08] hover:border-emerald-500/30 bg-[#1c1c1c] hover:bg-[#232323] backdrop-blur-sm shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300 relative group overflow-hidden">
+            <div className="absolute top-0 inset-x-8 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:via-emerald-400/30 transition-all" />
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[14px] font-medium text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-md bg-white/[0.04] border border-white/[0.08] grid place-items-center">
+                    <Icon name="brief" className="w-3 h-3 text-zinc-300" />
+                  </span>
+                  Studio Tier
+                </span>
+                <span className="text-[10.5px] text-zinc-400 font-sans bg-white/[0.03] px-2 py-0.5 rounded-full border border-white/[0.08]">
+                  Agencies
+                </span>
+              </div>
 
-            <div className="flex items-center gap-[9px] text-[12.5px] font-normal mb-[16px] text-white">
-              <span className="w-[24px] h-[24px] rounded-full grid place-items-center bg-[radial-gradient(circle_at_32%_26%,#4a4a4a,#0c0c0c_70%)] border border-[#333] shadow-[inset_0_1px_3px_rgba(255,255,255,0.2),0_0_0_5px_rgba(255,255,255,0.025),0_0_0_6px_rgba(255,255,255,0.08)] text-white">
-                <Icon name="brief" className="w-[11px] h-[11px]" />
-              </span>
-              Studio
+              {/* Price */}
+              <div className="flex items-baseline gap-1 text-[34px] font-heading font-medium tracking-tight leading-none mb-3 text-white">
+                <Icon name="rupee" className="w-[18px] h-[18px] text-zinc-400 self-center -mt-0.5" />
+                <span className="tabular-nums">{isMonthly ? "1,299" : "999"}</span>
+                <span className="text-[11px] font-sans text-zinc-400 ml-1">INR</span>
+                <span className="text-[12px] text-zinc-500 ml-1 font-normal font-sans">/ mo</span>
+              </div>
+
+              <p className="text-zinc-400 font-p font-normal text-[12.5px] leading-[1.6] mb-5">
+                Unlimited scale for agencies managing multiple client pipelines.
+              </p>
+
+              <Button href="/sign-up?plan=studio" className="w-full justify-center mb-5 py-[8.5px] text-[12px] hover:border-emerald-500/40">
+                Get Studio Plan
+              </Button>
+
+              <div className="pt-4 border-t border-white/[0.06]">
+                <div className="text-[10.5px] font-sans text-zinc-500 uppercase tracking-wider mb-2.5">Everything in Pro, plus:</div>
+                <ul className="space-y-2.5 text-[12px] text-zinc-300">
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>Unlimited workspaces & team seats</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>50,000 submissions / month</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>Client notification routing</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>Dedicated IP & high-volume quota</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    <span>Priority 24/7 engineering support</span>
+                  </li>
+                </ul>
+              </div>
             </div>
-
-            <div className="text-[32px] font-thin tracking-[-0.05em] leading-none mb-[16px] text-white">
-              $<span className="tabular-nums">{isMonthly ? "49" : "39"}</span>
-              <small className="text-[10px] text-[#565656] tracking-normal font-light ml-[5px]">
-                per month
-              </small>
-            </div>
-
-            <Button href="/signup?plan=studio" className="w-full mb-[16px]">
-              Contact sales
-            </Button>
-
-            <div className="text-center text-[#444] text-[13px] mb-[12px] relative">
-              <span className="absolute top-1/2 left-0 w-[42%] h-[1px] bg-white/[0.08]" />
-              +
-              <span className="absolute top-1/2 right-0 w-[42%] h-[1px] bg-white/[0.08]" />
-            </div>
-
-            <ul className="list-none grid gap-[10px] text-[#8c8c8c] text-[11.5px]">
-              <li className="flex items-center gap-[9px]">
-                <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                  <Icon name="chk" className="w-[7px] h-[7px]" />
-                </i>
-                Unlimited client domains
-              </li>
-              <li className="flex items-center gap-[9px]">
-                <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                  <Icon name="chk" className="w-[7px] h-[7px]" />
-                </i>
-                50,000 submissions / month
-              </li>
-              <li className="flex items-center gap-[9px]">
-                <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                  <Icon name="chk" className="w-[7px] h-[7px]" />
-                </i>
-                Client notification routing
-              </li>
-              <li className="flex items-center gap-[9px]">
-                <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                  <Icon name="chk" className="w-[7px] h-[7px]" />
-                </i>
-                Dedicated IP & high-volume quotas
-              </li>
-              <li className="flex items-center gap-[9px]">
-                <i className="w-[14px] h-[14px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#666,#1a1a1a)] border border-white/[0.17] grid place-items-center flex-none text-white">
-                  <Icon name="chk" className="w-[7px] h-[7px]" />
-                </i>
-                Priority 24/7 engineering support
-              </li>
-            </ul>
           </div>
         </div>
       </div>

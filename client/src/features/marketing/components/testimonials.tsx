@@ -2,50 +2,44 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { Pill, Card, Avatar } from "./ui";
+import { Pill, Avatar } from "./ui";
 
 interface TestimonialItem {
   id: number;
   name: string;
   role: string;
+  company: string;
   avatarImg: string;
   quote: string;
-  isFaded?: boolean;
 }
 
 const TESTIMONIALS: TestimonialItem[] = [
   {
     id: 1,
     name: "Alex Chen",
-    role: "Freelance web designer",
+    role: "Frontend Architect",
+    company: "Freelance",
     avatarImg: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
     quote:
-      "I used to spend 2 to 3 hours on every client site setting up SendGrid, server routes, and environment variables. With Salenova, I paste an endpoint into the HTML and move on.",
+      "I used to spend 2 to 3 hours on every client site setting up SendGrid, server route handlers, and environment secrets. With Salenova, I paste an endpoint and API key into the form and it works flawlessly.",
   },
   {
     id: 2,
     name: "Sarah Miller",
-    role: "Startup founder",
+    role: "Co-founder",
+    company: "Studio Labs",
     avatarImg: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
     quote:
-      "Other form services silently dropped submissions or charged crazy monthly fees. Salenova catches every real prospect while blocking hundreds of bot crawlers every week.",
+      "Other form services silently dropped submissions or charged crazy monthly fees. Salenova catches every real prospect with zero captchas while filtering out hundreds of scrapers every week.",
   },
   {
     id: 3,
     name: "Dev Patel",
-    role: "Indie hacker",
+    role: "Founder & Developer",
+    company: "Devflow",
     avatarImg: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
     quote:
-      "Deployed my static landing page without building a single backend route or database. Our first enterprise inquiry landed right in my inbox 10 minutes later.",
-  },
-  {
-    id: 4,
-    name: "Maria Costa",
-    role: "Agency owner",
-    avatarImg: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-    quote:
-      "Managing contact forms across 15 client domains from one dashboard saves our team hours of server maintenance and troubleshooting every month.",
-    isFaded: true,
+      "Deployed my static landing page without maintaining a single server route or database table. Our first enterprise quote landed right in our inbox and CRM dashboard 10 minutes later.",
   },
 ];
 
@@ -57,83 +51,96 @@ export function Testimonials() {
   };
 
   return (
-    <section className="pt-0 pb-[80px] md:pb-[96px]" id="voices">
-      <div className="max-w-[1040px] mx-auto px-[16px] sm:px-[24px] grid grid-cols-1 md:grid-cols-[1fr_1.15fr] gap-[36px] md:gap-[64px] items-start">
+    <section className="py-[56px] md:py-[76px] relative z-10" id="voices">
+      <div className="max-w-[1100px] mx-auto px-[16px] sm:px-[24px] grid grid-cols-1 md:grid-cols-[1fr_1.25fr] gap-[36px] md:gap-[56px] items-start">
         {/* Left Column */}
         <div>
-          <Pill icon="star">Customer stories</Pill>
-          <h2 className="text-[clamp(26px,3.2vw,36px)] font-extralight tracking-[-0.04em] leading-[1.1] my-[22px] mb-[16px] text-white">
-            Built for founders,<br />
-            <span className="text-[#6e6e6e]">devs, and agencies</span>
+          <Pill icon="star">Verified Developer Feedback</Pill>
+          <h2 className="text-[26px] sm:text-[34px] md:text-[40px] font-heading font-medium tracking-[-0.025em] leading-[1.2] mt-4 mb-3 text-white text-balance">
+            Loved by modern builders <br className="hidden sm:inline" />
+            <span className="text-zinc-400">across engineering teams and agencies.</span>
           </h2>
-          <p className="text-[#8c8c8c] max-w-[320px] text-[12.5px] leading-[1.7]">
-            Real feedback from developers who stopped writing custom form backends.
+          <p className="text-zinc-400 font-p font-normal max-w-[420px] text-[13.5px] sm:text-[14.5px] leading-[1.65]">
+            Real feedback from developers who stopped writing repetitive backend route handlers just to collect form submissions.
           </p>
 
-          <div className="flex items-center gap-[14px] mt-[28px] md:mt-[48px]">
-            {/* Stacked Avatars */}
-            <div className="flex">
-              {[0, 1, 2, 3].map((idx) => (
-                <div
-                  key={idx}
-                  className={`w-[34px] h-[34px] rounded-full overflow-hidden border-2 border-black flex-none relative ${
-                    idx > 0 ? "-ml-[10px]" : ""
-                  }`}
-                >
-                  <Avatar size={34} index={idx} alt="Beta builder" />
-                </div>
-              ))}
+          <div className="mt-[28px] md:mt-[36px] p-4 rounded-[16px] border border-white/[0.08] bg-[#1c1c1c] shadow-[0_8px_30px_rgba(0,0,0,0.5)] max-w-[320px] space-y-3 relative overflow-hidden group">
+            <div className="absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:via-emerald-400/30 transition-all" />
+            {/* 5-Star Indicator */}
+            <div className="flex items-center gap-1.5 text-amber-400/90 text-[12px]">
+              <span>★★★★★</span>
+              <span className="text-zinc-300 text-[12px] font-medium font-sans ml-1">4.9/5 Rating</span>
             </div>
 
-            <div>
-              <b className="block text-[30px] font-thin tracking-[-0.05em] leading-none text-white tabular-nums">
-                500+
-              </b>
-              <span className="text-[#8c8c8c] text-[11.5px]">active websites</span>
+            <div className="flex items-center gap-[14px] pt-2 border-t border-white/[0.06]">
+              {/* Stacked Avatars */}
+              <div className="flex -space-x-2">
+                {[0, 1, 2, 3].map((idx) => (
+                  <div
+                    key={idx}
+                    className="w-[30px] h-[30px] rounded-full overflow-hidden border-2 border-[#1c1c1c] flex-none relative"
+                  >
+                    <Avatar size={30} index={idx} alt="Builder" />
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <div className="text-[22px] font-heading font-medium tracking-tight leading-none text-white tabular-nums">
+                  500+
+                </div>
+                <span className="text-zinc-500 text-[10.5px] font-mono">active websites live</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Right Column: Quotes Cards */}
-        <div>
+        <div className="space-y-3">
           {TESTIMONIALS.map((item) => (
-            <Card
+            <div
               key={item.id}
-              className={`group p-[24px] mb-[12px] transition-colors duration-400 hover:border-white/[0.17] ${
-                item.isFaded
-                  ? "opacity-40 max-h-[120px] overflow-hidden mb-0 [mask-image:linear-gradient(#000,transparent)] [-webkit-mask-image:linear-gradient(#000,transparent)]"
-                  : ""
-              }`}
+              className="rounded-[16px] border border-white/[0.08] hover:border-emerald-500/30 bg-[#1c1c1c] hover:bg-[#232323] p-[20px] transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.5)] relative overflow-hidden group"
             >
-              <div className="flex items-center gap-[13px] mb-[18px]">
-                {imgErrors[item.id] ? (
-                  <Avatar size={42} variant="square" />
-                ) : (
-                  <div className="relative w-[42px] h-[42px] rounded-[12px] overflow-hidden border border-white/[0.17] flex-none">
-                    <Image
-                      src={item.avatarImg}
-                      alt={item.name}
-                      width={42}
-                      height={42}
-                      unoptimized
-                      onError={() => handleImgError(String(item.id))}
-                      className="w-full h-full object-cover grayscale contrast-105 group-hover:grayscale-0 transition-[filter] duration-500"
-                    />
+              <div className="absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-white/0 group-hover:via-emerald-400/35 to-transparent transition-all" />
+              <div className="flex items-center justify-between mb-[12px]">
+                <div className="flex items-center gap-[10px]">
+                  {imgErrors[item.id] ? (
+                    <Avatar size={36} variant="square" />
+                  ) : (
+                    <div className="relative w-[36px] h-[36px] rounded-lg overflow-hidden border border-white/10 flex-none shadow-sm">
+                      <Image
+                        src={item.avatarImg}
+                        alt={item.name}
+                        width={36}
+                        height={36}
+                        unoptimized
+                        onError={() => handleImgError(String(item.id))}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <div className="text-[13.5px] text-white font-medium leading-tight flex items-center gap-1.5">
+                      {item.name}
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" title="Verified Customer" />
+                    </div>
+                    <div className="text-zinc-500 text-[10.5px] font-mono mt-0.5">
+                      {item.role} · <span className="text-zinc-400">{item.company}</span>
+                    </div>
                   </div>
-                )}
-                <div>
-                  <div className="text-[13px] text-white leading-[1.3] font-normal">
-                    {item.name}
-                  </div>
-                  <small className="block text-[#565656] text-[11px] leading-[1.4]">
-                    {item.role}
-                  </small>
+                </div>
+
+                {/* Micro 5-Star */}
+                <div className="text-amber-400/80 text-[10.5px] tracking-widest hidden sm:block">
+                  ★★★★★
                 </div>
               </div>
-              <p className="text-[#bcbcbc] text-[12.5px] leading-[1.75] border-t border-white/[0.08] pt-[18px] m-0">
-                {item.quote}
+
+              <p className="text-zinc-300 font-p font-normal text-[12.5px] leading-[1.65] border-t border-white/[0.04] pt-[12px]">
+                &ldquo;{item.quote}&rdquo;
               </p>
-            </Card>
+            </div>
           ))}
         </div>
       </div>

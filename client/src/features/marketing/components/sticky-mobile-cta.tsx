@@ -27,7 +27,7 @@ export function StickyMobileCta() {
       <span className="text-[#8c8c8c] text-[12px] truncate mr-2 font-normal">
         Skip backend setup
       </span>
-      <Button href="/signup" variant="solid" size="sm" className="flex-none">
+      <Button href="/sign-up" variant="solid" size="sm" className="flex-none">
         Get started
       </Button>
     </div>

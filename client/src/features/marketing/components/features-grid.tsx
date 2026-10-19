@@ -1,353 +1,225 @@
 "use client";
 
-import React, { useState } from "react";
-import { Pill, Button, Avatar } from "./ui";
+import React from "react";
+import { Pill, Avatar } from "./ui";
+import { Icon } from "./icons";
 
 export function FeaturesGrid() {
-  const [hoveredScene1, setHoveredScene1] = useState(false);
-  const [hoveredScene2, setHoveredScene2] = useState(false);
-  const [hoveredScene3, setHoveredScene3] = useState(false);
-
   return (
-    <section id="features" className="pt-[20px] pb-[80px] md:py-[40px]">
-      <div className="max-w-[1040px] mx-auto px-[16px] sm:px-[24px]">
-        {/* Feature Row 1: Zero Backend Boilerplate */}
-        <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-[30px] items-center py-[20px] md:py-[40px]">
-          {/* 3D Scene 1 */}
-          <div
-            onMouseEnter={() => setHoveredScene1(true)}
-            onMouseLeave={() => setHoveredScene1(false)}
-            className="h-[270px] md:h-[320px] grid place-items-center [perspective:1100px] cursor-pointer"
-            style={{
-              maskImage: "radial-gradient(ellipse at center, #000 45%, transparent 78%)",
-              WebkitMaskImage:
-                "radial-gradient(ellipse at center, #000 45%, transparent 78%)",
-            }}
-          >
-            <div
-              className="relative w-[250px] h-[170px] [transform-style:preserve-3d] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-              style={{
-                transform: hoveredScene1
-                  ? "rotateX(50deg) rotateZ(-26deg)"
-                  : "rotateX(56deg) rotateZ(-34deg)",
-              }}
-            >
-              {/* Layer 1 */}
-              <div className="absolute inset-0 p-[14px] border border-white/[0.17] rounded-[12px] bg-[linear-gradient(150deg,rgba(40,40,40,0.95),rgba(8,8,8,0.95))] shadow-[-18px_22px_36px_rgba(0,0,0,0.7)] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]">
-                <div className="text-[9px] text-[#565656] mb-[6px]">Setup</div>
-                <div className="text-[22px] font-extralight tracking-[-0.04em] mb-[8px] text-white">
-                  1 endpoint
-                </div>
-                {/* Bar 1 */}
-                <div className="h-[7px] rounded-[4px] bg-white/10 mb-[6px] relative overflow-hidden">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-[4px] bg-[linear-gradient(90deg,rgba(255,255,255,0.25),rgba(255,255,255,0.6))] animate-[grow_3s_infinite_alternate_ease-in-out]"
-                    style={{ width: "90%" }}
-                  />
-                </div>
-                {/* Bar 2 */}
-                <div className="h-[7px] rounded-[4px] bg-white/10 mb-[6px] relative overflow-hidden">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-[4px] bg-[linear-gradient(90deg,rgba(255,255,255,0.25),rgba(255,255,255,0.6))] animate-[grow_3s_infinite_alternate_ease-in-out]"
-                    style={{ width: "60%" }}
-                  />
-                </div>
-              </div>
+    <section id="features" className="py-[56px] md:py-[76px] relative z-10">
+      {/* Subtle deep emerald ambient lighting */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-1/3 -translate-y-1/2 h-[500px] w-full max-w-[900px] mx-auto rounded-full blur-[150px] opacity-20 -z-10"
+        style={{
+          background: "radial-gradient(ellipse at 50% 50%, rgba(52,211,153,0.15) 0%, rgba(16,185,129,0.08) 50%, transparent 70%)",
+        }}
+      />
 
-              {/* Layer 2 */}
-              <div
-                className="absolute inset-0 p-[14px] border border-white/[0.17] rounded-[12px] bg-[linear-gradient(150deg,rgba(40,40,40,0.95),rgba(8,8,8,0.95))] shadow-[-18px_22px_36px_rgba(0,0,0,0.7)] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-                style={{
-                  transform: hoveredScene1 ? "translateZ(60px)" : "translateZ(34px)",
-                }}
-              >
-                <div className="text-[9px] text-[#565656] mb-[6px]">Submissions</div>
-                <div className="text-[22px] font-extralight tracking-[-0.04em] mb-[8px] text-white">
-                  2,000 / mo
-                </div>
-                <div className="h-[7px] rounded-[4px] bg-white/10 mb-[6px] relative overflow-hidden">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-[4px] bg-[linear-gradient(90deg,rgba(255,255,255,0.25),rgba(255,255,255,0.6))] animate-[grow_3s_infinite_alternate_ease-in-out]"
-                    style={{ width: "75%" }}
-                  />
-                </div>
-                <div className="h-[7px] rounded-[4px] bg-white/10 mb-[6px] relative overflow-hidden">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-[4px] bg-[linear-gradient(90deg,rgba(255,255,255,0.25),rgba(255,255,255,0.6))] animate-[grow_3s_infinite_alternate_ease-in-out]"
-                    style={{ width: "45%" }}
-                  />
-                </div>
-                <div className="h-[7px] rounded-[4px] bg-white/10 mb-[6px] relative overflow-hidden">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-[4px] bg-[linear-gradient(90deg,rgba(255,255,255,0.25),rgba(255,255,255,0.6))] animate-[grow_3s_infinite_alternate_ease-in-out]"
-                    style={{ width: "85%" }}
-                  />
-                </div>
-              </div>
-
-              {/* Layer 3 */}
-              <div
-                className="absolute inset-0 p-[14px] border border-white/[0.17] rounded-[12px] bg-[linear-gradient(150deg,rgba(40,40,40,0.95),rgba(8,8,8,0.95))] shadow-[-18px_22px_36px_rgba(0,0,0,0.7)] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-                style={{
-                  transform: hoveredScene1 ? "translateZ(120px)" : "translateZ(68px)",
-                }}
-              >
-                <div className="text-[9px] text-[#565656] mb-[6px]">Form API</div>
-                <div className="flex items-center gap-[8px] text-[9.5px] mb-[7px] text-[#cfcfcf] whitespace-nowrap">
-                  <i className="w-[16px] h-[16px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#777,#222)] flex-none inline-block" />
-                  POST /f/abc123
-                  <em className="ml-auto not-italic text-[#565656] pl-[8px]">200</em>
-                </div>
-                <div className="flex items-center gap-[8px] text-[9.5px] mb-[7px] text-[#cfcfcf] whitespace-nowrap">
-                  <i className="w-[16px] h-[16px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#777,#222)] flex-none inline-block" />
-                  Honeypot clean
-                  <em className="ml-auto not-italic text-[#565656] pl-[8px]">verified</em>
-                </div>
-                <div className="flex items-center gap-[8px] text-[9.5px] mb-[7px] text-[#cfcfcf] whitespace-nowrap">
-                  <i className="w-[16px] h-[16px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#777,#222)] flex-none inline-block" />
-                  Delivered to inbox
-                  <em className="ml-auto not-italic text-[#565656] pl-[8px]">0.3s</em>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Text 1 */}
-          <div className="md:pl-[26px] text-center md:text-left order-first md:order-last">
-            <Pill icon="term">Zero backend</Pill>
-            <h3 className="text-[clamp(24px,3vw,34px)] font-extralight tracking-[-0.04em] leading-[1.1] my-[22px] mb-[14px] text-white">
-              Stop wasting hours on<br />
-              <span className="text-[#6e6e6e]">backend boilerplate</span>
-            </h3>
-            <p className="text-[#8c8c8c] max-w-[380px] mx-auto md:mx-0 mb-[26px] text-[12.5px] leading-[1.7]">
-              You built your landing page in an afternoon. Don&apos;t waste the next three days provisioning server routes, connecting databases, configuring SMTP, and debugging CORS headers just to handle a contact form.
-            </p>
-            <div className="flex gap-[8px] flex-wrap justify-center md:justify-start">
-              <Button href="/signup" variant="solid" size="sm">
-                Get started
-              </Button>
-              <Button href="#try" size="sm">
-                Learn more
-              </Button>
-            </div>
-          </div>
+      <div className="max-w-[1100px] mx-auto px-[16px] sm:px-[24px]">
+        {/* Head */}
+        <div className="text-center max-w-[560px] mx-auto mb-[40px] sm:mb-[48px]">
+          <Pill icon="shield">Engineered for Scale</Pill>
+          <h2 className="text-[26px] sm:text-[34px] md:text-[40px] font-heading font-medium tracking-[-0.025em] leading-[1.2] mt-4 mb-3 text-white text-balance">
+            Everything your form pipeline needs <br className="hidden sm:inline" />
+            <span className="text-zinc-400">with zero backend servers to build.</span>
+          </h2>
+          <p className="text-zinc-400 font-p font-normal mt-3 text-[13.5px] sm:text-[14.5px] leading-[1.65] max-w-[520px] mx-auto text-pretty">
+            From automated spam filtering to multi-channel webhooks, Salenova replaces complex backend form infrastructure with one secure endpoint.
+          </p>
         </div>
 
-        {/* Feature Row 2: Real Leads Only */}
-        <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-[30px] items-center py-[20px] md:py-[40px]">
-          {/* 3D Scene 2 */}
-          <div
-            onMouseEnter={() => setHoveredScene2(true)}
-            onMouseLeave={() => setHoveredScene2(false)}
-            className="h-[270px] md:h-[320px] grid place-items-center [perspective:1100px] cursor-pointer"
-            style={{
-              maskImage: "radial-gradient(ellipse at center, #000 45%, transparent 78%)",
-              WebkitMaskImage:
-                "radial-gradient(ellipse at center, #000 45%, transparent 78%)",
-            }}
-          >
-            <div
-              className="relative w-[250px] h-[170px] [transform-style:preserve-3d] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-              style={{
-                transform: hoveredScene2
-                  ? "rotateX(46deg) rotateZ(-14deg)"
-                  : "rotateX(52deg) rotateZ(-20deg)",
-              }}
-            >
-              {/* Layer 1 */}
-              <div className="absolute inset-0 p-[14px] border border-white/[0.17] rounded-[12px] bg-[linear-gradient(150deg,rgba(40,40,40,0.95),rgba(8,8,8,0.95))] shadow-[-18px_22px_36px_rgba(0,0,0,0.7)] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]">
-                <div className="text-[9px] text-[#565656] mb-[6px]">Spam quarantine</div>
-                <div className="flex items-center gap-[8px] text-[9.5px] mb-[7px] text-[#cfcfcf] whitespace-nowrap">
-                  <i className="w-[16px] h-[16px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#777,#222)] flex-none inline-block" />
-                  bot.crawler@test.com
-                  <em className="ml-auto not-italic text-[#565656] pl-[8px]">rate limit</em>
-                </div>
-                <div className="flex items-center gap-[8px] text-[9.5px] mb-[7px] text-[#cfcfcf] whitespace-nowrap">
-                  <i className="w-[16px] h-[16px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#777,#222)] flex-none inline-block" />
-                  fake@disposable.com
-                  <em className="ml-auto not-italic text-[#565656] pl-[8px]">disposable</em>
-                </div>
+        {/* Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-[14px]">
+          {/* Card 1: Intelligent Multi-Layer Spam Shield (Large 2 Cols) */}
+          <div className="md:col-span-2 rounded-[18px] border border-white/[0.09] hover:border-emerald-500/35 bg-[#1c1c1c] hover:bg-[#232323] p-[24px] md:p-[28px] transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(52,211,153,0.1)] group relative">
+            {/* Top specular edge */}
+            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+            <div>
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 grid place-items-center text-emerald-400 group-hover:border-emerald-500/40 group-hover:shadow-[0_0_16px_rgba(52,211,153,0.25)] transition-all">
+                  <Icon name="shield" className="w-[18px] h-[18px]" />
+                </span>
+                <span className="text-[10.5px] font-sans text-emerald-300 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-1.5 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Zero Captchas Required
+                </span>
               </div>
 
-              {/* Layer 2 */}
-              <div
-                className="absolute inset-0 p-[14px] border border-white/[0.17] rounded-[12px] bg-[linear-gradient(150deg,rgba(40,40,40,0.95),rgba(8,8,8,0.95))] shadow-[-18px_22px_36px_rgba(0,0,0,0.7)] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-                style={{
-                  transform: hoveredScene2
-                    ? "translate3d(-44px, 40px, 48px)"
-                    : "translate3d(-26px, 24px, 28px)",
-                }}
-              >
-                <div className="text-[9px] text-[#565656] mb-[6px]">Shield stats</div>
-                <div className="grid grid-cols-2 gap-[6px]">
-                  <div className="border border-white/[0.08] rounded-[8px] p-[6px_8px] text-[9px] text-[#565656]">
-                    <b className="block text-[17px] font-extralight text-white tracking-[-0.04em]">
-                      +100
-                    </b>
-                    Blocked
-                  </div>
-                  <div className="border border-white/[0.08] rounded-[8px] p-[6px_8px] text-[9px] text-[#565656]">
-                    <b className="block text-[17px] font-extralight text-white tracking-[-0.04em]">
-                      20%
-                    </b>
-                    Spam rate
-                  </div>
-                </div>
+              <h3 className="text-[18px] font-heading font-medium tracking-tight text-white mb-2 group-hover:text-white transition-colors">
+                Intelligent Multi-Layer Spam Shield
+              </h3>
+              <p className="text-zinc-400 font-p font-normal text-[13px] leading-[1.65] max-w-[520px] mb-5">
+                Never lose a prospective lead to annoying puzzle captchas. Silent honeypots, disposable email detection, and IP reputation heuristics screen out bot crawlers in milliseconds.
+              </p>
+            </div>
+
+            {/* Interactive Visual Widget */}
+            <div className="rounded-xl border border-white/[0.06] bg-[#141414] p-3.5 font-sans shadow-inner">
+              <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/[0.05] text-[11px] text-zinc-300">
+                <span className="font-sans text-zinc-400 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  Salenova Heuristics Engine
+                </span>
+                <span className="flex items-center gap-1.5 text-emerald-400 font-sans text-[10.5px] bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  Active • 0 False Drops
+                </span>
               </div>
 
-              {/* Layer 3 */}
-              <div
-                className="absolute inset-0 p-[14px] border border-white/[0.17] rounded-[12px] bg-[linear-gradient(150deg,rgba(40,40,40,0.95),rgba(8,8,8,0.95))] shadow-[-18px_22px_36px_rgba(0,0,0,0.7)] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-                style={{
-                  transform: hoveredScene2
-                    ? "translate3d(-88px, 80px, 96px)"
-                    : "translate3d(-52px, 48px, 56px)",
-                }}
-              >
-                <div className="text-[9px] text-[#565656] mb-[6px]">Verified leads</div>
-                <div className="flex -space-x-[7px] my-[6px] mb-[10px]">
-                  <Avatar size={24} index={4} alt="Team member 1" />
-                  <Avatar size={24} index={5} alt="Team member 2" />
-                  <Avatar size={24} index={6} alt="Team member 3" />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/25 hover:bg-emerald-500/[0.03] transition-colors">
+                  <span className="text-[10px] text-zinc-500 block mb-0.5 font-sans">Silent Honeypot</span>
+                  <span className="text-[12px] text-white font-medium flex items-center gap-1.5">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400" /> Active Trap
+                  </span>
                 </div>
-                <div className="grid grid-cols-2 gap-[6px]">
-                  <div className="border border-white/[0.08] rounded-[8px] p-[6px_8px] text-[9px] text-[#565656]">
-                    <b className="block text-[17px] font-extralight text-white tracking-[-0.04em]">
-                      0
-                    </b>
-                    Lost leads
-                  </div>
-                  <div className="border border-white/[0.08] rounded-[8px] p-[6px_8px] text-[9px] text-[#565656]">
-                    <b className="block text-[17px] font-extralight text-white tracking-[-0.04em]">
-                      1 click
-                    </b>
-                    Rescue
-                  </div>
+                <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/25 hover:bg-emerald-500/[0.03] transition-colors">
+                  <span className="text-[10px] text-zinc-500 block mb-0.5 font-sans">Domain MX Verify</span>
+                  <span className="text-[12px] text-white font-medium flex items-center gap-1.5">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400" /> DNS Validated
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/25 hover:bg-emerald-500/[0.03] transition-colors">
+                  <span className="text-[10px] text-zinc-500 block mb-0.5 font-sans">Rate Limiter</span>
+                  <span className="text-[12px] text-white font-medium flex items-center gap-1.5">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400" /> Token Bucket
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/25 hover:bg-emerald-500/[0.03] transition-colors">
+                  <span className="text-[10px] text-zinc-500 block mb-0.5 font-sans">Disposable Filter</span>
+                  <span className="text-[12px] text-white font-medium flex items-center gap-1.5">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400" /> 18k Domains
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Text 2 */}
-          <div className="md:pl-[26px] text-center md:text-left order-first md:order-last">
-            <Pill icon="shield">Smart protection</Pill>
-            <h3 className="text-[clamp(24px,3vw,34px)] font-extralight tracking-[-0.04em] leading-[1.1] my-[22px] mb-[14px] text-white">
-              Spam protection that<br />
-              <span className="text-[#6e6e6e]">never annoys users</span>
-            </h3>
-            <p className="text-[#8c8c8c] max-w-[380px] mx-auto md:mx-0 mb-[26px] text-[12.5px] leading-[1.7]">
-              No ugly captcha puzzles turning prospective customers away. Silent honeypots, rate limiting, and domain verification filter out bot crawlers while letting every real inquiry land safely.
-            </p>
-            <div className="flex gap-[8px] flex-wrap justify-center md:justify-start">
-              <Button href="/signup" variant="solid" size="sm">
-                Get started
-              </Button>
-              <Button href="#try" size="sm">
-                Learn more
-              </Button>
+          {/* Card 2: Instant Form Ingestion */}
+          <div className="rounded-[18px] border border-white/[0.09] hover:border-emerald-500/35 bg-[#1c1c1c] hover:bg-[#232323] p-[24px] md:p-[28px] transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(52,211,153,0.1)] group relative">
+            {/* Top specular edge */}
+            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 grid place-items-center text-emerald-400 group-hover:border-emerald-500/40 group-hover:shadow-[0_0_16px_rgba(52,211,153,0.25)] transition-all">
+                  <Icon name="cpu" className="w-[18px] h-[18px]" />
+                </span>
+                <span className="text-[10.5px] font-sans text-emerald-300 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 font-medium">
+                  Zero Backend
+                </span>
+              </div>
+
+              <h3 className="text-[18px] font-heading font-medium tracking-tight text-white mb-2 group-hover:text-white transition-colors">
+                Instant Form Ingestion
+              </h3>
+              <p className="text-zinc-400 font-p font-normal text-[13px] leading-[1.65] mb-5">
+                Handles CORS headers, automated preflights, and JSON or FormData payloads. Connect plain HTML forms, React, or Webflow with zero server logic.
+              </p>
+            </div>
+
+            {/* Code Chip */}
+            <div className="rounded-xl border border-white/[0.06] bg-[#141414] p-3.5 font-sans text-[11px] text-zinc-300 space-y-2 shadow-inner">
+              <div className="flex items-center justify-between text-zinc-500 text-[10px]">
+                <span>REQUEST METHOD</span>
+                <span className="text-emerald-400 font-sans text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">200 OK</span>
+              </div>
+              <div className="text-white font-medium truncate flex items-center gap-2">
+                <span className="text-emerald-400 font-bold">POST</span>
+                <span>/v1/leads</span>
+              </div>
+              <div className="text-zinc-500 truncate text-[10.5px]">Host: api.salenova.com</div>
+              <div className="text-emerald-300/80 truncate text-[10.5px]">x-api-key: sln_live_••••</div>
             </div>
           </div>
-        </div>
 
-        {/* Feature Row 3: API and webhooks */}
-        <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-[30px] items-center py-[20px] md:py-[40px]">
-          {/* 3D Scene 3 */}
-          <div
-            onMouseEnter={() => setHoveredScene3(true)}
-            onMouseLeave={() => setHoveredScene3(false)}
-            className="h-[270px] md:h-[320px] grid place-items-center [perspective:1100px] cursor-pointer"
-            style={{
-              maskImage: "radial-gradient(ellipse at center, #000 45%, transparent 78%)",
-              WebkitMaskImage:
-                "radial-gradient(ellipse at center, #000 45%, transparent 78%)",
-            }}
-          >
-            <div
-              className="relative w-[250px] h-[170px] [transform-style:preserve-3d] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-              style={{
-                transform: hoveredScene3
-                  ? "rotateX(46deg) rotateZ(-14deg)"
-                  : "rotateX(52deg) rotateZ(-20deg)",
-              }}
-            >
-              {/* Layer 1 */}
-              <div className="absolute inset-0 p-[14px] border border-white/[0.17] rounded-[12px] bg-[linear-gradient(150deg,rgba(40,40,40,0.95),rgba(8,8,8,0.95))] shadow-[-18px_22px_36px_rgba(0,0,0,0.7)] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]">
-                <div className="text-[9px] text-[#565656] mb-[6px]">REST API</div>
-                <div className="flex items-center gap-[8px] text-[9.5px] mb-[7px] text-[#cfcfcf] whitespace-nowrap">
-                  <i className="w-[16px] h-[16px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#777,#222)] flex-none inline-block" />
-                  GET /v1/leads
-                  <em className="ml-auto not-italic text-[#565656] pl-[8px]">Bearer</em>
-                </div>
-                <div className="flex items-center gap-[8px] text-[9.5px] mb-[7px] text-[#cfcfcf] whitespace-nowrap">
-                  <i className="w-[16px] h-[16px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#777,#222)] flex-none inline-block" />
-                  GET /v1/leads/lead_8f2k1
-                  <em className="ml-auto not-italic text-[#565656] pl-[8px]">200</em>
-                </div>
+          {/* Card 3: Real-Time Routing */}
+          <div className="rounded-[18px] border border-white/[0.09] hover:border-emerald-500/35 bg-[#1c1c1c] hover:bg-[#232323] p-[24px] md:p-[28px] transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(52,211,153,0.1)] group relative">
+            {/* Top specular edge */}
+            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 grid place-items-center text-emerald-400 group-hover:border-emerald-500/40 group-hover:shadow-[0_0_16px_rgba(52,211,153,0.25)] transition-all">
+                  <Icon name="hook" className="w-[18px] h-[18px]" />
+                </span>
+                <span className="text-[10.5px] font-sans text-emerald-300 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 font-medium">
+                  Sub-200ms
+                </span>
               </div>
 
-              {/* Layer 2 */}
-              <div
-                className="absolute inset-0 p-[14px] border border-white/[0.17] rounded-[12px] bg-[linear-gradient(150deg,rgba(40,40,40,0.95),rgba(8,8,8,0.95))] shadow-[-18px_22px_36px_rgba(0,0,0,0.7)] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-                style={{
-                  transform: hoveredScene3
-                    ? "translate3d(-44px, 40px, 48px)"
-                    : "translate3d(-26px, 24px, 28px)",
-                }}
-              >
-                <div className="text-[9px] text-[#565656] mb-[6px]">Webhook</div>
-                <div className="flex items-center gap-[8px] text-[9.5px] mb-[7px] text-[#cfcfcf] whitespace-nowrap">
-                  <i className="w-[16px] h-[16px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#777,#222)] flex-none inline-block" />
-                  lead.created
-                  <em className="ml-auto not-italic text-[#565656] pl-[8px]">signed</em>
-                </div>
-                <div className="flex items-center gap-[8px] text-[9.5px] mb-[7px] text-[#cfcfcf] whitespace-nowrap">
-                  <i className="w-[16px] h-[16px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#777,#222)] flex-none inline-block" />
-                  Retry with backoff
-                  <em className="ml-auto not-italic text-[#565656] pl-[8px]">3/5</em>
-                </div>
-              </div>
+              <h3 className="text-[18px] font-heading font-medium tracking-tight text-white mb-2 group-hover:text-white transition-colors">
+                Multi-Channel Routing
+              </h3>
+              <p className="text-zinc-400 font-p font-normal text-[13px] leading-[1.65] mb-5">
+                Receive formatted email alerts instantly. Forward leads to Slack, Discord, Zapier, or your external CRM via signed webhooks with exponential backoff.
+              </p>
+            </div>
 
-              {/* Layer 3 */}
-              <div
-                className="absolute inset-0 p-[14px] border border-white/[0.17] rounded-[12px] bg-[linear-gradient(150deg,rgba(40,40,40,0.95),rgba(8,8,8,0.95))] shadow-[-18px_22px_36px_rgba(0,0,0,0.7)] transition-transform duration-1000 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-                style={{
-                  transform: hoveredScene3
-                    ? "translate3d(-88px, 80px, 96px)"
-                    : "translate3d(-52px, 48px, 56px)",
-                }}
-              >
-                <div className="text-[9px] text-[#565656] mb-[6px]">Inquiry event</div>
-                <div className="flex items-center gap-[8px] text-[9.5px] mb-[7px] text-[#cfcfcf] whitespace-nowrap">
-                  <i className="w-[16px] h-[16px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#777,#222)] flex-none inline-block" />
-                  john@acme.com
-                  <em className="ml-auto not-italic text-[#565656] pl-[8px]">accepted</em>
-                </div>
-                <div className="flex items-center gap-[8px] text-[9.5px] mb-[7px] text-[#cfcfcf] whitespace-nowrap">
-                  <i className="w-[16px] h-[16px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#777,#222)] flex-none inline-block" />
-                  sarah@startup.io
-                  <em className="ml-auto not-italic text-[#565656] pl-[8px]">accepted</em>
-                </div>
+            {/* Delivery Pipeline Visual */}
+            <div className="rounded-xl border border-white/[0.06] bg-[#141414] p-3.5 font-sans text-[11px] space-y-2 shadow-inner">
+              <div className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                <span className="text-zinc-200 flex items-center gap-2">
+                  <Icon name="mail" className="w-3.5 h-3.5 text-emerald-400" /> Immediate Email Alert
+                </span>
+                <span className="text-emerald-400 font-sans text-[10px]">Delivered</span>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                <span className="text-zinc-200 flex items-center gap-2">
+                  <Icon name="hook" className="w-3.5 h-3.5 text-emerald-400" /> Signed Webhook
+                </span>
+                <span className="text-emerald-400 font-sans text-[10px]">200 OK • 0 Retries</span>
               </div>
             </div>
           </div>
 
-          {/* Text 3 */}
-          <div className="md:pl-[26px] text-center md:text-left order-first md:order-last">
-            <Pill icon="hook">Integrations & webhooks</Pill>
-            <h3 className="text-[clamp(24px,3vw,34px)] font-extralight tracking-[-0.04em] leading-[1.1] my-[22px] mb-[14px] text-white">
-              Your submissions,<br />
-              <span className="text-[#6e6e6e]">delivered anywhere you want</span>
-            </h3>
-            <p className="text-[#8c8c8c] max-w-[380px] mx-auto md:mx-0 mb-[26px] text-[12.5px] leading-[1.7]">
-              Keep full control over your submissions. Route leads directly into your email, forward them to your CRM via signed webhooks with exponential backoff, or query them using our REST API.
-            </p>
-            <div className="flex gap-[8px] flex-wrap justify-center md:justify-start">
-              <Button href="/signup" variant="solid" size="sm">
-                Get started
-              </Button>
-              <Button href="#try" size="sm">
-                Learn more
-              </Button>
+          {/* Card 4: Organisation Workspaces (Large 2 Cols) */}
+          <div className="md:col-span-2 rounded-[18px] border border-white/[0.09] hover:border-emerald-500/35 bg-[#1c1c1c] hover:bg-[#232323] p-[24px] md:p-[28px] transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(52,211,153,0.1)] group relative">
+            {/* Top specular edge */}
+            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+            <div>
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 grid place-items-center text-emerald-400 group-hover:border-emerald-500/40 group-hover:shadow-[0_0_16px_rgba(52,211,153,0.25)] transition-all">
+                  <Icon name="brief" className="w-[18px] h-[18px]" />
+                </span>
+                <span className="text-[10.5px] font-sans text-emerald-300 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 font-medium">
+                  Team Hub
+                </span>
+              </div>
+
+              <h3 className="text-[18px] font-heading font-medium tracking-tight text-white mb-2 group-hover:text-white transition-colors">
+                Workspaces & Scoped API Credentials
+              </h3>
+              <p className="text-zinc-400 font-p font-normal text-[13px] leading-[1.65] max-w-[520px] mb-5">
+                Organise staging and production environments with scoped API keys. Invite team members with role-based access and export inquiries via CSV or REST API anytime.
+              </p>
+            </div>
+
+            {/* Workspace Hub Preview */}
+            <div className="rounded-xl border border-white/[0.06] bg-[#141414] p-3.5 font-sans shadow-inner">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 grid place-items-center text-emerald-300 text-[11px] font-semibold">
+                    A
+                  </span>
+                  <div>
+                    <span className="text-[13px] font-medium text-white block leading-tight">Acme Production Workspace</span>
+                    <span className="text-[10.5px] text-zinc-400 font-sans">key: sln_live_acme_••••</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    <Avatar size={24} index={0} alt="Member 1" />
+                    <Avatar size={24} index={1} alt="Member 2" />
+                    <Avatar size={24} index={2} alt="Member 3" />
+                  </div>
+                  <span className="text-[10.5px] text-emerald-300 font-sans bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                    3 Active Seats
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

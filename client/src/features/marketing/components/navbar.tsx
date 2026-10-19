@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { Show, UserButton } from "@clerk/nextjs";
 import { Icon } from "./icons";
 import { Button } from "./ui";
 import { cn } from "@/shared/lib/utils";
@@ -34,26 +36,29 @@ export function Navbar() {
       ref={navRef}
       id="nav"
       className={cn(
-        "fixed top-[14px] left-1/2 -translate-x-1/2 z-50 flex items-center py-[5px] pr-[5px] pl-[14px] border border-white/[0.08] rounded-full bg-[rgba(12,12,12,0.65)] backdrop-blur-[18px]",
-        "w-[calc(100%-24px)] md:w-auto md:max-w-[1040px] justify-between md:justify-start gap-[10px] md:gap-[26px]",
+        "fixed top-[14px] md:top-[18px] left-1/2 -translate-x-1/2 z-50 flex items-center justify-between py-[7px] px-[12px] md:py-[8px] md:px-[20px] border border-white/[0.08] rounded-full bg-[#181818]/90 backdrop-blur-[20px] shadow-[0_12px_36px_rgba(0,0,0,0.5)] transition-all",
+        "w-[calc(100%-24px)] sm:w-[calc(100%-48px)] max-w-[1100px]",
         isOpen ? "open" : ""
       )}
     >
-      {/* Brand */}
-      <a href="#" className="flex items-center gap-[8px] font-normal text-[12px] text-white">
-        <span className="w-[22px] h-[22px] rounded-full bg-[radial-gradient(circle_at_32%_26%,#555,#0a0a0a)] border border-[#3a3a3a] inline-grid place-items-center flex-none">
-          <Icon name="logo" className="w-[11px] h-[11px] text-white" />
+      {/* Brand (Left) */}
+      <a href="#" className="flex items-center gap-[9px] text-[13.5px] text-white group flex-none">
+        <span className="w-[24px] h-[24px] rounded-full bg-white/[0.08] border border-white/[0.14] inline-grid place-items-center flex-none text-white shadow-sm group-hover:scale-105 transition-transform">
+          <Icon name="logo" className="w-[12px] h-[12px] text-white" />
         </span>
-        <span>Salenova</span>
+        <span className="font-heading font-medium tracking-tight text-[14px]">Salenova</span>
       </a>
 
-      {/* Desktop Links */}
-      <div className="hidden md:flex gap-[22px] text-[11.5px] text-[#8c8c8c]">
+      {/* Desktop Links (Center) */}
+      <div className="hidden md:flex items-center gap-[28px] text-[13px] text-zinc-400 font-sans">
         <a href="#benefits" className="hover:text-white transition-colors">
           Product
         </a>
         <a href="#features" className="hover:text-white transition-colors">
           Features
+        </a>
+        <a href="#try" className="hover:text-white transition-colors">
+          Sandbox
         </a>
         <a href="#pricing" className="hover:text-white transition-colors">
           Pricing
@@ -63,11 +68,28 @@ export function Navbar() {
         </a>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex items-center gap-[8px]">
-        <Button href="/signup" variant="solid" size="sm">
-          Get started
-        </Button>
+      {/* Action buttons (Right) */}
+      <div className="flex items-center gap-[10px]">
+        <Show when="signed-out">
+          <Link
+            href="/sign-in"
+            className="hidden sm:inline-block text-[12px] text-neutral-400 hover:text-white transition-colors px-1.5 font-sans"
+          >
+            Sign in
+          </Link>
+          <Button href="/sign-up" variant="solid" size="sm" className="shadow-sm">
+            Get started
+          </Button>
+        </Show>
+        <Show when="signed-in">
+          <UserButton
+            appearance={{
+              elements: {
+                userButtonAvatarBox: "w-8 h-8 rounded-full border border-white/20 shadow-sm",
+              },
+            }}
+          />
+        </Show>
 
         {/* Burger Button */}
         <button
@@ -91,7 +113,7 @@ export function Navbar() {
       <div
         id="mp"
         className={cn(
-          "md:hidden absolute left-0 right-0 top-[calc(100%+8px)] p-[10px] border border-white/[0.17] rounded-[20px] bg-[rgba(10,10,10,0.92)] backdrop-blur-[22px] transition-all duration-350 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
+          "md:hidden absolute left-0 right-0 top-[calc(100%+8px)] p-[10px] border border-white/[0.17] rounded-[20px] bg-[#1c1c1c]/95 backdrop-blur-[22px] transition-all duration-350 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
           isOpen
             ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
             : "opacity-0 -translate-y-2 scale-[0.98] pointer-events-none"
@@ -125,16 +147,31 @@ export function Navbar() {
         >
           FAQ <Icon name="arrow" className="w-[14px] h-[14px]" />
         </a>
-        <div className="pt-[10px]">
-          <Button
-            href="/signup"
-            variant="solid"
-            className="w-full py-[12px]"
-            onClick={() => setIsOpen(false)}
-          >
-            Get started free
-          </Button>
-        </div>
+        <Show when="signed-out">
+          <div className="pt-[10px] flex flex-col gap-2">
+            <Button
+              href="/sign-up"
+              variant="solid"
+              className="w-full py-[12px]"
+              onClick={() => setIsOpen(false)}
+            >
+              Get started free
+            </Button>
+            <Link
+              href="/sign-in"
+              className="text-center py-[10px] text-[13px] text-neutral-400 hover:text-white transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Sign in
+            </Link>
+          </div>
+        </Show>
+        <Show when="signed-in">
+          <div className="pt-[14px] pb-[6px] px-[12px] flex items-center justify-between border-t border-white/[0.08] mt-[10px]">
+            <span className="text-[13px] font-medium text-zinc-300">Account</span>
+            <UserButton />
+          </div>
+        </Show>
       </div>
     </nav>
   );

@@ -1,180 +1,82 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Icon, IconName } from "./icons";
-import { Pill, Button, Orb } from "./ui";
-
-interface FloatingCircle {
-  id: string;
-  icon: IconName;
-  label: string;
-}
-
-const CIRCLES: FloatingCircle[] = [
-  { id: "bolt", icon: "bolt", label: "Instant delivery" },
-  { id: "mail", icon: "mail", label: "Email alerts" },
-  { id: "lock", icon: "lock", label: "Spam shield" },
-  { id: "hook", icon: "hook", label: "Webhooks" },
-];
+import React, { useState } from "react";
+import { Icon } from "./icons";
+import { Pill, Button } from "./ui";
 
 export function CtaBanner() {
   const [copied, setCopied] = useState(false);
-  const commandText = "npx salenova init --form contact";
-  const circleRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const endpointSnippet = `curl -X POST https://api.salenova.com/v1/leads \\
+  -H "Content-Type: application/json" \\
+  -H "x-api-key: sln_live_YOUR_WORKSPACE_KEY" \\
+  -d '{"name":"Alex","email":"alex@startup.io"}'`;
 
   const handleCopy = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(commandText);
+      navigator.clipboard.writeText(endpointSnippet);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     }
   };
 
-  // Free-roaming organic physics/parametric animation for the four circles
-  useEffect(() => {
-    let animId: number = 0;
-    let startTime: number | null = null;
-
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const t = timestamp - startTime;
-
-      // Circle 0: Bolt (upper left roaming through center and top)
-      if (circleRefs.current[0]) {
-        const x = 20 + 26 * Math.sin(t * 0.0006);
-        const y = 36 + 28 * Math.cos(t * 0.00045);
-        circleRefs.current[0].style.left = `${Math.max(5, Math.min(92, x))}%`;
-        circleRefs.current[0].style.top = `${Math.max(8, Math.min(88, y))}%`;
-      }
-
-      // Circle 1: Mail (lower left roaming towards center-bottom and across)
-      if (circleRefs.current[1]) {
-        const x = 24 + 28 * Math.cos(t * 0.0005 + 1.2);
-        const y = 68 + 24 * Math.sin(t * 0.00065 + 2.1);
-        circleRefs.current[1].style.left = `${Math.max(5, Math.min(92, x))}%`;
-        circleRefs.current[1].style.top = `${Math.max(8, Math.min(88, y))}%`;
-      }
-
-      // Circle 2: Lock (upper right roaming through center-top and right)
-      if (circleRefs.current[2]) {
-        const x = 76 + 26 * Math.sin(t * 0.00048 + 3.4);
-        const y = 34 + 28 * Math.cos(t * 0.0006 + 1.5);
-        circleRefs.current[2].style.left = `${Math.max(5, Math.min(92, x))}%`;
-        circleRefs.current[2].style.top = `${Math.max(8, Math.min(88, y))}%`;
-      }
-
-      // Circle 3: Hook (lower right roaming towards center and lower bounds)
-      if (circleRefs.current[3]) {
-        const x = 78 + 26 * Math.cos(t * 0.00055 + 4.2);
-        const y = 66 + 25 * Math.sin(t * 0.00042 + 0.8);
-        circleRefs.current[3].style.left = `${Math.max(5, Math.min(92, x))}%`;
-        circleRefs.current[3].style.top = `${Math.max(8, Math.min(88, y))}%`;
-      }
-
-      animId = requestAnimationFrame(animate);
-    };
-
-    animId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animId);
-  }, []);
-
   return (
-    <section className="pt-0 pb-[80px] md:pb-[96px]">
-      <div className="max-w-[1040px] mx-auto px-[16px] sm:px-[24px]">
-        <div
-          className="relative p-[48px_18px_40px] md:p-[64px_24px_52px] text-center border border-white/[0.08] rounded-[22px] overflow-hidden min-h-[460px] md:min-h-[500px] flex flex-col justify-between"
-          style={{
-            background:
-              "radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.08), transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.03), transparent)",
-          }}
-        >
-          {/* Subtle Ambient Radial Glow */}
-          <div
-            className="pointer-events-none absolute inset-0 z-0 opacity-60"
-            style={{
-              background:
-                "radial-gradient(circle at 50% 40%, rgba(255,255,255,0.06), transparent 70%)",
-            }}
-          />
+    <section className="py-[56px] md:py-[80px] relative z-10">
+      <div className="max-w-[1100px] mx-auto px-[16px] sm:px-[24px]">
+        {/* Pure Matte Gray Architectural Card */}
+        <div className="relative rounded-[20px] border border-white/[0.09] bg-[#1c1c1c] p-[44px_20px] md:p-[64px_32px] text-center shadow-[0_20px_60px_rgba(0,0,0,0.7)] overflow-hidden">
+          {/* Subtle Top Specular Edge Line */}
+          <div className="absolute top-0 inset-x-12 h-[1px] bg-gradient-to-r from-transparent via-white/[0.14] to-transparent pointer-events-none" />
 
-          {/* 4 Freely Moving Floating Circles with Glowing Trajectory (Z-10: Behind text) */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
-            {CIRCLES.map((circle, index) => (
-              <div
-                key={circle.id}
-                ref={(el) => {
-                  circleRefs.current[index] = el;
-                }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-auto transition-transform duration-200 hover:scale-125 cursor-pointer group"
-                style={{
-                  left: index === 0 ? "12%" : index === 1 ? "12%" : index === 2 ? "88%" : "88%",
-                  top: index === 0 ? "40%" : index === 1 ? "68%" : index === 2 ? "38%" : "66%",
-                }}
-              >
-                {/* Outer luminous glow halo */}
-                <div className="absolute -inset-2 rounded-full bg-white/[0.08] blur-[8px] opacity-75 group-hover:opacity-100 transition-opacity" />
-
-                {/* Circle badge */}
-                <div className="relative w-[36px] h-[36px] rounded-full grid place-items-center bg-[radial-gradient(circle_at_32%_26%,#4a4a4a,#0c0c0c_70%)] border border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.16),inset_0_1px_3px_rgba(255,255,255,0.35),0_0_0_4px_rgba(255,255,255,0.02)] text-white">
-                  <Icon name={circle.icon} className="w-[14px] h-[14px] drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]" />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Text Content & Actions (Z-20: Placed above moving circles with high-contrast text drop shadows) */}
-          <div className="relative z-20 pointer-events-auto flex flex-col items-center">
+          <div className="relative z-10 max-w-[620px] mx-auto flex flex-col items-center">
             {/* Pill */}
-            <div className="backdrop-blur-md bg-black/40 rounded-full inline-block">
-              <Pill icon="bolt">Capture your first lead today</Pill>
-            </div>
+            <Pill icon="bolt">Instant Setup · Zero Backend Required</Pill>
 
-            {/* Heading with drop-shadow so text stays 100% readable when circles glide behind */}
-            <h2 className="text-[clamp(28px,3.8vw,40px)] font-light tracking-[-0.04em] leading-[1.1] my-[22px] mb-[26px] text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.98)] select-none">
-              Ready to get started?
+            {/* Heading */}
+            <h2 className="text-[26px] sm:text-[34px] md:text-[40px] font-heading font-medium tracking-[-0.025em] leading-[1.2] mt-4 mb-3 text-white text-balance">
+              Start capturing verified leads <br className="hidden sm:inline" />
+              <span className="text-zinc-400">in less than five minutes.</span>
             </h2>
 
-            {/* CTA Buttons */}
-            <div className="flex gap-[10px] justify-center flex-wrap relative z-20">
-              <Button href="/signup" variant="solid">
-                Get started free <Icon name="arrow" className="w-[14px] h-[14px] transition-transform group-hover:translate-x-1" />
+            {/* Subtext */}
+            <p className="text-zinc-400 font-p font-normal text-[13.5px] sm:text-[15px] leading-[1.65] max-w-[500px] mb-7 text-pretty">
+              Create your organization workspace in seconds, grab your API key, and point any form directly to Salenova.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-[340px] sm:max-w-none">
+              <Button
+                href="/sign-up"
+                variant="solid"
+                size="default"
+                className="w-full sm:w-auto py-2.5 px-6 text-[12.5px] group shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_25px_rgba(52,211,153,0.4)]"
+              >
+                Get started free
+                <Icon name="arrow" className="w-[13px] h-[13px] transition-transform group-hover:translate-x-1" />
               </Button>
-              <Button onClick={handleCopy}>
-                {copied ? "Copied" : "Copy init command"}
-              </Button>
-            </div>
-          </div>
 
-          {/* Visual Showcase: Breathing Center Orb and Corner Crosshair Boxes */}
-          <div className="relative h-[170px] md:h-[210px] mt-[26px] flex items-center justify-center z-15 pointer-events-none">
-            {/* Box Left */}
-            <div
-              className="hidden md:block absolute w-[110px] h-[110px] border border-white/[0.08] top-1/2 -mt-[55px] left-[calc(12%+60px)] animate-[pulse_6s_ease-in-out_infinite]"
-            >
-              <span className="absolute -left-[3px] -top-[6px] text-[#666] text-[12px] leading-none select-none">
-                +
-              </span>
-              <span className="absolute -right-[3px] -bottom-[6px] text-[#666] text-[12px] leading-none select-none">
-                +
-              </span>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-[8px] rounded-full border border-white/[0.08] bg-[#141414] hover:bg-[#242424] hover:border-emerald-500/30 text-[12px] text-zinc-300 hover:text-white font-sans transition-all cursor-pointer select-none"
+              >
+                <Icon name={copied ? "chk" : "copy"} className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{copied ? "Copied snippet!" : "Copy cURL endpoint"}</span>
+              </button>
             </div>
 
-            {/* Box Right */}
-            <div
-              className="hidden md:block absolute w-[110px] h-[110px] border border-white/[0.08] top-1/2 -mt-[55px] right-[calc(12%+60px)] animate-[pulse_6s_ease-in-out_infinite]"
-            >
-              <span className="absolute -left-[3px] -top-[6px] text-[#666] text-[12px] leading-none select-none">
-                +
+            {/* Trust points */}
+            <div className="flex items-center justify-center gap-4 sm:gap-5 mt-7 text-[11px] text-zinc-400 font-mono flex-wrap">
+              <span className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-medium">✓</span> No credit card required
               </span>
-              <span className="absolute -right-[3px] -bottom-[6px] text-[#666] text-[12px] leading-none select-none">
-                +
+              <span className="text-zinc-600">•</span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-medium">✓</span> 100 free submissions/mo
               </span>
-            </div>
-
-            {/* Breathing Center Orb */}
-            <div className="relative pointer-events-auto">
-              <div className="absolute -inset-[46px] rounded-full border border-white/[0.08] pointer-events-none animate-[breathe_4s_ease-in-out_infinite]" />
-              <Orb size={96} />
+              <span className="text-zinc-600">•</span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-medium">✓</span> Live CRM dashboard
+              </span>
             </div>
           </div>
         </div>

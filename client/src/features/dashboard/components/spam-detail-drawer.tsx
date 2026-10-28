@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDashboard } from "../context/dashboard-context";
 import {
   X,
@@ -8,11 +8,13 @@ import {
   AlertTriangle,
   RotateCcw,
   FileCode,
+  Loader2,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
 
 export function SpamDetailDrawer() {
-  const { spam, selectedSpamId, setSelectedSpamId, rescueSpamLead } = useDashboard();
+  const { spam, selectedSpamId, setSelectedSpamId, rescueSpamLeadAsync, addToast } = useDashboard();
+  const [isRescuing, setIsRescuing] = useState(false);
 
   const item = spam.find((s) => s.id === selectedSpamId);
 
@@ -30,8 +32,18 @@ export function SpamDetailDrawer() {
 
   if (!item) return null;
 
-  const handleRescue = () => {
-    rescueSpamLead(item.id);
+  const handleRescue = async () => {
+    if (isRescuing) return;
+    setIsRescuing(true);
+    try {
+      await rescueSpamLeadAsync(item.id);
+      addToast("Lead rescued", "Submission moved to active Leads.");
+      setSelectedSpamId(null);
+    } catch {
+      addToast("Error", "Failed to rescue spam record", "error");
+    } finally {
+      setIsRescuing(false);
+    }
   };
 
   return (
@@ -86,10 +98,15 @@ export function SpamDetailDrawer() {
             <button
               type="button"
               onClick={handleRescue}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-black font-medium text-xs hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer whitespace-nowrap flex-none"
+              disabled={isRescuing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-black font-medium text-xs hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer whitespace-nowrap flex-none disabled:opacity-70"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Rescue Lead</span>
+              {isRescuing ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <RotateCcw className="w-3.5 h-3.5" />
+              )}
+              <span>{isRescuing ? "Rescuing..." : "Rescue Lead"}</span>
             </button>
           </div>
 

@@ -12,6 +12,7 @@ export const createSpamSlice: StateCreator<
   SpamSlice
 > = (set, get) => ({
   spam: INITIAL_SPAM,
+  setSpam: (spam) => set({ spam }),
   rescueSpamLead: (spamId) => {
     const { spam, leads, forms, selectedSpamId, addToast } = get();
     const targetSpam = spam.find((s) => s.id === spamId);

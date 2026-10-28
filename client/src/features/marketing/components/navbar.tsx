@@ -42,12 +42,12 @@ export function Navbar() {
       )}
     >
       {/* Brand (Left) */}
-      <a href="#" className="flex items-center gap-[9px] text-[13.5px] text-white group flex-none">
+      <Link href="/" className="flex items-center gap-[9px] text-[13.5px] text-white group flex-none">
         <span className="w-[24px] h-[24px] rounded-full bg-white/[0.08] border border-white/[0.14] inline-grid place-items-center flex-none text-white shadow-sm group-hover:scale-105 transition-transform">
           <Icon name="logo" className="w-[12px] h-[12px] text-white" />
         </span>
         <span className="font-heading font-medium tracking-tight text-[14px]">Salenova</span>
-      </a>
+      </Link>
 
       {/* Desktop Links (Center) */}
       <div className="hidden md:flex items-center gap-[28px] text-[13px] text-zinc-400 font-sans">

@@ -12,6 +12,7 @@ export const createLeadsSlice: StateCreator<
   LeadsSlice
 > = (set, get) => ({
   leads: INITIAL_LEADS,
+  setLeads: (leads) => set({ leads }),
   updateLeadStatus: (id, status) => {
     set((state) => ({
       leads: state.leads.map((l) => (l.id === id ? { ...l, status } : l)),

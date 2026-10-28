@@ -17,6 +17,24 @@ export const createUISlice: StateCreator<
   setSelectedFormId: (id) => set({ selectedFormId: id }),
   isCreateFormOpen: false,
   setIsCreateFormOpen: (open) => set({ isCreateFormOpen: open }),
+  isTourOpen: false,
+  tourStep: 0,
+  startTour: () => set({ isTourOpen: true, tourStep: 0 }),
+  closeTour: () => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("salenova_tour_completed", "true");
+      } catch {
+        // Safe fallback for private browsing
+      }
+    }
+    set({ isTourOpen: false });
+  },
+  setTourStep: (step) => set({ tourStep: step }),
+  nextTourStep: () =>
+    set((state) => ({ tourStep: Math.min(state.tourStep + 1, 4) })),
+  prevTourStep: () =>
+    set((state) => ({ tourStep: Math.max(state.tourStep - 1, 0) })),
   toasts: [],
   addToast: (title, description, variant = "success") => {
     const id = `${Date.now()}-${Math.random()}`;

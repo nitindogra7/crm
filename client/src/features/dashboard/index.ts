@@ -17,3 +17,7 @@ export * from "./components/analytics-view";
 export * from "./components/spam-shield-view";
 export * from "./components/formatted-date";
 export * from "./components/settings-view";
+export * from "./components/dashboard-walkthrough";
+export * from "./components/create-organization-modal";
+export * from "./components/dashboard-skeleton";
+

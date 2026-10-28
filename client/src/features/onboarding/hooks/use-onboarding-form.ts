@@ -58,7 +58,9 @@ export function useOnboardingForm() {
   // Derived Values
   const activeName = name.trim() || suggestedName;
   const activeSlug = hasManuallyEditedSlug ? customSlug : slugify(activeName);
-  const endpointUrl = `https://api.salenova.com/v1/f/${activeSlug}`;
+  const apiBase =
+    process.env.NEXT_PUBLIC_API_URL || "https://api.salenova.com";
+  const endpointUrl = `${apiBase}/api/f/${activeSlug}`;
   const initial = (activeName.charAt(0) || "W").toUpperCase();
   const selectedTone =
     AVATAR_TONES.find((t) => t.id === avatarTone) || AVATAR_TONES[0];

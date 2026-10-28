@@ -9,20 +9,28 @@ import {
   Send,
   Zap,
   Trash2,
+  AlertTriangle,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
 
 export function FormDetailModal() {
   const {
     forms,
+    apiKeys,
+    createApiKeyAsync,
     selectedFormId,
     setSelectedFormId,
-    updateForm,
-    toggleFormEnabled,
-    deleteForm,
-    simulateLeadSubmission,
+    updateFormAsync,
+    toggleFormEnabledAsync,
+    deleteFormAsync,
+    simulateLeadSubmissionAsync,
     addToast,
   } = useDashboard();
+
+  const apiKey = apiKeys.find((k) => !k.revoked) || null;
+  const hasApiKey = !!apiKey;
 
   const form = forms.find((f) => f.id === selectedFormId);
 
@@ -52,6 +60,13 @@ export function FormDetailModal() {
   const [simMessage, setSimMessage] = useState(
     "Hi there, we'd like to book a consultation about upgrading our client onboarding workflow."
   );
+
+  // Loading states for actions
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [isGeneratingKey, setIsGeneratingKey] = useState(false);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -85,27 +100,85 @@ export function FormDetailModal() {
     addToast("Copied to clipboard", "Snippet ready to paste.");
   };
 
-  const handleSaveOverview = (e: React.FormEvent) => {
+  const handleSaveOverview = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateForm(form.id, {
-      name: formName.trim() || form.name,
-      redirectUrl: redirectUrl.trim() || undefined,
-    });
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await updateFormAsync(form.id, {
+        name: formName.trim() || form.name,
+        redirectUrl: redirectUrl.trim() || undefined,
+      });
+      addToast("Form updated", "Changes saved successfully.");
+    } catch {
+      addToast("Error", "Failed to update form", "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleSimulateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    simulateLeadSubmission(form.id, {
-      name: simName,
-      email: simEmail,
-      message: simMessage,
-      source: "Form Preview Simulation",
-    });
-    setActiveTab("overview");
+  const handleDeleteForm = async () => {
+    if (isDeleting) return;
+    if (!window.confirm(`Are you sure you want to delete "${form.name}"?`)) return;
+    setIsDeleting(true);
+    try {
+      await deleteFormAsync(form.id);
+      setSelectedFormId(null);
+    } catch {
+      addToast("Error", "Failed to delete form", "error");
+      setIsDeleting(false);
+    }
   };
+
+  const handleToggleForm = async () => {
+    if (isToggling) return;
+    setIsToggling(true);
+    try {
+      await toggleFormEnabledAsync(form.id);
+    } catch {
+      addToast("Error", "Failed to toggle form status", "error");
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
+  const handleGenerateKey = async () => {
+    if (isGeneratingKey) return;
+    setIsGeneratingKey(true);
+    try {
+      await createApiKeyAsync();
+    } catch {
+      addToast("Error", "Failed to generate API key", "error");
+    } finally {
+      setIsGeneratingKey(false);
+    }
+  };
+
+  const handleSimulateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSimulating) return;
+    setIsSimulating(true);
+    try {
+      await simulateLeadSubmissionAsync(form.id, {
+        name: simName,
+        email: simEmail,
+        message: simMessage,
+        source: "Form Preview Simulation",
+      });
+      setActiveTab("overview");
+    } catch {
+      addToast("Error", "Failed to simulate lead submission", "error");
+    } finally {
+      setIsSimulating(false);
+    }
+  };
+
+  const apiKeyToken = hasApiKey ? apiKey.fullKeyMock : "YOUR_API_KEY_HERE";
 
   const htmlSnippet = `<!-- 1. Standard HTML Form Pointed to Salenova Endpoint -->
 <form action="${form.endpointUrl}" method="POST">
+  <!-- Authorize submission with your workspace API key -->
+  <input type="hidden" name="_api_key" value="${apiKeyToken}" />
   <input type="text" name="name" placeholder="Full name" required />
   <input type="email" name="email" placeholder="work@company.com" required />
   <textarea name="message" placeholder="How can we help?"></textarea>
@@ -120,7 +193,10 @@ export function FormDetailModal() {
 const handleSubmit = async (data) => {
   const res = await fetch("${form.endpointUrl}", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": "${apiKeyToken}",
+    },
     body: JSON.stringify({
       name: data.name,
       email: data.email,
@@ -134,6 +210,7 @@ const handleSubmit = async (data) => {
   const curlSnippet = `# 3. Direct HTTP POST cURL
 curl -X POST ${form.endpointUrl} \\
   -H "Content-Type: application/json" \\
+  -H "x-api-key: ${apiKeyToken}" \\
   -d '{
     "name": "Alex Vance",
     "email": "alex@studio.co",
@@ -174,14 +251,16 @@ curl -X POST ${form.endpointUrl} \\
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => toggleFormEnabled(form.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors ${
+              onClick={handleToggleForm}
+              disabled={isToggling}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors cursor-pointer disabled:opacity-60 ${
                 form.enabled
                   ? "border-zinc-700 text-zinc-300 hover:bg-white/[0.05]"
                   : "bg-emerald-500 text-black border-emerald-400 font-semibold"
               }`}
             >
-              {form.enabled ? "Pause Form" : "Enable Form"}
+              {isToggling && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>{form.enabled ? "Pause Form" : "Enable Form"}</span>
             </button>
 
             <button
@@ -331,18 +410,25 @@ curl -X POST ${form.endpointUrl} \\
                 <div className="flex items-center justify-between pt-2">
                   <button
                     type="button"
-                    onClick={() => deleteForm(form.id)}
-                    className="inline-flex items-center gap-1.5 text-rose-400 hover:text-rose-300 text-xs transition-colors"
+                    onClick={handleDeleteForm}
+                    disabled={isDeleting || isSaving}
+                    className="inline-flex items-center gap-1.5 text-rose-400 hover:text-rose-300 text-xs transition-colors cursor-pointer disabled:opacity-50"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete Form</span>
+                    {isDeleting ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
+                    <span>{isDeleting ? "Deleting..." : "Delete Form"}</span>
                   </button>
 
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl bg-white text-black font-medium hover:bg-zinc-200 transition-colors shadow-sm"
+                    disabled={isSaving || isDeleting}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black font-medium hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer disabled:opacity-70"
                   >
-                    Save Changes
+                    {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>{isSaving ? "Saving..." : "Save Changes"}</span>
                   </button>
                 </div>
               </form>
@@ -393,6 +479,31 @@ curl -X POST ${form.endpointUrl} \\
           {/* TAB 3: INTEGRATION */}
           {activeTab === "integration" && (
             <div className="space-y-5">
+              {/* API Key Missing Alert if user hasn't generated their single key yet */}
+              {!hasApiKey && (
+                <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-400 flex-none" />
+                    <span className="text-xs text-zinc-300">
+                      Workspace API key required before connecting this form to external sites.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGenerateKey}
+                    disabled={isGeneratingKey}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-black font-semibold text-xs transition-colors self-start sm:self-auto flex-none cursor-pointer disabled:opacity-70"
+                  >
+                    {isGeneratingKey ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5" />
+                    )}
+                    <span>{isGeneratingKey ? "Generating Key..." : "Generate API Key Now"}</span>
+                  </button>
+                </div>
+              )}
+
               {/* Endpoint banner */}
               <div className="p-3 rounded-xl border border-white/[0.08] bg-[#121212] flex items-center justify-between gap-3">
                 <div className="min-w-0">
@@ -570,10 +681,15 @@ curl -X POST ${form.endpointUrl} \\
 
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black font-medium hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer"
+                    disabled={isSimulating}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black font-medium hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer disabled:opacity-70"
                   >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Simulate Test Submission</span>
+                    {isSimulating ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Send className="w-3.5 h-3.5" />
+                    )}
+                    <span>{isSimulating ? "Injecting Lead..." : "Simulate Test Submission"}</span>
                   </button>
                 </div>
               </form>

@@ -20,6 +20,122 @@ model Onboarding {
   isOnboarded Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId])
   @@map("onboarding")
 }
 
+// Dashboard / Organization table where more than one organization can be created and managed per user
+model Dashboard {
+  id             String    @id @default(cuid())
+  userId         String    // Clerk User ID (supports multiple organizations/dashboards per user)
+  organizationId String?   // Optional Clerk Organization ID (e.g. "org_...")
+  name           String    // Organization / Workspace name
+  slug           String    @unique
+  ownerEmail     String?
+  avatarTone     String    @default("zinc")
+  plan           String    @default("Free Tier")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  forms          Form[]
+  apiKeys        ApiKey[]
+  leads          Lead[]
+  spam           Spam[]
+
+  @@index([userId])
+  @@index([organizationId])
+  @@map("dashboards")
+}
+
+model Form {
+  id          String    @id @default(cuid())
+  dashboardId String
+  name        String
+  slug        String
+  endpointUrl String
+  enabled     Boolean   @default(true)
+  leadCount   Int       @default(0)
+  spamCount   Int       @default(0)
+  redirectUrl String?
+  fields      Json      @default("[]") // Array of FormField: { id, name, label, type, required }
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  leads       Lead[]
+  spam        Spam[]
+
+  @@unique([dashboardId, slug])
+  @@index([dashboardId])
+  @@index([slug])
+  @@map("forms")
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  dashboardId String
+  name        String    @default("Live API Key")
+  keyPrefix   String    @default("sln_live_")
+  key         String    @unique
+  fullKeyMock String?
+  revoked     Boolean   @default(false)
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@index([dashboardId])
+  @@index([key])
+  @@map("api_keys")
+}
+
+model Lead {
+  id          String    @id @default(cuid())
+  dashboardId String
+  formId      String?
+  formName    String
+  name        String
+  email       String
+  message     String    @default("")
+  source      String    @default("Website embed")
+  status      String    @default("New") // "New" | "Contacted"
+  receivedAt  DateTime  @default(now())
+  extraFields Json?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  form        Form?     @relation(fields: [formId], references: [id], onDelete: SetNull)
+
+  @@index([dashboardId])
+  @@index([formId])
+  @@map("leads")
+}
+
+model Spam {
+  id             String    @id @default(cuid())
+  dashboardId    String
+  formId         String?
+  formName       String
+  senderName     String
+  senderEmail    String
+  disposition    String    @default("Quarantined") // "Quarantined" | "Rejected"
+  reason         String    @default("Honeypot filled")
+  messageSnippet String    @default("")
+  rawPayload     Json
+  triggerRule    String    @default("honeypot")
+  metadata       Json?
+  receivedAt     DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  dashboard      Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  form           Form?     @relation(fields: [formId], references: [id], onDelete: SetNull)
+
+  @@index([dashboardId])
+  @@index([formId])
+  @@map("spam")
+}

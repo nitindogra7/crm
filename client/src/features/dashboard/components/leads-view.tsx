@@ -13,12 +13,13 @@ import {
   X,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
+import { LeadsSkeleton } from "./dashboard-skeleton";
 
 const ITEMS_PER_PAGE = 7;
 
 export function LeadsView() {
   const searchParams = useSearchParams();
-  const { leads, forms, setSelectedLeadId } = useDashboard();
+  const { leads, forms, isLoading, setSelectedLeadId } = useDashboard();
 
   const timeParam = searchParams.get("time");
   const statusParam = searchParams.get("status");
@@ -117,6 +118,10 @@ export function LeadsView() {
     selectedSource !== "all" ||
     selectedStatus !== "all" ||
     selectedDate !== "all";
+
+  if (isLoading) {
+    return <LeadsSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
@@ -262,9 +267,13 @@ export function LeadsView() {
                         <Inbox className="w-5 h-5" />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-white">No leads match filters</p>
+                        <p className="text-sm font-medium text-white">
+                          {leads.length === 0 ? "No leads received yet" : "No leads match filters"}
+                        </p>
                         <p className="text-xs text-zinc-500">
-                          Try adjusting your search criteria, dates, or status toggles.
+                          {leads.length === 0
+                            ? "Submissions captured by your forms will automatically show up here."
+                            : "Try adjusting your search criteria, dates, or status toggles."}
                         </p>
                       </div>
                       {hasActiveFilters && (

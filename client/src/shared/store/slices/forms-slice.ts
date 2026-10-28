@@ -1,6 +1,7 @@
 import { StateCreator } from "zustand";
 import { FormItem } from "@/shared/types";
 import { INITIAL_FORMS } from "@/features/dashboard/data/mock-data";
+import { API_URL } from "@/shared/lib/api-client";
 import type { AppStoreState, FormsSlice } from "../types";
 
 export type { FormsSlice };
@@ -12,6 +13,7 @@ export const createFormsSlice: StateCreator<
   FormsSlice
 > = (set) => ({
   forms: INITIAL_FORMS,
+  setForms: (forms) => set({ forms }),
   addForm: ({ name, redirectUrl, fields }) => {
     const slug =
       name
@@ -24,7 +26,7 @@ export const createFormsSlice: StateCreator<
       id: `form_${Date.now()}`,
       name,
       slug,
-      endpointUrl: `https://api.salenova.com/v1/f/${slug}`,
+      endpointUrl: `${API_URL}/api/forms-and-api/f/${slug}`,
       enabled: true,
       leadCount: 0,
       spamCount: 0,

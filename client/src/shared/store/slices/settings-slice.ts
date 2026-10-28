@@ -17,14 +17,39 @@ export const createSettingsSlice: StateCreator<
   SettingsSlice
 > = (set, get) => ({
   apiKeys: INITIAL_API_KEYS,
+  setApiKeys: (apiKeys) => set({ apiKeys }),
   webhook: INITIAL_WEBHOOK,
   notifications: INITIAL_NOTIFICATIONS,
   deliveryLogs: INITIAL_DELIVERY_LOGS,
-  createApiKey: (name) => {
+  createApiKey: (name = "Workspace Inbound Key", env = "live") => {
+    const randomHex = Math.random().toString(36).substring(2, 10);
+    const prefix = env === "test" ? "sln_test_" : "sln_live_";
+    const newKey: ApiKeyItem = {
+      id: `key_${Date.now()}`,
+      name: (name || "Workspace Inbound Key").trim(),
+      keyPrefix: `${prefix}${randomHex.slice(0, 4)}...`,
+      fullKeyMock: `${prefix}${randomHex}${Math.random().toString(36).substring(2, 12)}`,
+      createdAt: new Date().toISOString(),
+      lastUsedAt: "Never",
+      revoked: false,
+    };
+
+    set(() => ({
+      apiKeys: [newKey],
+    }));
+
+    get().addToast(
+      "API Key Generated",
+      `Your workspace API key is now active. You can now connect your forms.`,
+      "success"
+    );
+    return newKey;
+  },
+  regenerateApiKey: () => {
     const randomHex = Math.random().toString(36).substring(2, 10);
     const newKey: ApiKeyItem = {
       id: `key_${Date.now()}`,
-      name: name.trim() || "Untitled API Key",
+      name: "Workspace Inbound Key",
       keyPrefix: `sln_live_${randomHex.slice(0, 4)}...`,
       fullKeyMock: `sln_live_${randomHex}${Math.random().toString(36).substring(2, 12)}`,
       createdAt: new Date().toISOString(),
@@ -32,20 +57,22 @@ export const createSettingsSlice: StateCreator<
       revoked: false,
     };
 
-    set((state) => ({
-      apiKeys: [newKey, ...state.apiKeys],
+    set(() => ({
+      apiKeys: [newKey],
     }));
 
     get().addToast(
-      "API Key created",
-      `Mock key "${newKey.name}" generated. Remember: all keys in demo mode are nonfunctional preview tokens.`
+      "API Key Regenerated",
+      "New active key provisioned. Remember to update any external form connections.",
+      "success"
     );
+    return newKey;
   },
-  revokeApiKey: (id) => {
-    set((state) => ({
-      apiKeys: state.apiKeys.map((k) => (k.id === id ? { ...k, revoked: true } : k)),
+  revokeApiKey: () => {
+    set(() => ({
+      apiKeys: [],
     }));
-    get().addToast("API Key revoked", "Key will reject any simulated calls.", "info");
+    get().addToast("API Key Revoked", "Workspace key removed. Generate a new key before connecting forms.", "info");
   },
   updateWebhook: (updates) => {
     set((state) => ({

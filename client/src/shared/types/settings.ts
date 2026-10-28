@@ -4,7 +4,7 @@ export interface ApiKeyItem {
   keyPrefix: string;
   fullKeyMock: string;
   createdAt: string;
-  lastUsedAt: string;
+  lastUsedAt?: string | null;
   revoked: boolean;
 }
 

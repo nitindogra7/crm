@@ -12,12 +12,20 @@ import {
   ShieldCheck,
   CheckCircle2,
   RotateCcw,
+  Loader2,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
 
 export function LeadDetailDrawer() {
-  const { leads, selectedLeadId, setSelectedLeadId, updateLeadStatus, addToast } = useDashboard();
+  const {
+    leads,
+    selectedLeadId,
+    setSelectedLeadId,
+    updateLeadStatusAsync,
+    addToast,
+  } = useDashboard();
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const lead = leads.find((l) => l.id === selectedLeadId);
 
@@ -42,9 +50,18 @@ export function LeadDetailDrawer() {
     setTimeout(() => setCopiedEmail(false), 2000);
   };
 
-  const handleToggleStatus = () => {
+  const handleToggleStatus = async () => {
+    if (isUpdatingStatus) return;
+    setIsUpdatingStatus(true);
     const nextStatus = lead.status === "New" ? "Contacted" : "New";
-    updateLeadStatus(lead.id, nextStatus);
+    try {
+      await updateLeadStatusAsync(lead.id, nextStatus);
+      addToast("Status updated", `Lead marked as ${nextStatus}.`);
+    } catch {
+      addToast("Error", "Failed to update lead status", "error");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   return (
@@ -114,13 +131,19 @@ export function LeadDetailDrawer() {
             <button
               type="button"
               onClick={handleToggleStatus}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+              disabled={isUpdatingStatus}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer disabled:opacity-70 ${
                 lead.status === "New"
                   ? "bg-emerald-500 text-black hover:bg-emerald-400 shadow-sm"
                   : "bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700"
               }`}
             >
-              {lead.status === "New" ? (
+              {isUpdatingStatus ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Updating...</span>
+                </>
+              ) : lead.status === "New" ? (
                 <>
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Mark Contacted</span>

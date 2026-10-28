@@ -28,10 +28,12 @@ export const createOnboardingSchema = z.object({
       "Slug must contain only lowercase alphanumeric characters and single hyphens"
     ),
   ownerEmail: z
-    .string()
-    .email("Owner email must be a valid email address")
-    .optional()
-    .nullable(),
+    .union([
+      z.string().email("Owner email must be a valid email address"),
+      z.literal(""),
+      z.null(),
+    ])
+    .optional(),
   teamSize: z
     .enum(["team", "solo"])
     .default("team"),

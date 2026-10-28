@@ -8,17 +8,18 @@ datasource db {
 }
 
 model Onboarding {
-  id         String   @id @default(cuid())
-  userId     String   // Clerk User ID (e.g. "user_2xxxx...")
-  name       String
-  slug       String   @unique
-  avatarTone String   @default("zinc")
-  teamSize   String   @default("team")
-  useCase    String   @default("saas")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([userId])
+  id          String   @id @default(cuid())
+  userId      String   @unique // Clerk User ID (e.g. "user_2xxxx...")
+  name        String
+  slug        String   @unique
+  ownerEmail  String?
+  avatarTone  String   @default("zinc")
+  teamSize    String   @default("team")
+  useCase     String   @default("saas")
+  endpointUrl String?
+  isOnboarded Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   @@map("onboarding")
 }
 

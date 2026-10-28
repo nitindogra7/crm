@@ -13,7 +13,6 @@
 [![Express](https://img.shields.io/badge/Express-5.2-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![Prisma](https://img.shields.io/badge/Prisma-6.19-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![License: ISC](https://img.shields.io/badge/License-ISC-green.svg?style=for-the-badge)](LICENSE)
 
 <br />
@@ -51,7 +50,7 @@ Salenova instantly handles:
 | **Spam & Bot Shield** | Built-in honeypot validation and rate limiting keep low-quality bot entries out of your CRM. |
 | **Real-time Dispositioning** | Every submission is audited and tagged with a disposition (`accepted`, `spam`, etc.). |
 | **Universal Form Ingestion** | Works seamlessly with standard HTML forms, React/Next.js, fetch requests, or cURL. |
-| **Modern Stack & High Velocity** | Powered by Next.js 16 (React 19 compiler), Express 5, Prisma 6, and Docker Compose. |
+| **Modern Stack & High Velocity** | Powered by Next.js 16 (React 19 compiler), Express 5, and Prisma 6. |
 | **Developer Ergonomics** | Type-safe schemas, interactive live testing widget, and CLI-ready workflow. |
 
 ---
@@ -110,8 +109,6 @@ crm/
 │   │   └── migrations/          # Version-controlled SQL migrations
 │   ├── src/
 │   │   └── index.ts             # Express server entry point & health check
-│   ├── Dockerfile               # Production container image definition
-│   ├── docker-compose.yml       # PostgreSQL 16 + API local stack orchestration
 │   └── package.json             # Server dependencies & Prisma scripts
 │
 ├── docs/                        # Complete Project Documentation Suite
@@ -138,7 +135,7 @@ crm/
 Ensure you have the following installed on your machine:
 - **Node.js**: `v20.x` or `v22.x` (LTS recommended)
 - **pnpm**: `v9.x` or `v10.x` (`npm install -g pnpm`)
-- **Docker & Docker Compose** (Optional, recommended for PostgreSQL)
+- **PostgreSQL**: Local PostgreSQL instance or cloud database (Neon, Supabase)
 
 ---
 
@@ -160,20 +157,8 @@ cp client/.env.example client/.env.local
 
 ### 3. Start Database and Backend
 
-You can spin up PostgreSQL using Docker Compose, or run your own local PostgreSQL instance.
-
-#### Option A: Using Docker Compose (Recommended)
-
-```bash
-cd server
-docker compose up db -d
-```
-
-#### Option B: Standalone Setup
-
-If running PostgreSQL locally:
-1. Ensure PostgreSQL is running on port `5433` (or update `DATABASE_URL` in `server/.env`).
-2. Run database migrations and generate the Prisma Client:
+1. Ensure your PostgreSQL instance is running and set your `DATABASE_URL` in `server/.env`.
+2. Run database migrations and start the backend:
 
 ```bash
 cd server
@@ -289,7 +274,7 @@ For detailed guides, please refer to the documents in the [`docs/`](./docs) fold
   *Entity definitions, indexes, schema diagrams, and migration instructions.*
 
 - 💻 [**Local Development Setup Guide**](./docs/LOCAL_SETUP.md)  
-  *Troubleshooting, Docker orchestration, and step-by-step onboarding for contributors.*
+  *Troubleshooting, environment configuration, and step-by-step onboarding for contributors.*
 
 - 🤝 [**Contributing Guidelines**](./docs/CONTRIBUTING.md)  
   *Branching strategy, Conventional Commits, code standards, and PR workflows.*
@@ -300,7 +285,7 @@ For detailed guides, please refer to the documents in the [`docs/`](./docs) fold
 
 - [x] Next.js 16 landing page with interactive 3D physics cards and code runner
 - [x] Owner onboarding and signup interface
-- [x] Docker Compose multi-container setup (PostgreSQL 16 + Express API)
+- [x] Express 5 TypeScript backend API with Prisma ORM
 - [x] Prisma ORM configuration with `Form` and `Submission` models
 - [ ] Authentication API (JWT + secure HTTP-only cookies)
 - [ ] Dynamic Form endpoint ingestion (`/f/:formId`) with honeypot verification

@@ -15,7 +15,7 @@ Ensure your machine meets the following prerequisites before getting started:
   # or
   npm install -g pnpm
   ```
-- **Docker & Docker Compose**: (Recommended for running PostgreSQL locally)
+- **PostgreSQL**: Local PostgreSQL service (v14+) or cloud provider (Neon, Supabase, etc.)
 - **Git**: Latest version
 
 ---
@@ -47,12 +47,8 @@ Ensure the contents look similar to:
 PORT=4000
 FRONTEND_URL=http://localhost:3000
 
-POSTGRES_USER=salenova
-POSTGRES_PASSWORD=salenova_dev_pw
-POSTGRES_DB=salenova
-
-# Connection string for host machine to PostgreSQL container on port 5433
-DATABASE_URL="postgresql://salenova:salenova_dev_pw@localhost:5433/salenova?schema=public"
+# Connection string for your local or cloud PostgreSQL database
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/salenova?schema=public"
 ```
 
 ### 3.2 Frontend Configuration (`client/.env.local`)
@@ -72,22 +68,14 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ## 4. Starting the Database
 
-We recommend using Docker Compose to launch PostgreSQL.
+Make sure your PostgreSQL server is running locally (e.g., via the PostgreSQL Windows service, macOS brew services, or Linux systemd) or obtain your connection URL from your cloud database provider (Supabase / Neon).
 
-```bash
-cd server
-docker compose up db -d
+Create the database if it doesn't already exist:
+```sql
+CREATE DATABASE salenova;
 ```
 
-> **Why port 5433?**  
-> Notice that the `docker-compose.yml` maps port `5433:5432`. This avoids collisions if you already have a local PostgreSQL instance running on the default `5432` port.
-
-To verify the container is healthy:
-```bash
-docker ps
-```
-
-You should see `salenova-db` with status `healthy`.
+Update your `DATABASE_URL` in `server/.env` to point to this database.
 
 ---
 
@@ -146,12 +134,8 @@ Open a second terminal window and navigate to `client/`:
 
 ## 7. Troubleshooting Common Issues
 
-### Issue 1: Database connection refused (`ECONNREFUSED 127.0.0.1:5433`)
-- **Fix**: Check if the Docker container is running:
-  ```bash
-  docker compose ps
-  ```
-  If stopped, run `docker compose up db -d`.
+### Issue 1: Database connection refused (`ECONNREFUSED 127.0.0.1:5432`)
+- **Fix**: Check if your PostgreSQL service is running and accessible on port 5432 (or your configured port). Verify that the credentials in `server/.env` match your PostgreSQL user and password.
 
 ### Issue 2: `@prisma/client did not initialize yet`
 - **Fix**: Run `pnpm run db:generate` inside the `server/` directory.

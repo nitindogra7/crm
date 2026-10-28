@@ -70,6 +70,13 @@ export function Navbar() {
 
       {/* Action buttons (Right) */}
       <div className="flex items-center gap-[10px]">
+        <Link
+          href="/dashboard"
+          className="text-[12px] text-zinc-200 hover:text-white transition-colors px-2.5 py-1 rounded-full border border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.09] font-sans flex items-center gap-1.5"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span>Dashboard</span>
+        </Link>
         <Show when="signed-out">
           <Link
             href="/sign-in"

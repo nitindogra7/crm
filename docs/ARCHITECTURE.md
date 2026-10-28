@@ -123,8 +123,10 @@ sequenceDiagram
 
 ---
 
-## 6. Deployment & Containerization
+## 6. Deployment & Runtime Execution
 
-The backend service is containerized via Docker and orchestrated through Docker Compose:
-- **`db` container**: Alpine-based PostgreSQL 16 image with persistent volume mapping (`pgdata`) and native health checks (`pg_isready`).
-- **`api` container**: Multi-stage Node 22 slim build, with automated migration execution on startup before booting the server with `tsx`.
+The backend service is designed as a lightweight, standalone Express 5 application:
+- **Runtime**: Node.js 22 LTS with `tsx` for TypeScript execution during development and production.
+- **Database**: Connects directly to any PostgreSQL instance (locally or cloud-hosted such as Neon/Supabase) via standard connection strings managed by Prisma ORM.
+- **Stateless Architecture**: The API server is completely stateless, enabling simple scaling across platforms (e.g. Render, Railway, AWS EC2, or direct VPS).
+

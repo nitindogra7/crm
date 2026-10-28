@@ -8,8 +8,8 @@ This document describes the REST API endpoints, request contracts, security conv
 
 ### Base URLs
 - **Local Development**: `http://localhost:4000`
-- **Docker Network**: `http://api:4000`
 - **Production**: `https://api.salenova.com` (configured via reverse proxy)
+
 
 ### Content Types
 - Ingestion endpoints accept both `application/json` and `application/x-www-form-urlencoded` (standard HTML form submits).

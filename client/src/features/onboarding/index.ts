@@ -1,1 +1,9 @@
-export { OnboardingWizard } from "./components/onboarding-wizard";
+export * from "./components/onboarding-wizard";
+export * from "./components/onboarding-header";
+export * from "./components/onboarding-footer";
+export * from "./components/onboarding-form";
+export * from "./components/onboarding-success";
+export * from "./components/endpoint-preview";
+export * from "./hooks/use-onboarding-form";
+export * from "./types";
+export * from "./constants";

@@ -9,10 +9,9 @@ The core REST API and data ingestion service for **Salenova**, built with Expres
 - **Runtime**: [Node.js 22 LTS](https://nodejs.org/)
 - **Framework**: [Express 5](https://expressjs.com/)
 - **ORM**: [Prisma 6](https://www.prisma.io/)
-- **Database**: [PostgreSQL 16](https://www.postgresql.org/)
+- **Database**: [PostgreSQL](https://www.postgresql.org/)
 - **TypeScript Runner**: [tsx](https://github.com/privatenumber/tsx)
 - **Security & Utilities**: Helmet, CORS, Cookie-Parser, Morgan, BcryptJS, JSON Web Tokens
-- **Containerization**: Docker & Docker Compose
 
 ---
 
@@ -30,8 +29,6 @@ server/
 │   ├── core/                  # Core domain utilities, errors, and configuration
 │   └── module/                # Feature modules (forms, submissions, auth)
 │
-├── Dockerfile                 # Production multi-stage Docker build
-├── docker-compose.yml         # Local stack orchestration (PostgreSQL + API)
 ├── package.json               # Backend dependencies & Prisma scripts
 └── .env.example               # Environment variables template
 ```
@@ -56,31 +53,18 @@ Copy `.env.example` to `.env`:
 cp .env.example .env
 ```
 
-Verify your database credentials:
+Set your PostgreSQL connection string in `.env`:
 ```env
 PORT=4000
 FRONTEND_URL=http://localhost:3000
-POSTGRES_USER=salenova
-POSTGRES_PASSWORD=salenova_dev_pw
-POSTGRES_DB=salenova
-DATABASE_URL="postgresql://salenova:salenova_dev_pw@localhost:5433/salenova?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/salenova?schema=public"
 ```
 
 ---
 
-### 3. Start Database (Docker)
+### 3. Setup Database & Run Migrations
 
-Start the PostgreSQL service in detached mode:
-
-```bash
-docker compose up db -d
-```
-
-The database container maps internal port `5432` to host port `5433` to prevent conflicts with local Postgres installations.
-
----
-
-### 4. Apply Migrations & Generate Prisma Client
+Ensure your PostgreSQL service is running and the database exists, then run:
 
 ```bash
 # Apply migrations to PostgreSQL
@@ -92,7 +76,7 @@ pnpm run db:generate
 
 ---
 
-### 5. Start the Server
+### 4. Start the Server
 
 ```bash
 pnpm run dev

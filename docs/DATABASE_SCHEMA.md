@@ -116,7 +116,7 @@ pnpm run db:generate
 # Create and apply a new migration during local development
 pnpm run db:migrate
 
-# Apply all pending migrations (used in Docker and CI/CD pipelines)
+# Apply all pending migrations (used in production and CI/CD pipelines)
 pnpm run db:deploy
 
 # Launch interactive visual database browser (Prisma Studio)

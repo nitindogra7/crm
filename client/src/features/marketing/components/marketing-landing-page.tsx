@@ -15,7 +15,6 @@ import { Testimonials } from "./testimonials";
 import { Faq } from "./faq";
 import { Footer } from "./footer";
 import { StickyMobileCta } from "./sticky-mobile-cta";
-import { SmoothScroll } from "./smooth-scroll";
 
 export function MarketingLandingPage() {
   const [kept, setKept] = useState(0);
@@ -30,8 +29,7 @@ export function MarketingLandingPage() {
   }, []);
 
   return (
-    <SmoothScroll>
-      <div className="relative min-h-screen bg-[#121212] text-[#f4f4f5] font-sans antialiased selection:bg-white selection:text-black overflow-x-hidden pb-[70px] md:pb-0">
+    <div className="relative min-h-screen bg-[#121212] text-[#f4f4f5] font-sans antialiased selection:bg-white selection:text-black overflow-x-hidden pb-[70px] md:pb-0">
         {/* Deep High-Tech Ambient Depth (Emerald & Mint Green Glow matching Hero) */}
         <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
           {/* Top ambient aura */}
@@ -182,6 +180,5 @@ export function MarketingLandingPage() {
         {/* Sticky Mobile CTA */}
         <StickyMobileCta />
       </div>
-    </SmoothScroll>
   );
 }

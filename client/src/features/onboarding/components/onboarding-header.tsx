@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { Icon } from "@/features/marketing/components/icons";
@@ -14,6 +14,12 @@ export function OnboardingHeader({
   userEmail,
   userName,
 }: OnboardingHeaderProps) {
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
   return (
     <header className="w-full border-b border-white/[0.08] bg-[#121212]/90 backdrop-blur-md sticky top-0 z-30">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -46,7 +52,11 @@ export function OnboardingHeader({
             ) : (
               <div className="w-24 h-3 rounded bg-zinc-800 animate-pulse hidden sm:inline-block" />
             )}
-            <UserButton />
+            {mounted ? (
+              <UserButton />
+            ) : (
+              <div className="w-7 h-7 rounded-full bg-white/10 animate-pulse" />
+            )}
           </div>
         </div>
       </div>

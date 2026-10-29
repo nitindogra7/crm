@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { useDashboard } from "../context/dashboard-context";
 import { FormField } from "../types";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, Loader2 } from "lucide-react";
 
 export function CreateFormModal() {
-  const { isCreateFormOpen, setIsCreateFormOpen, addForm } = useDashboard();
+  const { isCreateFormOpen, setIsCreateFormOpen, createFormAsync, addToast } = useDashboard();
 
   const [name, setName] = useState("");
   const [redirectUrl, setRedirectUrl] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fields, setFields] = useState<FormField[]>([
     { id: "f_name", name: "name", label: "Full Name", type: "text", required: true },
     { id: "f_email", name: "email", label: "Email Address", type: "email", required: true },
@@ -58,19 +59,27 @@ export function CreateFormModal() {
     setNewFieldName("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || isSubmitting) return;
 
-    addForm({
-      name: name.trim(),
-      redirectUrl: redirectUrl.trim() || undefined,
-      fields,
-    });
+    setIsSubmitting(true);
+    try {
+      await createFormAsync({
+        name: name.trim(),
+        redirectUrl: redirectUrl.trim() || undefined,
+        fields,
+      });
 
-    setName("");
-    setRedirectUrl("");
-    setIsCreateFormOpen(false);
+      setName("");
+      setRedirectUrl("");
+      setIsCreateFormOpen(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to create form";
+      addToast("Error", msg, "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -222,16 +231,24 @@ export function CreateFormModal() {
             <button
               type="button"
               onClick={() => setIsCreateFormOpen(false)}
-              className="px-3.5 py-2 rounded-xl border border-white/[0.1] text-zinc-400 hover:text-white transition-colors"
+              disabled={isSubmitting}
+              className="px-3.5 py-2 rounded-xl border border-white/[0.1] text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={!name.trim()}
-              className="px-4 py-2 rounded-xl bg-white text-black font-medium text-xs hover:bg-zinc-200 disabled:opacity-40 transition-colors shadow-sm cursor-pointer"
+              disabled={!name.trim() || isSubmitting}
+              className="px-4 py-2 rounded-xl bg-white text-black font-medium text-xs hover:bg-zinc-200 disabled:opacity-40 transition-colors shadow-sm cursor-pointer inline-flex items-center gap-1.5"
             >
-              Create Form
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Creating Form...</span>
+                </>
+              ) : (
+                <span>Create Form</span>
+              )}
             </button>
           </div>
         </form>

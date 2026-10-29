@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useDashboard } from "../context/dashboard-context";
+import { SpamSkeleton } from "./dashboard-skeleton";
 import { SpamDisposition } from "../types";
 import {
   ShieldAlert,
@@ -9,16 +10,32 @@ import {
   XCircle,
   RotateCcw,
   Search,
+  Loader2,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
 
 export function SpamShieldView() {
-  const { spam, forms, setSelectedSpamId, rescueSpamLead } = useDashboard();
+  const { spam, forms, isLoading, setSelectedSpamId, rescueSpamLeadAsync, addToast } = useDashboard();
 
   const [selectedDisposition, setSelectedDisposition] = useState<"all" | SpamDisposition>("all");
   const [selectedReason, setSelectedReason] = useState<string>("all");
   const [selectedForm, setSelectedForm] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [rescuingId, setRescuingId] = useState<string | null>(null);
+
+  const handleRescueItem = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (rescuingId) return;
+    setRescuingId(id);
+    try {
+      await rescueSpamLeadAsync(id);
+      addToast("Lead rescued", "Submission moved to active Leads.");
+    } catch {
+      addToast("Error", "Failed to rescue lead", "error");
+    } finally {
+      setRescuingId(null);
+    }
+  };
 
   const allReasons = useMemo(() => {
     const set = new Set<string>();
@@ -67,6 +84,10 @@ export function SpamShieldView() {
     selectedDisposition !== "all" ||
     selectedReason !== "all" ||
     selectedForm !== "all";
+
+  if (isLoading) {
+    return <SpamSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
@@ -274,15 +295,17 @@ export function SpamShieldView() {
                     <td className="py-3.5 px-4 text-right">
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          rescueSpamLead(item.id);
-                        }}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-white/[0.1] bg-white/[0.04] hover:bg-white text-zinc-200 hover:text-black font-medium text-[11px] transition-all cursor-pointer whitespace-nowrap shadow-sm"
+                        onClick={(e) => handleRescueItem(e, item.id)}
+                        disabled={rescuingId === item.id}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-white/[0.1] bg-white/[0.04] hover:bg-white text-zinc-200 hover:text-black font-medium text-[11px] transition-all cursor-pointer whitespace-nowrap shadow-sm disabled:opacity-50"
                         title="Move to inbox as New lead"
                       >
-                        <RotateCcw className="w-3 h-3" />
-                        <span>Rescue</span>
+                        {rescuingId === item.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <RotateCcw className="w-3 h-3" />
+                        )}
+                        <span>{rescuingId === item.id ? "Rescuing..." : "Rescue"}</span>
                       </button>
                     </td>
                   </tr>

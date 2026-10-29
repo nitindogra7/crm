@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useDashboard } from "../context/dashboard-context";
+import { AnalyticsSkeleton } from "./dashboard-skeleton";
 import {
   AreaChart,
   Area,
@@ -68,7 +69,7 @@ function CustomTooltip({
 }
 
 export function AnalyticsView() {
-  const { leads, spam, forms, addToast } = useDashboard();
+  const { leads, spam, forms, isLoading, addToast } = useDashboard();
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const isMounted = useHydrated();
 
@@ -146,24 +147,45 @@ export function AnalyticsView() {
     }));
   }, [spam]);
 
-  // 5. Hourly Peak Activity Simulation
+  // 5. Hourly Activity Distribution (dynamically aggregated)
   const hourlyData = useMemo(() => {
-    const hours = [
-      { hour: "12 AM", count: 0 },
-      { hour: "3 AM", count: 0 },
-      { hour: "6 AM", count: 1 },
-      { hour: "9 AM", count: 4 },
-      { hour: "12 PM", count: 6 },
-      { hour: "3 PM", count: 5 },
-      { hour: "6 PM", count: 3 },
-      { hour: "9 PM", count: 2 },
-    ];
-    return hours;
-  }, []);
+    const buckets: Record<string, number> = {
+      "12 AM": 0,
+      "3 AM": 0,
+      "6 AM": 0,
+      "9 AM": 0,
+      "12 PM": 0,
+      "3 PM": 0,
+      "6 PM": 0,
+      "9 PM": 0,
+    };
+
+    leads.forEach((l) => {
+      if (!l.receivedAt) return;
+      const hour = new Date(l.receivedAt).getHours();
+      if (hour < 3) buckets["12 AM"]++;
+      else if (hour < 6) buckets["3 AM"]++;
+      else if (hour < 9) buckets["6 AM"]++;
+      else if (hour < 12) buckets["9 AM"]++;
+      else if (hour < 15) buckets["12 PM"]++;
+      else if (hour < 18) buckets["3 PM"]++;
+      else if (hour < 21) buckets["6 PM"]++;
+      else buckets["9 PM"]++;
+    });
+
+    return Object.entries(buckets).map(([hour, count]) => ({ hour, count }));
+  }, [leads]);
+
+  const peakBucket = useMemo(() => {
+    const max = Math.max(...hourlyData.map((h) => h.count));
+    if (max === 0) return null;
+    const found = hourlyData.find((h) => h.count === max);
+    return found ? found.hour : null;
+  }, [hourlyData]);
 
   // Summary Metrics
   const totalSubmissions = leads.length + spam.length;
-  const cleanRate = totalSubmissions > 0 ? Math.round((leads.length / totalSubmissions) * 100) : 100;
+  const cleanRate = totalSubmissions > 0 ? Math.round((leads.length / totalSubmissions) * 100) : 0;
   const spamRate = totalSubmissions > 0 ? Math.round((spam.length / totalSubmissions) * 100) : 0;
   const avgDaily = (leads.length / (timeRange === "7d" ? 7 : 30)).toFixed(1);
 
@@ -183,6 +205,10 @@ export function AnalyticsView() {
 
     addToast("Analytics exported", `Generated report for ${timeRange} timeline.`);
   };
+
+  if (isLoading) {
+    return <AnalyticsSkeleton />;
+  }
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -383,7 +409,12 @@ export function AnalyticsView() {
           </div>
 
           <div className="h-64 w-full pt-2">
-            {isMounted ? (
+            {formData.length === 0 ? (
+              <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 border border-dashed border-white/[0.08] rounded-xl text-zinc-500 text-xs gap-1.5">
+                <p className="font-medium text-zinc-400">No form endpoints registered yet</p>
+                <p className="text-[11px] text-zinc-600">Create forms to track comparative volume per endpoint.</p>
+              </div>
+            ) : isMounted ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={formData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -422,7 +453,12 @@ export function AnalyticsView() {
           </div>
 
           <div className="h-52 w-full relative flex items-center justify-center">
-            {isMounted ? (
+            {sourceData.length === 0 ? (
+              <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 border border-dashed border-white/[0.08] rounded-xl text-zinc-500 text-xs gap-1.5">
+                <p className="font-medium text-zinc-400">No traffic sources recorded yet</p>
+                <p className="text-[11px] text-zinc-600">Source tags will populate as inquiries arrive.</p>
+              </div>
+            ) : isMounted ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -448,31 +484,34 @@ export function AnalyticsView() {
               </ResponsiveContainer>
             ) : null}
 
-            {/* Center Label inside Donut */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-xl font-heading font-medium text-white tabular-nums">
-                {leads.length}
-              </span>
-              <span className="text-[10px] font-mono uppercase text-zinc-500">
-                Total Leads
-              </span>
-            </div>
+            {sourceData.length > 0 && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xl font-heading font-medium text-white tabular-nums">
+                  {leads.length}
+                </span>
+                <span className="text-[10px] font-mono uppercase text-zinc-500">
+                  Total Leads
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Legend items */}
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/[0.06] text-xs">
-            {sourceData.map((item, idx) => (
-              <div key={item.name} className="flex items-center gap-2">
-                <span
-                  className="w-2.5 h-2.5 rounded-full flex-none"
-                  style={{ backgroundColor: SOURCE_COLORS[idx % SOURCE_COLORS.length] }}
-                />
-                <span className="text-zinc-300 truncate text-[11px] font-mono">
-                  {item.name} ({item.value})
-                </span>
-              </div>
-            ))}
-          </div>
+          {sourceData.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/[0.06] text-xs">
+              {sourceData.map((item, idx) => (
+                <div key={item.name} className="flex items-center gap-2">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full flex-none"
+                    style={{ backgroundColor: SOURCE_COLORS[idx % SOURCE_COLORS.length] }}
+                  />
+                  <span className="text-zinc-300 truncate text-[11px] font-mono">
+                    {item.name} ({item.value})
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -490,34 +529,41 @@ export function AnalyticsView() {
           </div>
 
           <div className="space-y-3 pt-2">
-            {spamReasonData.map((item, idx) => {
-              const pct = spam.length > 0 ? Math.round((item.value / spam.length) * 100) : 0;
-              return (
-                <div key={item.name} className="space-y-1 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-zinc-300 font-mono text-[11.5px] flex items-center gap-2">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: SPAM_COLORS[idx % SPAM_COLORS.length] }}
+            {spamReasonData.length === 0 ? (
+              <div className="py-8 text-center border border-dashed border-white/[0.08] rounded-xl text-zinc-500 text-xs">
+                <p className="font-medium text-zinc-400">No spam detected</p>
+                <p className="text-[11px] text-zinc-600 mt-0.5">Automated bot defense triggers will be charted here.</p>
+              </div>
+            ) : (
+              spamReasonData.map((item, idx) => {
+                const pct = spam.length > 0 ? Math.round((item.value / spam.length) * 100) : 0;
+                return (
+                  <div key={item.name} className="space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300 font-mono text-[11.5px] flex items-center gap-2">
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: SPAM_COLORS[idx % SPAM_COLORS.length] }}
+                        />
+                        {item.name}
+                      </span>
+                      <span className="text-zinc-400 font-mono text-[11px] tabular-nums">
+                        {item.value} ({pct}%)
+                      </span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: SPAM_COLORS[idx % SPAM_COLORS.length],
+                        }}
                       />
-                      {item.name}
-                    </span>
-                    <span className="text-zinc-400 font-mono text-[11px] tabular-nums">
-                      {item.value} ({pct}%)
-                    </span>
+                    </div>
                   </div>
-                  <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${pct}%`,
-                        backgroundColor: SPAM_COLORS[idx % SPAM_COLORS.length],
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -532,9 +578,15 @@ export function AnalyticsView() {
                 Hourly activity clusters to understand when prospects submit inquiries.
               </p>
             </div>
-            <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-              Peak: 12 PM - 3 PM
-            </span>
+            {peakBucket ? (
+              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                Peak: {peakBucket}
+              </span>
+            ) : (
+              <span className="text-[11px] font-mono text-zinc-500 bg-white/[0.04] px-2 py-0.5 rounded border border-white/[0.06]">
+                Awaiting Submissions
+              </span>
+            )}
           </div>
 
           <div className="h-48 w-full pt-2">

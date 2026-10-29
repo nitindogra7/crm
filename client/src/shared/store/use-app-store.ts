@@ -45,8 +45,8 @@ export const useAppStore = create<AppStoreState>()(
           selectedFormId: null,
         });
         get().addToast(
-          "Demo data reset",
-          "Restored initial forms, leads, spam records, and logs."
+          "Workspace cleared",
+          "Reset all dashboard data to clean empty state."
         );
       },
 
@@ -75,16 +75,11 @@ export const useAppStore = create<AppStoreState>()(
       },
     }),
     {
-      name: "salenova_crm_dashboard_state_v1",
+      name: "salenova_crm_dashboard_state_v3",
       partialize: (state) => ({
         workspace: state.workspace,
-        forms: state.forms,
-        leads: state.leads,
-        spam: state.spam,
-        apiKeys: state.apiKeys,
         webhook: state.webhook,
         notifications: state.notifications,
-        deliveryLogs: state.deliveryLogs,
       }),
     }
   )

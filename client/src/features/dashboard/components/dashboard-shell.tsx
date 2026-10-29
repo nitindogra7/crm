@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useDashboard } from "../context/dashboard-context";
+import { LoadingBar } from "./dashboard-skeleton";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { ToastNotificationContainer } from "./toast-notification";
@@ -8,16 +10,21 @@ import { LeadDetailDrawer } from "./lead-detail-drawer";
 import { SpamDetailDrawer } from "./spam-detail-drawer";
 import { CreateFormModal } from "./create-form-modal";
 import { FormDetailModal } from "./form-detail-modal";
+import { DashboardWalkthrough } from "./dashboard-walkthrough";
 
 interface DashboardShellProps {
   children: React.ReactNode;
 }
 
 export function DashboardShell({ children }: DashboardShellProps) {
+  const { isLoading } = useDashboard();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-[#121212] text-zinc-100 font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#0a0a0c] text-zinc-100 font-sans overflow-hidden">
+      {/* Global Top Loading Bar */}
+      {isLoading && <LoadingBar />}
+
       {/* Desktop Sidebar */}
       <div className="hidden md:flex h-full flex-none">
         <Sidebar />
@@ -51,6 +58,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
       <SpamDetailDrawer />
       <CreateFormModal />
       <FormDetailModal />
+      <DashboardWalkthrough />
       <ToastNotificationContainer />
     </div>
   );

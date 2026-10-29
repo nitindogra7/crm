@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
 import { getAuth, clerkClient } from "@clerk/express";
-import { onboardingService, OnboardingService } from "./onboarding.service";
+import { onboardingService, OnboardingService } from "./onboarding.services";
 import {
   createOnboardingSchema,
   updateOnboardingSchema,

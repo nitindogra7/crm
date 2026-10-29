@@ -1,5 +1,6 @@
 import {
   WorkspaceConfig,
+  OrganizationDashboard,
   FormItem,
   LeadItem,
   LeadStatus,
@@ -13,6 +14,8 @@ import {
 
 export interface WorkspaceSlice {
   workspace: WorkspaceConfig;
+  organizations: OrganizationDashboard[];
+  activeDashboardId: string | null;
   updateWorkspace: (updates: Partial<WorkspaceConfig>) => void;
   initWorkspace: (config: {
     name: string;
@@ -21,10 +24,13 @@ export interface WorkspaceSlice {
     teamSize: "team" | "solo";
     avatarTone: string;
   }) => void;
+  setOrganizations: (orgs: OrganizationDashboard[]) => void;
+  setActiveDashboardId: (id: string) => void;
 }
 
 export interface FormsSlice {
   forms: FormItem[];
+  setForms: (forms: FormItem[]) => void;
   addForm: (form: {
     name: string;
     redirectUrl?: string;
@@ -37,7 +43,11 @@ export interface FormsSlice {
 
 export interface LeadsSlice {
   leads: LeadItem[];
+  setLeads: (leads: LeadItem[]) => void;
   updateLeadStatus: (id: string, status: LeadStatus) => void;
+  deleteLead: (id: string) => void;
+  deleteLeads: (ids: string[]) => void;
+  batchUpdateLeadStatus: (ids: string[], status: LeadStatus) => void;
   simulateLeadSubmission: (
     formId: string,
     payload: {
@@ -52,6 +62,7 @@ export interface LeadsSlice {
 
 export interface SpamSlice {
   spam: SpamItem[];
+  setSpam: (spam: SpamItem[]) => void;
   rescueSpamLead: (spamId: string) => void;
 }
 
@@ -60,8 +71,10 @@ export interface SettingsSlice {
   webhook: WebhookConfig;
   notifications: NotificationSettings;
   deliveryLogs: DeliveryLogItem[];
-  createApiKey: (name: string) => void;
-  revokeApiKey: (id: string) => void;
+  setApiKeys: (keys: ApiKeyItem[]) => void;
+  createApiKey: (name?: string, env?: "live" | "test") => ApiKeyItem;
+  regenerateApiKey: () => ApiKeyItem;
+  revokeApiKey: (id?: string) => void;
   updateWebhook: (updates: Partial<WebhookConfig>) => void;
   updateNotifications: (updates: Partial<NotificationSettings>) => void;
 }
@@ -75,6 +88,13 @@ export interface UISlice {
   setSelectedFormId: (id: string | null) => void;
   isCreateFormOpen: boolean;
   setIsCreateFormOpen: (open: boolean) => void;
+  isTourOpen: boolean;
+  tourStep: number;
+  startTour: () => void;
+  closeTour: () => void;
+  setTourStep: (step: number) => void;
+  nextTourStep: () => void;
+  prevTourStep: () => void;
   toasts: ToastMessage[];
   addToast: (
     title: string,

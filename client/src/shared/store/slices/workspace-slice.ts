@@ -11,6 +11,8 @@ export const createWorkspaceSlice: StateCreator<
   WorkspaceSlice
 > = (set) => ({
   workspace: INITIAL_WORKSPACE,
+  organizations: [],
+  activeDashboardId: null,
   updateWorkspace: (updates) =>
     set((state) => ({
       workspace: { ...state.workspace, ...updates },
@@ -26,4 +28,6 @@ export const createWorkspaceSlice: StateCreator<
         createdAt: new Date().toISOString(),
       },
     }),
+  setOrganizations: (orgs) => set({ organizations: orgs }),
+  setActiveDashboardId: (id) => set({ activeDashboardId: id }),
 });

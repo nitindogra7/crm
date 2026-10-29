@@ -14,6 +14,9 @@ import {
   updateFormSchema,
   createApiKeySchema,
   updateLeadStatusSchema,
+  batchDeleteLeadsSchema,
+  batchUpdateLeadStatusSchema,
+  getLeadsQuerySchema,
   simulateSubmissionSchema,
   FIELD_TYPES,
   AVATAR_TONES,
@@ -33,6 +36,9 @@ export type CreateFormInput = z.infer<typeof createFormSchema>;
 export type UpdateFormInput = z.infer<typeof updateFormSchema>;
 export type CreateApiKeyInput = z.infer<typeof createApiKeySchema>;
 export type UpdateLeadStatusInput = z.infer<typeof updateLeadStatusSchema>;
+export type BatchDeleteLeadsInput = z.infer<typeof batchDeleteLeadsSchema>;
+export type BatchUpdateLeadStatusInput = z.infer<typeof batchUpdateLeadStatusSchema>;
+export type GetLeadsQueryInput = z.infer<typeof getLeadsQuerySchema>;
 export type SimulateSubmissionInput = z.infer<typeof simulateSubmissionSchema>;
 
 export type DashboardRecord = Dashboard;
@@ -49,7 +55,8 @@ export interface FormSubmissionPayload {
 }
 
 export interface IngestSubmissionResult {
-  status: "success" | "quarantined";
+  status: "success" | "quarantined" | "rejected";
+  statusCode?: number;
   leadId?: string;
   spamId?: string;
   redirectUrl?: string;

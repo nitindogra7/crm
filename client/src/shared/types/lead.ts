@@ -1,4 +1,4 @@
-export type LeadStatus = "New" | "Contacted";
+export type LeadStatus = "New" | "Contacted" | "Qualified" | "Archived";
 
 export interface LeadItem {
   id: string;
@@ -16,4 +16,22 @@ export interface LeadItem {
     userAgent?: string;
     referrer?: string;
   };
+}
+
+export interface LeadsPagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface GetLeadsParams {
+  dashboardId?: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  formId?: string;
+  source?: string;
+  status?: string;
+  dateRange?: "all" | "today" | "week" | "month";
 }

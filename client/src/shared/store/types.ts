@@ -45,6 +45,9 @@ export interface LeadsSlice {
   leads: LeadItem[];
   setLeads: (leads: LeadItem[]) => void;
   updateLeadStatus: (id: string, status: LeadStatus) => void;
+  deleteLead: (id: string) => void;
+  deleteLeads: (ids: string[]) => void;
+  batchUpdateLeadStatus: (ids: string[], status: LeadStatus) => void;
   simulateLeadSubmission: (
     formId: string,
     payload: {

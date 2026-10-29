@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useDashboard } from "../context/dashboard-context";
+import { LeadStatus } from "@/shared/types";
 import {
   X,
   Copy,
@@ -11,8 +12,11 @@ import {
   FileText,
   ShieldCheck,
   CheckCircle2,
-  RotateCcw,
+  Trash2,
+  Download,
+  AlertTriangle,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
 
@@ -22,24 +26,32 @@ export function LeadDetailDrawer() {
     selectedLeadId,
     setSelectedLeadId,
     updateLeadStatusAsync,
+    deleteLeadAsync,
     addToast,
   } = useDashboard();
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [copiedPayload, setCopiedPayload] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const lead = leads.find((l) => l.id === selectedLeadId);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        setSelectedLeadId(null);
+        if (showDeleteConfirm) {
+          setShowDeleteConfirm(false);
+        } else {
+          setSelectedLeadId(null);
+        }
       }
     }
     if (selectedLeadId) {
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
     }
-  }, [selectedLeadId, setSelectedLeadId]);
+  }, [selectedLeadId, setSelectedLeadId, showDeleteConfirm]);
 
   if (!lead) return null;
 
@@ -50,17 +62,52 @@ export function LeadDetailDrawer() {
     setTimeout(() => setCopiedEmail(false), 2000);
   };
 
-  const handleToggleStatus = async () => {
-    if (isUpdatingStatus) return;
+  const handleCopyPayload = () => {
+    navigator.clipboard.writeText(JSON.stringify(lead, null, 2));
+    setCopiedPayload(true);
+    addToast("Lead details copied", "JSON payload copied to clipboard.");
+    setTimeout(() => setCopiedPayload(false), 2000);
+  };
+
+  const handleStatusChange = async (newStatus: LeadStatus) => {
+    if (isUpdatingStatus || lead.status === newStatus) return;
     setIsUpdatingStatus(true);
-    const nextStatus = lead.status === "New" ? "Contacted" : "New";
     try {
-      await updateLeadStatusAsync(lead.id, nextStatus);
-      addToast("Status updated", `Lead marked as ${nextStatus}.`);
+      await updateLeadStatusAsync(lead.id, newStatus);
+      addToast("Status updated", `Lead marked as ${newStatus}.`);
     } catch {
       addToast("Error", "Failed to update lead status", "error");
     } finally {
       setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await deleteLeadAsync(lead.id);
+      setSelectedLeadId(null);
+      setShowDeleteConfirm(false);
+    } catch {
+      addToast("Error", "Failed to delete lead from server", "error");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const getStatusBadgeStyle = (status: LeadStatus) => {
+    switch (status) {
+      case "New":
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+      case "Contacted":
+        return "bg-sky-500/10 text-sky-400 border-sky-500/20";
+      case "Qualified":
+        return "bg-purple-500/10 text-purple-400 border-purple-500/20";
+      case "Archived":
+        return "bg-zinc-800 text-zinc-400 border-zinc-700";
+      default:
+        return "bg-zinc-800 text-zinc-300 border-zinc-700";
     }
   };
 
@@ -79,20 +126,24 @@ export function LeadDetailDrawer() {
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                 <span
-                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono border ${
-                    lead.status === "New"
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-zinc-800 text-zinc-300 border-zinc-700"
-                  }`}
+                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono border ${getStatusBadgeStyle(
+                    lead.status
+                  )}`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
-                      lead.status === "New" ? "bg-emerald-400" : "bg-zinc-500"
+                      lead.status === "New"
+                        ? "bg-emerald-400"
+                        : lead.status === "Contacted"
+                        ? "bg-sky-400"
+                        : lead.status === "Qualified"
+                        ? "bg-purple-400"
+                        : "bg-zinc-500"
                     }`}
                   />
-                  {lead.status} Lead
+                  {lead.status}
                 </span>
-                <span className="text-[11px] font-mono text-zinc-500">
+                <span className="text-[11px] font-mono text-zinc-500 truncate max-w-[150px]">
                   ID: {lead.id}
                 </span>
               </div>
@@ -104,7 +155,7 @@ export function LeadDetailDrawer() {
                 <button
                   type="button"
                   onClick={handleCopyEmail}
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors cursor-pointer"
                   title="Copy email address"
                 >
                   {copiedEmail ? (
@@ -119,7 +170,7 @@ export function LeadDetailDrawer() {
             <button
               type="button"
               onClick={() => setSelectedLeadId(null)}
-              className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/[0.06] transition-colors flex-none"
+              className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/[0.06] transition-colors flex-none cursor-pointer"
               aria-label="Close drawer"
             >
               <X className="w-5 h-5" />
@@ -128,55 +179,115 @@ export function LeadDetailDrawer() {
 
           {/* Action Toolbar */}
           <div className="px-5 py-3 border-b border-white/[0.06] bg-[#1a1a1a] flex items-center justify-between gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={handleToggleStatus}
-              disabled={isUpdatingStatus}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer disabled:opacity-70 ${
-                lead.status === "New"
-                  ? "bg-emerald-500 text-black hover:bg-emerald-400 shadow-sm"
-                  : "bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700"
-              }`}
-            >
-              {isUpdatingStatus ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Updating...</span>
-                </>
-              ) : lead.status === "New" ? (
-                <>
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Mark Contacted</span>
-                </>
-              ) : (
-                <>
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Mark New</span>
-                </>
+            {/* Status Dropdown Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono text-zinc-400 uppercase">
+                Status:
+              </span>
+              <select
+                value={lead.status}
+                disabled={isUpdatingStatus}
+                onChange={(e) => handleStatusChange(e.target.value as LeadStatus)}
+                className="px-2.5 py-1.5 rounded-xl bg-zinc-900 border border-white/[0.12] text-xs text-white focus:outline-none focus:border-white/40 cursor-pointer disabled:opacity-50"
+              >
+                <option value="New">New</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Qualified">Qualified</option>
+                <option value="Archived">Archived</option>
+              </select>
+              {isUpdatingStatus && (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
               )}
-            </button>
+            </div>
 
-            <button
-              type="button"
-              onClick={handleCopyEmail}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/[0.1] bg-white/[0.03] hover:bg-white/[0.08] text-xs text-zinc-300 transition-colors"
-            >
-              {copiedEmail ? (
-                <>
+            {/* Actions group */}
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleCopyPayload}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/[0.1] bg-white/[0.03] hover:bg-white/[0.08] text-xs text-zinc-300 transition-colors cursor-pointer"
+                title="Copy lead JSON payload"
+              >
+                {copiedPayload ? (
                   <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400">Copied</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>Copy Email</span>
-                </>
-              )}
-            </button>
+                ) : (
+                  <Download className="w-3.5 h-3.5" />
+                )}
+                <span>JSON</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-xs text-red-400 transition-colors cursor-pointer"
+                title="Delete this lead"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete</span>
+              </button>
+            </div>
           </div>
+
+          {/* Delete Confirmation Alert Banner */}
+          {showDeleteConfirm && (
+            <div className="p-4 bg-red-500/10 border-b border-red-500/20 text-xs text-red-200 animate-in fade-in duration-150 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-400 flex-none" />
+                <span>Delete this lead permanently?</span>
+              </div>
+              <div className="flex items-center gap-2 flex-none">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-2.5 py-1 rounded-lg border border-white/[0.1] text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={handleDelete}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3 h-3" />
+                  )}
+                  <span>Confirm</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Drawer Body */}
           <div className="flex-1 overflow-y-auto p-5 space-y-6 text-xs">
+            {/* Quick Status Bar */}
+            <div className="p-3 rounded-xl border border-white/[0.06] bg-[#121212] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <span className="text-zinc-300 font-medium">Pipeline Stage</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {(["New", "Contacted", "Qualified", "Archived"] as LeadStatus[]).map(
+                  (s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => handleStatusChange(s)}
+                      className={`px-2 py-1 rounded-md text-[10.5px] font-mono transition-colors cursor-pointer ${
+                        lead.status === s
+                          ? "bg-white text-black font-semibold"
+                          : "bg-white/[0.04] text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+
             {/* Submission Message */}
             <div className="space-y-2">
               <label className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">

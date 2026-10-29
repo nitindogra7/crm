@@ -65,6 +65,9 @@ interface DashboardContextType {
     }
   ) => Promise<void>;
   updateLeadStatusAsync: (id: string, status: LeadStatus) => Promise<void>;
+  deleteLeadAsync: (id: string) => Promise<void>;
+  batchDeleteLeadsAsync: (ids: string[]) => Promise<void>;
+  batchUpdateLeadStatusAsync: (ids: string[], status: LeadStatus) => Promise<void>;
   rescueSpamLeadAsync: (spamId: string) => Promise<void>;
   refreshDashboardData: () => Promise<void>;
 }
@@ -172,7 +175,7 @@ export function DashboardProvider({
           ).catch(() => ({ success: false, data: [] })),
 
           apiFetch<{ success: boolean; data: LeadItem[] }>(
-            `/api/forms-and-api/leads?dashboardId=${dashboardId}`,
+            `/api/leads?dashboardId=${dashboardId}`,
             { token }
           ).catch(() => ({ success: false, data: [] })),
 
@@ -458,7 +461,7 @@ export function DashboardProvider({
       store.simulateLeadSubmission(formId, payload);
       try {
         const token = await getToken();
-        await apiFetch("/api/forms-and-api/simulate", {
+        await apiFetch("/api/leads/simulate", {
           method: "POST",
           token,
           body: JSON.stringify({
@@ -488,13 +491,73 @@ export function DashboardProvider({
       store.updateLeadStatus(id, status);
       try {
         const token = await getToken();
-        await apiFetch(`/api/forms-and-api/leads/${id}/status`, {
+        await apiFetch(`/api/leads/${id}/status`, {
           method: "PATCH",
           token,
           body: JSON.stringify({ status }),
         });
       } catch (err) {
         console.warn("Failed updating lead status on backend:", err);
+      }
+    },
+    [getToken, store]
+  );
+
+  const deleteLeadAsync = useCallback(
+    async (id: string) => {
+      store.deleteLead(id);
+      try {
+        const token = await getToken();
+        await apiFetch(`/api/leads/${id}`, {
+          method: "DELETE",
+          token,
+        });
+      } catch (err) {
+        console.warn("Failed deleting lead on backend:", err);
+        store.addToast("Sync notice", "Could not sync deletion with server.", "error");
+      }
+    },
+    [getToken, store]
+  );
+
+  const batchDeleteLeadsAsync = useCallback(
+    async (ids: string[]) => {
+      store.deleteLeads(ids);
+      try {
+        const token = await getToken();
+        await apiFetch(`/api/leads/bulk-delete`, {
+          method: "POST",
+          token,
+          body: JSON.stringify({
+            ids,
+            dashboardId: store.activeDashboardId || undefined,
+          }),
+        });
+      } catch (err) {
+        console.warn("Failed batch deleting leads on backend:", err);
+        store.addToast("Sync notice", "Could not sync batch deletion with server.", "error");
+      }
+    },
+    [getToken, store]
+  );
+
+  const batchUpdateLeadStatusAsync = useCallback(
+    async (ids: string[], status: LeadStatus) => {
+      store.batchUpdateLeadStatus(ids, status);
+      try {
+        const token = await getToken();
+        await apiFetch(`/api/leads/bulk-status`, {
+          method: "POST",
+          token,
+          body: JSON.stringify({
+            ids,
+            status,
+            dashboardId: store.activeDashboardId || undefined,
+          }),
+        });
+      } catch (err) {
+        console.warn("Failed batch updating lead status on backend:", err);
+        store.addToast("Sync notice", "Could not sync status update with server.", "error");
       }
     },
     [getToken, store]
@@ -542,6 +605,9 @@ export function DashboardProvider({
     revokeApiKeyAsync,
     simulateLeadSubmissionAsync,
     updateLeadStatusAsync,
+    deleteLeadAsync,
+    batchDeleteLeadsAsync,
+    batchUpdateLeadStatusAsync,
     rescueSpamLeadAsync,
     refreshDashboardData,
   };
@@ -582,10 +648,45 @@ export function useDashboard() {
       revokeApiKeyAsync: async () => {},
       simulateLeadSubmissionAsync: async () => {},
       updateLeadStatusAsync: async () => {},
+      deleteLeadAsync: async () => {},
+      batchDeleteLeadsAsync: async () => {},
+      batchUpdateLeadStatusAsync: async () => {},
       rescueSpamLeadAsync: async () => {},
       refreshDashboardData: async () => {},
     }),
     // Seamless wrappers
+    updateLeadStatus: (id: string, status: LeadStatus) => {
+      store.updateLeadStatus(id, status);
+      if (context?.updateLeadStatusAsync) {
+        context.updateLeadStatusAsync(id, status).catch((e) => {
+          console.warn("Backend lead status update error:", e);
+        });
+      }
+    },
+    deleteLead: (id: string) => {
+      store.deleteLead(id);
+      if (context?.deleteLeadAsync) {
+        context.deleteLeadAsync(id).catch((e) => {
+          console.warn("Backend lead delete error:", e);
+        });
+      }
+    },
+    deleteLeads: (ids: string[]) => {
+      store.deleteLeads(ids);
+      if (context?.batchDeleteLeadsAsync) {
+        context.batchDeleteLeadsAsync(ids).catch((e) => {
+          console.warn("Backend batch delete leads error:", e);
+        });
+      }
+    },
+    batchUpdateLeadStatus: (ids: string[], status: LeadStatus) => {
+      store.batchUpdateLeadStatus(ids, status);
+      if (context?.batchUpdateLeadStatusAsync) {
+        context.batchUpdateLeadStatusAsync(ids, status).catch((e) => {
+          console.warn("Backend batch lead status update error:", e);
+        });
+      }
+    },
     addForm: (input: {
       name: string;
       redirectUrl?: string;

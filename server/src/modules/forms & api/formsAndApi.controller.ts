@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { ZodError } from "zod";
 import { getAuth } from "@clerk/express";
-import { formsAndApiService, FormsAndApiService } from "./formsAndApi.service";
+import { formsAndApiService, FormsAndApiService } from "./formsAndApi.services";
 import {
   createDashboardSchema,
   updateDashboardSchema,
@@ -9,6 +9,9 @@ import {
   updateFormSchema,
   createApiKeySchema,
   updateLeadStatusSchema,
+  batchDeleteLeadsSchema,
+  batchUpdateLeadStatusSchema,
+  getLeadsQuerySchema,
   simulateSubmissionSchema,
 } from "./formsAndApi.validation";
 
@@ -322,14 +325,29 @@ export class FormsAndApiController {
 
   submitForm = async (req: Request, res: Response): Promise<void> => {
     try {
-      const formSlug = req.params.slug ? String(req.params.slug) : undefined;
-      const rawFormId = req.params.formId || req.body?._formId || req.body?.formId;
+      const rawSlug =
+        req.params.slug ||
+        req.body?.formSlug ||
+        req.body?._slug ||
+        req.body?.slug ||
+        req.query.formSlug ||
+        req.query.slug;
+      const formSlug = rawSlug ? String(rawSlug) : undefined;
+
+      const rawFormId =
+        req.params.formId ||
+        req.body?._formId ||
+        req.body?.formId ||
+        req.query.formId ||
+        req.query._formId;
       const formId = rawFormId ? String(rawFormId) : undefined;
 
       const apiKey =
         (req.headers["x-api-key"] as string) ||
         (req.query.api_key as string) ||
+        (req.query.apiKey as string) ||
         (req.body?._api_key as string) ||
+        (req.body?.apiKey as string) ||
         (req.headers.authorization?.replace(/^Bearer\s+/i, ""));
 
       const clientIp =
@@ -359,7 +377,14 @@ export class FormsAndApiController {
         return;
       }
 
-      const statusCode = result.status === "success" ? 200 : 202;
+      const statusCode =
+        result.statusCode ||
+        (result.status === "success"
+          ? 200
+          : result.status === "quarantined"
+            ? 202
+            : 400);
+
       res.status(statusCode).json({
         success: result.status === "success",
         ...result,
@@ -413,13 +438,120 @@ export class FormsAndApiController {
         return;
       }
 
-      const dashboardId = req.query.dashboardId as string | undefined;
-      const leads = await this.service.getLeads(userId, dashboardId);
+      const query = getLeadsQuerySchema.parse(req.query);
+      const result = await this.service.getLeads(userId, query);
 
-      res.status(200).json({ success: true, data: leads });
+      res.status(200).json({
+        success: true,
+        data: result.items,
+        pagination: result.pagination,
+      });
     } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({
+          success: false,
+          error: "Validation failed",
+          details: error.issues.map((i) => i.message),
+        });
+        return;
+      }
       console.error("Error getting leads:", error);
       res.status(500).json({ success: false, error: "Failed to retrieve leads" });
+    }
+  };
+
+  deleteLead = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const auth = getAuth(req);
+      const userId = auth?.userId;
+      if (!userId) {
+        res.status(401).json({ success: false, error: "Unauthorized" });
+        return;
+      }
+
+      const id = String(req.params.id);
+      const deleted = await this.service.deleteLead(userId, id);
+
+      if (!deleted) {
+        res.status(404).json({ success: false, error: "Lead not found or access denied" });
+        return;
+      }
+
+      res.status(200).json({ success: true, message: "Lead deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+      res.status(500).json({ success: false, error: "Failed to delete lead" });
+    }
+  };
+
+  batchDeleteLeads = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const auth = getAuth(req);
+      const userId = auth?.userId;
+      if (!userId) {
+        res.status(401).json({ success: false, error: "Unauthorized" });
+        return;
+      }
+
+      const validated = batchDeleteLeadsSchema.parse(req.body);
+      const result = await this.service.batchDeleteLeads(
+        userId,
+        validated.ids,
+        validated.dashboardId
+      );
+
+      res.status(200).json({
+        success: true,
+        message: `${result.count} lead(s) deleted successfully`,
+        data: { count: result.count },
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({
+          success: false,
+          error: "Validation failed",
+          details: error.issues.map((i) => i.message),
+        });
+        return;
+      }
+      console.error("Error batch deleting leads:", error);
+      res.status(500).json({ success: false, error: "Failed to delete leads" });
+    }
+  };
+
+  batchUpdateLeadStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const auth = getAuth(req);
+      const userId = auth?.userId;
+      if (!userId) {
+        res.status(401).json({ success: false, error: "Unauthorized" });
+        return;
+      }
+
+      const validated = batchUpdateLeadStatusSchema.parse(req.body);
+      const result = await this.service.batchUpdateLeadStatus(
+        userId,
+        validated.ids,
+        validated.status,
+        validated.dashboardId
+      );
+
+      res.status(200).json({
+        success: true,
+        message: `${result.count} lead(s) updated to ${validated.status}`,
+        data: { count: result.count },
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({
+          success: false,
+          error: "Validation failed",
+          details: error.issues.map((i) => i.message),
+        });
+        return;
+      }
+      console.error("Error batch updating lead status:", error);
+      res.status(500).json({ success: false, error: "Failed to update lead status" });
     }
   };
 

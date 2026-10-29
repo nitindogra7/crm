@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const AVATAR_TONES = ["zinc", "emerald", "slate", "white"] as const;
 export const FIELD_TYPES = ["text", "email", "textarea", "tel", "number"] as const;
-export const LEAD_STATUSES = ["New", "Contacted"] as const;
+export const LEAD_STATUSES = ["New", "Contacted", "Qualified", "Archived"] as const;
 export const SPAM_DISPOSITIONS = ["Quarantined", "Rejected"] as const;
 
 /**
@@ -117,6 +117,37 @@ export const createApiKeySchema = z.object({
  */
 export const updateLeadStatusSchema = z.object({
   status: z.enum(LEAD_STATUSES),
+});
+
+/**
+ * Schema for batch deleting leads
+ */
+export const batchDeleteLeadsSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1, "At least one lead ID is required"),
+  dashboardId: z.string().optional(),
+});
+
+/**
+ * Schema for batch updating lead status
+ */
+export const batchUpdateLeadStatusSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1, "At least one lead ID is required"),
+  status: z.enum(LEAD_STATUSES),
+  dashboardId: z.string().optional(),
+});
+
+/**
+ * Schema for querying leads with pagination and filters
+ */
+export const getLeadsQuerySchema = z.object({
+  dashboardId: z.string().optional(),
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().optional().default(10),
+  search: z.string().optional(),
+  formId: z.string().optional(),
+  source: z.string().optional(),
+  status: z.string().optional(),
+  dateRange: z.enum(["all", "today", "week", "month"]).optional(),
 });
 
 /**

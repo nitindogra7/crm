@@ -12,6 +12,8 @@ import type {
   ApiKeyRecord,
   LeadRecord,
   SpamRecord,
+  LeadStatus,
+  GetLeadsQueryInput,
   IngestSubmissionResult,
 } from "./formsAndApi.types";
 
@@ -130,6 +132,9 @@ export class FormsAndApiService {
       const db = await this.repository.findDashboardById(providedDashboardId);
       if (db && db.userId === userId) {
         return db.id;
+      }
+      if (db && db.userId !== userId) {
+        throw new Error("Access denied: You do not have access to this workspace");
       }
     }
     const dashboards = await this.getOrCreateDashboards(userId);
@@ -295,7 +300,24 @@ export class FormsAndApiService {
   }): Promise<IngestSubmissionResult> {
     const { formSlug, formId, apiKey, body, headers, ip } = params;
 
-    // 1. Find the target form
+    // 1. Identify target form and/or API Key authentication
+    let verifiedApiKey: ApiKeyRecord | null = null;
+    let targetDashboardId: string | null = null;
+
+    if (apiKey) {
+      verifiedApiKey = await this.repository.findApiKeyByKey(apiKey);
+      if (!verifiedApiKey || verifiedApiKey.revoked) {
+        return {
+          status: "rejected",
+          statusCode: 401,
+          message: "Invalid, expired, or revoked API key",
+        };
+      }
+      await this.repository.touchApiKeyLastUsed(verifiedApiKey.id);
+      targetDashboardId = verifiedApiKey.dashboardId;
+    }
+
+    // Look up form by ID or Slug
     let form: FormRecord | null = null;
     if (formId) {
       form = await this.repository.findFormById(formId);
@@ -303,35 +325,38 @@ export class FormsAndApiService {
       form = await this.repository.findFormByGlobalSlug(formSlug);
     }
 
-    if (!form) {
-      return {
-        status: "quarantined",
-        message: "Target form endpoint not found",
-      };
-    }
-
-    if (!form.enabled) {
-      return {
-        status: "quarantined",
-        message: "Form submissions are currently paused by workspace owner",
-      };
-    }
-
-    // 2. Validate API key if provided, or verify against dashboard key
-    let verifiedApiKey: ApiKeyRecord | null = null;
-    if (apiKey) {
-      verifiedApiKey = await this.repository.findApiKeyByKey(apiKey);
-      if (!verifiedApiKey || verifiedApiKey.revoked || verifiedApiKey.dashboardId !== form.dashboardId) {
+    // If form is found, verify API key alignment (if apiKey provided) and check if enabled
+    if (form) {
+      if (verifiedApiKey && verifiedApiKey.dashboardId !== form.dashboardId) {
         return {
-          status: "quarantined",
-          message: "Invalid, expired, or revoked API key",
+          status: "rejected",
+          statusCode: 403,
+          message: "API key does not belong to the target form's workspace",
         };
       }
-      await this.repository.touchApiKeyLastUsed(verifiedApiKey.id);
+
+      if (!form.enabled) {
+        return {
+          status: "rejected",
+          statusCode: 403,
+          message: "Form submissions are currently paused by workspace owner",
+        };
+      }
+
+      targetDashboardId = form.dashboardId;
     }
 
-    // 3. Extract core fields & honeypots
-    const honeypotTriggers = ["_gotcha", "_hp", "honeypot", "fax", "website_url_check"];
+    // If neither form nor valid API key is present, reject as endpoint not found
+    if (!form && !targetDashboardId) {
+      return {
+        status: "rejected",
+        statusCode: 404,
+        message: "Target form endpoint or API key not found",
+      };
+    }
+
+    // 2. Extract core fields & honeypots
+    const honeypotTriggers = ["_gotcha", "_hp", "honeypot", "website_url_check"];
     let isHoneypotTriggered = false;
     let triggerReason = "";
 
@@ -356,15 +381,30 @@ export class FormsAndApiService {
     const rawMessage = body.message ?? body.inquiry ?? body.comment;
     const message = typeof rawMessage === "string" ? rawMessage : "";
 
-    // Basic heuristic: check disposable email
-    const disposableDomains = ["mailinator.com", "guerrillamail.com", "tempmail.com", "10minutemail.com"];
-    const emailParts = senderEmail.includes("@") ? senderEmail.split("@") : [];
-    const emailDomain = emailParts[1]?.toLowerCase();
-    const isDisposableEmail = emailDomain ? disposableDomains.includes(emailDomain) : false;
+    // Heuristics: Email presence, syntax validation, disposable domains
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValidEmail = senderEmail ? emailRegex.test(senderEmail) : false;
 
-    if (isDisposableEmail) {
+    if (!senderEmail) {
       isHoneypotTriggered = true;
-      triggerReason = "Disposable email address detected";
+      triggerReason = triggerReason || "Missing contact email address";
+    } else if (!isValidEmail) {
+      isHoneypotTriggered = true;
+      triggerReason = triggerReason || "Invalid email format";
+    } else {
+      const disposableDomains = [
+        "mailinator.com",
+        "guerrillamail.com",
+        "tempmail.com",
+        "10minutemail.com",
+        "trashmail.com",
+      ];
+      const emailParts = senderEmail.split("@");
+      const emailDomain = emailParts[1]?.toLowerCase();
+      if (emailDomain && disposableDomains.includes(emailDomain)) {
+        isHoneypotTriggered = true;
+        triggerReason = "Disposable email address detected";
+      }
     }
 
     const userAgentHeader = headers["user-agent"];
@@ -380,7 +420,8 @@ export class FormsAndApiService {
       referrer,
     };
 
-    // Separate extra fields (capture any custom string, number, or boolean fields)
+    // Prototype pollution prevention: block dangerous object keys
+    const dangerousKeys = ["__proto__", "constructor", "prototype"];
     const coreKeys = [
       "name",
       "fullName",
@@ -396,62 +437,89 @@ export class FormsAndApiService {
       "honeypot",
       "_api_key",
       "apiKey",
-      "fax",
       "website_url_check",
+      "formId",
+      "_formId",
+      "formSlug",
+      "slug",
+      "_slug",
+      "dashboardId",
     ];
-    const extraFields: Record<string, string> = {};
+
+    const extraFields: Record<string, string> = Object.create(null);
     for (const [k, v] of Object.entries(body)) {
-      if (!coreKeys.includes(k) && v !== undefined && v !== null && v !== "") {
+      if (
+        !dangerousKeys.includes(k) &&
+        !coreKeys.includes(k) &&
+        v !== undefined &&
+        v !== null &&
+        v !== ""
+      ) {
         extraFields[k] = typeof v === "object" ? JSON.stringify(v) : String(v);
       }
     }
 
-    // 4. If flagged as spam -> quarantine in Spam table
-    if (isHoneypotTriggered || !senderEmail) {
+    // 3. If flagged as spam -> quarantine in Spam table
+    if (isHoneypotTriggered) {
       const spam = await this.repository.createSpam({
-        dashboardId: form.dashboardId,
-        formId: form.id,
-        formName: form.name,
+        dashboardId: targetDashboardId!,
+        formId: form ? form.id : null,
+        formName: form ? form.name : "API Ingestion",
         senderName,
         senderEmail: senderEmail || "unknown@unverified.net",
         disposition: "Quarantined",
-        reason: triggerReason || "Missing contact email or suspicious payload",
+        reason: triggerReason || "Suspicious submission payload",
         messageSnippet: message.slice(0, 200),
         rawPayload: body as Prisma.InputJsonValue,
         triggerRule: triggerReason || "heuristics",
         metadata,
       });
 
-      await this.repository.incrementSpamCount(form.id);
+      if (form) {
+        await this.repository.incrementSpamCount(form.id);
+      }
 
       return {
         status: "quarantined",
-        spamId: spam.id,
-        redirectUrl: form.redirectUrl || undefined,
+        statusCode: 202,
+        spamId: verifiedApiKey ? spam.id : undefined, // do not leak internal database IDs to anonymous visitors
+        redirectUrl: form?.redirectUrl || undefined,
         message: "Submission received and quarantined for security inspection",
       };
     }
 
-    // 5. Clean submission -> save to Leads table
+    // 4. Clean submission -> save to Leads table
+    const source =
+      body.source && typeof body.source === "string"
+        ? body.source
+        : (headers["referer"] as string)
+          ? "Web Referral"
+          : verifiedApiKey
+            ? "API Integration"
+            : "Website embed";
+
     const lead = await this.repository.createLead({
-      dashboardId: form.dashboardId,
-      formId: form.id,
-      formName: form.name,
+      dashboardId: targetDashboardId!,
+      formId: form ? form.id : null,
+      formName: form ? form.name : "API Ingestion",
       name: senderName,
       email: senderEmail,
       message,
-      source: (headers["referer"] as string) ? "Web Referral" : "Website embed",
+      source,
       status: "New",
       extraFields: Object.keys(extraFields).length > 0 ? extraFields : undefined,
       metadata,
     });
 
-    await this.repository.incrementLeadCount(form.id);
+    if (form) {
+      await this.repository.incrementLeadCount(form.id);
+    }
 
     return {
       status: "success",
-      leadId: lead.id,
-      redirectUrl: form.redirectUrl || undefined,
+      statusCode: 200,
+      leadId: verifiedApiKey ? lead.id : undefined, // do not leak internal database IDs to anonymous visitors
+      redirectUrl: form?.redirectUrl || undefined,
       message: "Lead captured successfully",
     };
   }
@@ -461,12 +529,23 @@ export class FormsAndApiService {
     input: SimulateSubmissionInput
   ): Promise<LeadRecord> {
     const dashboardId = await this.resolveDashboardId(userId, input.dashboardId);
-    const form = await this.repository.findFormById(input.formId);
+    let validFormId: string | null = null;
+    let formName = "Sandbox Simulator";
+
+    if (input.formId) {
+      const form = await this.repository.findFormById(input.formId);
+      // ONLY link if form actually exists AND belongs to the user's dashboard!
+      if (form && form.dashboardId === dashboardId) {
+        validFormId = form.id;
+        formName = form.name;
+        await this.repository.incrementLeadCount(form.id);
+      }
+    }
 
     const lead = await this.repository.createLead({
       dashboardId,
-      formId: input.formId,
-      formName: form?.name || "Quick Test Form",
+      formId: validFormId,
+      formName,
       name: input.name,
       email: input.email,
       message: input.message,
@@ -475,10 +554,6 @@ export class FormsAndApiService {
       extraFields: input.extraFields,
     });
 
-    if (form) {
-      await this.repository.incrementLeadCount(form.id);
-    }
-
     return lead;
   }
 
@@ -486,7 +561,49 @@ export class FormsAndApiService {
   // LEADS & SPAM MANAGEMENT
   // ==========================================
 
-  async getLeads(userId: string, dashboardId?: string): Promise<LeadRecord[]> {
+  async getLeads(
+    userId: string,
+    query?: GetLeadsQueryInput
+  ): Promise<{
+    items: LeadRecord[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
+    const targetDashboardId = await this.resolveDashboardId(
+      userId,
+      query?.dashboardId
+    );
+
+    const result = await this.repository.findLeadsWithPagination({
+      dashboardId: targetDashboardId,
+      page: query?.page,
+      limit: query?.limit,
+      search: query?.search,
+      formId: query?.formId,
+      source: query?.source,
+      status: query?.status,
+      dateRange: query?.dateRange,
+    });
+
+    return {
+      items: result.items,
+      pagination: {
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+      },
+    };
+  }
+
+  async getAllLeads(
+    userId: string,
+    dashboardId?: string
+  ): Promise<LeadRecord[]> {
     const targetDashboardId = await this.resolveDashboardId(userId, dashboardId);
     return this.repository.findLeadsByDashboardId(targetDashboardId);
   }
@@ -494,7 +611,7 @@ export class FormsAndApiService {
   async updateLeadStatus(
     userId: string,
     leadId: string,
-    status: "New" | "Contacted"
+    status: LeadStatus
   ): Promise<LeadRecord | null> {
     const lead = await this.repository.findLeadById(leadId);
     if (!lead) return null;
@@ -502,6 +619,41 @@ export class FormsAndApiService {
     if (!dashboard || dashboard.userId !== userId) return null;
 
     return this.repository.updateLeadStatus(leadId, status);
+  }
+
+  async deleteLead(userId: string, leadId: string): Promise<boolean> {
+    const lead = await this.repository.findLeadById(leadId);
+    if (!lead) return false;
+    const dashboard = await this.repository.findDashboardById(lead.dashboardId);
+    if (!dashboard || dashboard.userId !== userId) return false;
+
+    await this.repository.deleteLead(leadId);
+    return true;
+  }
+
+  async batchDeleteLeads(
+    userId: string,
+    leadIds: string[],
+    dashboardId?: string
+  ): Promise<{ count: number }> {
+    const targetDashboardId = await this.resolveDashboardId(userId, dashboardId);
+    const count = await this.repository.deleteLeads(targetDashboardId, leadIds);
+    return { count };
+  }
+
+  async batchUpdateLeadStatus(
+    userId: string,
+    leadIds: string[],
+    status: LeadStatus,
+    dashboardId?: string
+  ): Promise<{ count: number }> {
+    const targetDashboardId = await this.resolveDashboardId(userId, dashboardId);
+    const count = await this.repository.batchUpdateLeadStatus(
+      targetDashboardId,
+      leadIds,
+      status
+    );
+    return { count };
   }
 
   async getSpam(userId: string, dashboardId?: string): Promise<SpamRecord[]> {
@@ -515,16 +667,67 @@ export class FormsAndApiService {
     const dashboard = await this.repository.findDashboardById(spam.dashboardId);
     if (!dashboard || dashboard.userId !== userId) return null;
 
-    // Create lead from spam data
+    // Extract full message and extra fields from rawPayload if available
+    let fullMessage = spam.messageSnippet;
+    let extraFields: Record<string, string> | undefined = undefined;
+
+    if (
+      spam.rawPayload &&
+      typeof spam.rawPayload === "object" &&
+      !Array.isArray(spam.rawPayload)
+    ) {
+      const payload = spam.rawPayload as Record<string, unknown>;
+      const rawMsg = payload.message ?? payload.inquiry ?? payload.comment;
+      if (typeof rawMsg === "string" && rawMsg.trim()) {
+        fullMessage = rawMsg;
+      }
+
+      const dangerousKeys = ["__proto__", "constructor", "prototype"];
+      const coreKeys = [
+        "name",
+        "fullName",
+        "senderName",
+        "email",
+        "senderEmail",
+        "workEmail",
+        "message",
+        "inquiry",
+        "comment",
+        "_gotcha",
+        "_hp",
+        "honeypot",
+        "_api_key",
+        "apiKey",
+      ];
+
+      const extracted: Record<string, string> = Object.create(null);
+      for (const [k, v] of Object.entries(payload)) {
+        if (
+          !coreKeys.includes(k) &&
+          !dangerousKeys.includes(k) &&
+          v !== undefined &&
+          v !== null &&
+          v !== ""
+        ) {
+          extracted[k] = typeof v === "object" ? JSON.stringify(v) : String(v);
+        }
+      }
+      if (Object.keys(extracted).length > 0) {
+        extraFields = extracted;
+      }
+    }
+
+    // Create lead from rescued spam data
     const lead = await this.repository.createLead({
       dashboardId: spam.dashboardId,
       formId: spam.formId,
       formName: spam.formName,
       name: spam.senderName,
       email: spam.senderEmail,
-      message: spam.messageSnippet,
+      message: fullMessage,
       source: "Rescued from Quarantine",
       status: "New",
+      extraFields,
       metadata: spam.metadata || undefined,
     });
 

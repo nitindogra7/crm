@@ -7,6 +7,7 @@ import { prisma } from "./prisma";
 import { onboardingRouter } from "./modules/onboarding/onboarding.routes";
 import { formsAndApiRouter } from "./modules/forms & api/formsAndApi.routes";
 import { formsAndApiController } from "./modules/forms & api/formsAndApi.controller";
+import { leadsRouter } from "./modules/leads/leads.routes";
 
 const app: Application = express();
 
@@ -14,26 +15,29 @@ const app: Application = express();
 const publicSubmissionCors = cors({
   origin: "*",
   methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-api-key", "Accept"],
 });
 
 // Allowed origins for dashboard management & authenticated user operations
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL?.replace(/\/+$/, ""),
+  "https://onecompiler.com",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
 ].filter(Boolean) as string[];
 
 const dashboardCors = cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) return callback(null, true);
+    const normalized = origin.replace(/\/+$/, "");
+    if (allowedOrigins.includes(normalized)) {
       return callback(null, true);
     }
     return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-api-key", "Accept"],
 });
 
 // Smart CORS routing: Public forms endpoints accept all origins; authenticated routes restrict to frontend
@@ -84,6 +88,9 @@ app.get("/health", async (_req, res) => {
 
 // Mounted Routes
 app.use("/api/onboarding", onboardingRouter);
+app.use("/api/leads", leadsRouter);
+app.use("/api/forms-and-api/leads", leadsRouter);
+app.use("/api/forms/leads", leadsRouter);
 app.use("/api/forms-and-api", formsAndApiRouter);
 app.use("/api/forms", formsAndApiRouter);
 

@@ -1,5 +1,5 @@
 import { StateCreator } from "zustand";
-import { LeadItem, DeliveryLogItem } from "@/shared/types";
+import { LeadItem, DeliveryLogItem, LeadStatus } from "@/shared/types";
 import { INITIAL_LEADS } from "@/features/dashboard/data/mock-data";
 import type { AppStoreState, LeadsSlice } from "../types";
 
@@ -18,8 +18,75 @@ export const createLeadsSlice: StateCreator<
       leads: state.leads.map((l) => (l.id === id ? { ...l, status } : l)),
     }));
     get().addToast(
-      status === "Contacted" ? "Lead marked contacted" : "Lead marked new",
+      `Lead marked ${status}`,
       `Status changed to ${status}.`
+    );
+  },
+  deleteLead: (id) => {
+    const { leads, forms, selectedLeadId, setSelectedLeadId, addToast } = get();
+    const targetLead = leads.find((l) => l.id === id);
+    if (!targetLead) return;
+
+    if (selectedLeadId === id) {
+      setSelectedLeadId(null);
+    }
+
+    const nextForms = forms.map((f) =>
+      f.id === targetLead.formId
+        ? { ...f, leadCount: Math.max(0, f.leadCount - 1) }
+        : f
+    );
+
+    set({
+      leads: leads.filter((l) => l.id !== id),
+      forms: nextForms,
+    });
+
+    addToast("Lead deleted", `Removed "${targetLead.name}" from leads inbox.`);
+  },
+  deleteLeads: (ids) => {
+    const { leads, forms, selectedLeadId, setSelectedLeadId, addToast } = get();
+    if (ids.length === 0) return;
+
+    if (selectedLeadId && ids.includes(selectedLeadId)) {
+      setSelectedLeadId(null);
+    }
+
+    // Count deletions per form
+    const formCounts: Record<string, number> = {};
+    for (const id of ids) {
+      const l = leads.find((item) => item.id === id);
+      if (l && l.formId) {
+        formCounts[l.formId] = (formCounts[l.formId] || 0) + 1;
+      }
+    }
+
+    const nextForms = forms.map((f) => {
+      const dec = formCounts[f.id] || 0;
+      return dec > 0 ? { ...f, leadCount: Math.max(0, f.leadCount - dec) } : f;
+    });
+
+    const idsSet = new Set(ids);
+    set({
+      leads: leads.filter((l) => !idsSet.has(l.id)),
+      forms: nextForms,
+    });
+
+    addToast(
+      "Leads deleted",
+      `Successfully removed ${ids.length} lead${ids.length > 1 ? "s" : ""}.`
+    );
+  },
+  batchUpdateLeadStatus: (ids, status: LeadStatus) => {
+    const idsSet = new Set(ids);
+    set((state) => ({
+      leads: state.leads.map((l) =>
+        idsSet.has(l.id) ? { ...l, status } : l
+      ),
+    }));
+    get().addToast(
+      "Status updated",
+      `Updated ${ids.length} lead${ids.length > 1 ? "s" : ""} to "${status}".`
     );
   },
   simulateLeadSubmission: (formId, payload) => {
@@ -84,7 +151,7 @@ export const createLeadsSlice: StateCreator<
 
     addToast(
       "Test lead simulated!",
-      `Added "${newLead.name}" to ${targetForm?.name || "inbox"}. (Local preview only; no actual emails sent)`
+      `Added "${newLead.name}" to ${targetForm?.name || "inbox"}.`
     );
   },
 });

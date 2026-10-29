@@ -43,11 +43,8 @@ router.post("/submit/:formId", formsAndApiController.submitForm);
 router.post("/simulate", formsAndApiController.simulateSubmission);
 
 // ==========================================
-// LEADS & SPAM & STATS ROUTES
+// SPAM & STATS ROUTES
 // ==========================================
-router.get("/leads", formsAndApiController.getLeads);
-router.patch("/leads/:id/status", formsAndApiController.updateLeadStatus);
-
 router.get("/spam", formsAndApiController.getSpam);
 router.post("/spam/:id/rescue", formsAndApiController.rescueSpam);
 

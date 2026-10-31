@@ -14,6 +14,7 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
+    "/__clerk/:path*",
     "/dashboard(.*)",
     "/onboarding(.*)",
     "/sign-in(.*)",

@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { useDashboard } from "../context/dashboard-context";
 import { FormField } from "../types";
-import { X, Plus, Trash2, Loader2 } from "lucide-react";
+import { WorkspaceEnvironment } from "@/shared/types";
+import { X, Plus, Trash2, Loader2, FlaskConical, Globe, AlertCircle } from "lucide-react";
 
 export function CreateFormModal() {
-  const { isCreateFormOpen, setIsCreateFormOpen, createFormAsync, addToast } = useDashboard();
+  const { isCreateFormOpen, setIsCreateFormOpen, createFormAsync, currentEnvironment, workspace, addToast } = useDashboard();
 
   const [name, setName] = useState("");
   const [redirectUrl, setRedirectUrl] = useState("");
   const [allowedDomains, setAllowedDomains] = useState("");
+  const [environment, setEnvironment] = useState<WorkspaceEnvironment>(currentEnvironment || "development");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fields, setFields] = useState<FormField[]>([
     { id: "f_name", name: "name", label: "Full Name", type: "text", required: true },
@@ -20,6 +22,14 @@ export function CreateFormModal() {
 
   const [newFieldName, setNewFieldName] = useState("");
   const [newFieldType, setNewFieldType] = useState<FormField["type"]>("text");
+
+  const [prevOpen, setPrevOpen] = useState(isCreateFormOpen);
+  if (isCreateFormOpen !== prevOpen) {
+    setPrevOpen(isCreateFormOpen);
+    if (isCreateFormOpen) {
+      setEnvironment(currentEnvironment || "development");
+    }
+  }
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -75,6 +85,7 @@ export function CreateFormModal() {
         name: name.trim(),
         redirectUrl: redirectUrl.trim() || undefined,
         allowedDomains: parsedDomains,
+        environment,
         fields,
       });
 
@@ -137,6 +148,69 @@ export function CreateFormModal() {
             <p className="text-[11px] text-slate-400 mt-1">
               Used to identify submissions in your inbox.
             </p>
+          </div>
+
+          {/* Target Environment */}
+          <div>
+            <label className="block text-slate-700 font-semibold mb-1.5">
+              Target Environment
+            </label>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setEnvironment("development")}
+                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                  environment === "development"
+                    ? "bg-amber-50/70 border-amber-300 ring-2 ring-amber-500/20 shadow-xs"
+                    : "bg-slate-50/70 border-slate-200/90 hover:border-slate-300"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-semibold text-xs text-amber-900">
+                    <FlaskConical className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Development</span>
+                  </div>
+                  {environment === "development" && (
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Permissive CORS for localhost and test previews.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setEnvironment("production")}
+                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                  environment === "production"
+                    ? "bg-purple-50/70 border-purple-300 ring-2 ring-purple-500/20 shadow-xs"
+                    : "bg-slate-50/70 border-slate-200/90 hover:border-slate-300"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-semibold text-xs text-purple-900">
+                    <Globe className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Production</span>
+                  </div>
+                  {environment === "production" && (
+                    <span className="w-2 h-2 rounded-full bg-purple-600" />
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-snug">
+                  Origin-verified endpoint. Strict CORS protection.
+                </p>
+              </button>
+            </div>
+
+            {environment === "production" && !workspace?.productionOrigin && (
+              <div className="mt-2 p-2.5 rounded-xl border border-amber-200/80 bg-amber-50/60 flex items-start gap-2 text-[11px] text-amber-800 leading-relaxed">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Origin not configured:</strong> Your workspace has no production origin set yet. Submissions to this form from client browsers will be blocked until configured in Workspace Settings.
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Optional Redirect URL */}

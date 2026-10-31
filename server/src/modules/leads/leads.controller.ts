@@ -25,6 +25,7 @@ export class LeadsController {
       }
 
       const dashboardId = req.query.dashboardId as string | undefined;
+      const environment = req.query.environment as string | undefined;
       const isPaginationRequested =
         req.query.page !== undefined || req.query.limit !== undefined;
 
@@ -37,7 +38,7 @@ export class LeadsController {
         !req.query.status &&
         !req.query.dateRange
       ) {
-        const items = await this.service.getAllLeads(userId, dashboardId);
+        const items = await this.service.getAllLeads(userId, dashboardId, environment);
         res.status(200).json({
           success: true,
           data: items,

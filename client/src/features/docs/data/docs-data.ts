@@ -298,8 +298,8 @@ export const HTTP_STATUS_CODES: StatusCodeInfo[] = [
   {
     code: 403,
     status: "Forbidden",
-    meaning: "Form is paused by workspace owner.",
-    description: "The target form has been toggled to disabled/paused in the infraly dashboard.",
+    meaning: "Origin mismatch or form paused.",
+    description: "In production mode, the Origin/Referer header did not match your configured Production Origin, or the form is paused.",
     sampleResponse: `{\n  "success": false,\n  "status": "rejected",\n  "message": "Form submissions are currently paused by workspace owner"\n}`,
   },
   {

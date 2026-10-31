@@ -121,6 +121,9 @@ export class FormsAndApiService {
       ...(updates.ownerEmail !== undefined && { ownerEmail: updates.ownerEmail || null }),
       ...(updates.avatarTone !== undefined && { avatarTone: updates.avatarTone }),
       ...(updates.plan !== undefined && { plan: updates.plan }),
+      ...(updates.productionOrigin !== undefined && { productionOrigin: updates.productionOrigin || null }),
+      ...(updates.allowedOrigins !== undefined && { allowedOrigins: updates.allowedOrigins }),
+      ...(updates.activeEnvironment !== undefined && { activeEnvironment: updates.activeEnvironment }),
     });
   }
 
@@ -175,15 +178,16 @@ export class FormsAndApiService {
       name: input.name,
       slug: finalSlug,
       endpointUrl,
+      environment: input.environment || "development",
       redirectUrl: input.redirectUrl || null,
       allowedDomains: input.allowedDomains || [],
       fields: input.fields || [],
     });
   }
 
-  async getForms(userId: string, dashboardId?: string): Promise<FormRecord[]> {
+  async getForms(userId: string, dashboardId?: string, environment?: string): Promise<FormRecord[]> {
     const targetDashboardId = await this.resolveDashboardId(userId, dashboardId);
-    return this.repository.findFormsByDashboardId(targetDashboardId);
+    return this.repository.findFormsByDashboardId(targetDashboardId, environment);
   }
 
   async getFormById(userId: string, formId: string): Promise<FormRecord | null> {
@@ -222,6 +226,7 @@ export class FormsAndApiService {
       ...(updates.name !== undefined && { name: updates.name }),
       ...(updates.slug !== undefined && { slug: finalSlug, endpointUrl: newEndpointUrl }),
       ...(updates.enabled !== undefined && { enabled: updates.enabled }),
+      ...(updates.environment !== undefined && { environment: updates.environment }),
       ...(updates.redirectUrl !== undefined && { redirectUrl: updates.redirectUrl ? updates.redirectUrl : null }),
       ...(updates.allowedDomains !== undefined && { allowedDomains: updates.allowedDomains }),
       ...(updates.fields !== undefined && { fields: updates.fields }),
@@ -239,40 +244,50 @@ export class FormsAndApiService {
   // API KEYS
   // ==========================================
 
-  async getApiKeys(userId: string, dashboardId?: string): Promise<ApiKeyRecord[]> {
+  async getApiKeys(userId: string, dashboardId?: string, environment?: string): Promise<ApiKeyRecord[]> {
     const targetDashboardId = await this.resolveDashboardId(userId, dashboardId);
-    return this.repository.findApiKeysByDashboardId(targetDashboardId);
+    return this.repository.findApiKeysByDashboardId(targetDashboardId, environment);
   }
 
   async generateApiKey(
     userId: string,
     dashboardId?: string,
-    name: string = "Live API Key",
-    env: "live" | "test" = "live"
+    name?: string,
+    env: "live" | "test" = "test",
+    environment?: string
   ): Promise<ApiKeyRecord> {
     const targetDashboardId = await this.resolveDashboardId(userId, dashboardId);
-    const prefix = `sln_${env}_`;
+    const resolvedEnv = environment === "production" ? "live" : environment === "development" ? "test" : env;
+    const prefix = `sln_${resolvedEnv}_`;
     const randomHex = crypto.randomBytes(16).toString("hex");
     const fullKey = `${prefix}${randomHex}`;
+    const keyEnv = resolvedEnv === "live" ? "production" : "development";
+    const defaultName = keyEnv === "production" ? "Production API Key" : "Development API Key";
 
     return this.repository.createApiKey({
       dashboardId: targetDashboardId,
-      name,
+      name: name || defaultName,
       key: fullKey,
       keyPrefix: prefix,
+      environment: keyEnv,
       fullKeyMock: fullKey,
     });
   }
 
   async regenerateApiKey(
     userId: string,
-    dashboardId?: string
+    dashboardId?: string,
+    env: "live" | "test" = "test",
+    environment?: string
   ): Promise<ApiKeyRecord> {
     const targetDashboardId = await this.resolveDashboardId(userId, dashboardId);
-    // Revoke previous keys
-    await this.repository.revokeAllActiveKeysForDashboard(targetDashboardId);
+    const resolvedEnv = environment === "production" ? "live" : environment === "development" ? "test" : env;
+    const keyEnv = resolvedEnv === "live" ? "production" : "development";
+
+    // Revoke previous keys for that environment
+    await this.repository.revokeAllActiveKeysForDashboard(targetDashboardId, keyEnv);
     // Create new one
-    return this.generateApiKey(userId, targetDashboardId, "Live API Key", "live");
+    return this.generateApiKey(userId, targetDashboardId, undefined, resolvedEnv, keyEnv);
   }
 
   async revokeApiKey(userId: string, apiKeyId: string): Promise<boolean> {
@@ -348,10 +363,94 @@ export class FormsAndApiService {
       targetDashboardId = form.dashboardId;
     }
 
-    // Verify Domain Whitelist / Allowed Origins for public form submissions
-    if (form && form.allowedDomains && form.allowedDomains.length > 0) {
-      // Authenticated server-to-server requests with a valid API key bypass origin domain checks
-      if (!verifiedApiKey) {
+    // Determine target environment: inherited from Form or ApiKey, defaulting to development
+    const targetEnvironment =
+      form?.environment ||
+      verifiedApiKey?.environment ||
+      (verifiedApiKey?.keyPrefix?.includes("live") ? "production" : "development");
+
+    const targetDashboard = targetDashboardId
+      ? await this.repository.findDashboardById(targetDashboardId)
+      : null;
+
+    // ==========================================
+    // PRODUCTION MODE STRICT ORIGIN VERIFICATION
+    // ==========================================
+    if (targetEnvironment === "production") {
+      const prodOrigin = targetDashboard?.productionOrigin;
+      if (!prodOrigin) {
+        return {
+          status: "rejected",
+          statusCode: 403,
+          message:
+            "Production Origin Required: This workspace is running in Production mode, but no Production Origin has been configured in Settings. Submissions are rejected until a production origin is registered.",
+        };
+      }
+
+      // Origin and referer headers
+      const originHeader = (Array.isArray(headers.origin) ? headers.origin[0] : headers.origin) || "";
+      const refHeader =
+        (Array.isArray(headers.referer) ? headers.referer[0] : headers.referer) ||
+        (Array.isArray(headers.referrer) ? headers.referrer[0] : headers.referrer) ||
+        "";
+
+      let requestHost = "";
+      try {
+        if (originHeader) {
+          requestHost = new URL(originHeader).hostname.toLowerCase();
+        } else if (refHeader && refHeader !== "Direct") {
+          requestHost = new URL(refHeader).hostname.toLowerCase();
+        }
+      } catch {
+        requestHost = "";
+      }
+
+      // If neither origin nor referer is provided, check if it's an authenticated backend API call with live key
+      if (!originHeader && !refHeader) {
+        if (!verifiedApiKey) {
+          return {
+            status: "rejected",
+            statusCode: 403,
+            message:
+              "Origin Missing: Production web form submissions must include a valid Origin or Referer header matching your production origin.",
+          };
+        }
+      } else {
+        // Collect all authorized origins/domains
+        const allowedPool = [
+          prodOrigin,
+          ...(targetDashboard?.allowedOrigins || []),
+          ...(form?.allowedDomains || []),
+        ];
+
+        const isAllowed = allowedPool.some((allowed) => {
+          if (!allowed) return false;
+          let cleanAllowed = allowed
+            .trim()
+            .toLowerCase()
+            .replace(/^https?:\/\//, "")
+            .replace(/\/.*$/, "")
+            .replace(/:\d+$/, "");
+
+          if (cleanAllowed === "*") return true;
+          if (cleanAllowed.startsWith("*.")) {
+            cleanAllowed = cleanAllowed.slice(2);
+          }
+
+          return requestHost === cleanAllowed || requestHost.endsWith("." + cleanAllowed);
+        });
+
+        if (!isAllowed) {
+          return {
+            status: "rejected",
+            statusCode: 403,
+            message: `Origin Denied: Submissions from origin domain '${requestHost || "unspecified"}' are rejected in production mode. Configured production origin is '${prodOrigin}'.`,
+          };
+        }
+      }
+    } else {
+      // In development mode, check optional per-form allowedDomains whitelist if explicitly configured
+      if (form && form.allowedDomains && form.allowedDomains.length > 0 && !verifiedApiKey) {
         const originHeader = (Array.isArray(headers.origin) ? headers.origin[0] : headers.origin) || "";
         const refHeader =
           (Array.isArray(headers.referer) ? headers.referer[0] : headers.referer) ||
@@ -377,16 +476,13 @@ export class FormsAndApiService {
             .replace(/\/.*$/, "")
             .replace(/:\d+$/, "");
 
+          if (cleanAllowed === "*") return true;
           if (cleanAllowed.startsWith("*.")) {
             cleanAllowed = cleanAllowed.slice(2);
           }
 
           if (!cleanAllowed) return false;
-          return (
-            requestDomain === cleanAllowed ||
-            requestDomain.endsWith("." + cleanAllowed) ||
-            cleanAllowed === "*"
-          );
+          return requestDomain === cleanAllowed || requestDomain.endsWith("." + cleanAllowed);
         });
 
         if (!isOriginAllowed) {
@@ -542,6 +638,7 @@ export class FormsAndApiService {
               messageSnippet: message.slice(0, 200),
               rawPayload: body as Prisma.InputJsonValue,
               triggerRule: triggerReason || "heuristics",
+              environment: targetEnvironment,
               metadata,
             },
           }),
@@ -563,6 +660,7 @@ export class FormsAndApiService {
           messageSnippet: message.slice(0, 200),
           rawPayload: body as Prisma.InputJsonValue,
           triggerRule: triggerReason || "heuristics",
+          environment: targetEnvironment,
           metadata,
         });
         spamId = spam.id;
@@ -600,6 +698,7 @@ export class FormsAndApiService {
             message,
             source,
             status: "New",
+            environment: targetEnvironment,
             extraFields: Object.keys(extraFields).length > 0 ? extraFields : undefined,
             metadata,
           },
@@ -620,6 +719,7 @@ export class FormsAndApiService {
         message,
         source,
         status: "New",
+        environment: targetEnvironment,
         extraFields: Object.keys(extraFields).length > 0 ? extraFields : undefined,
         metadata,
       });
@@ -642,6 +742,7 @@ export class FormsAndApiService {
     const dashboardId = await this.resolveDashboardId(userId, input.dashboardId);
     let validFormId: string | null = null;
     let formName = "Sandbox Simulator";
+    let formEnv = "development";
 
     if (input.formId) {
       const form = await this.repository.findFormById(input.formId);
@@ -649,6 +750,7 @@ export class FormsAndApiService {
       if (form && form.dashboardId === dashboardId) {
         validFormId = form.id;
         formName = form.name;
+        formEnv = form.environment || "development";
         await this.repository.incrementLeadCount(form.id);
       }
     }
@@ -662,6 +764,7 @@ export class FormsAndApiService {
       message: input.message,
       source: input.source || "Sandbox Simulator",
       status: "New",
+      environment: input.environment || formEnv || "development",
       extraFields: input.extraFields,
     });
 
@@ -691,6 +794,7 @@ export class FormsAndApiService {
 
     const result = await this.repository.findLeadsWithPagination({
       dashboardId: targetDashboardId,
+      environment: query?.environment,
       page: query?.page,
       limit: query?.limit,
       search: query?.search,
@@ -713,10 +817,11 @@ export class FormsAndApiService {
 
   async getAllLeads(
     userId: string,
-    dashboardId?: string
+    dashboardId?: string,
+    environment?: string
   ): Promise<LeadRecord[]> {
     const targetDashboardId = await this.resolveDashboardId(userId, dashboardId);
-    return this.repository.findLeadsByDashboardId(targetDashboardId);
+    return this.repository.findLeadsByDashboardId(targetDashboardId, environment);
   }
 
   async updateLeadStatus(
@@ -769,9 +874,9 @@ export class FormsAndApiService {
     return { count };
   }
 
-  async getSpam(userId: string, dashboardId?: string): Promise<SpamRecord[]> {
+  async getSpam(userId: string, dashboardId?: string, environment?: string): Promise<SpamRecord[]> {
     const targetDashboardId = await this.resolveDashboardId(userId, dashboardId);
-    return this.repository.findSpamByDashboardId(targetDashboardId);
+    return this.repository.findSpamByDashboardId(targetDashboardId, environment);
   }
 
   async rescueSpamLead(userId: string, spamId: string): Promise<LeadRecord | null> {
@@ -842,6 +947,7 @@ export class FormsAndApiService {
           message: fullMessage,
           source: "Rescued from Quarantine",
           status: "New",
+          environment: spam.environment || "development",
           extraFields,
           metadata: spam.metadata || undefined,
         },
@@ -866,7 +972,8 @@ export class FormsAndApiService {
 
   async getStats(
     userId: string,
-    dashboardId?: string
+    dashboardId?: string,
+    environment?: string
   ): Promise<{
     totalLeads: number;
     leadsToday: number;
@@ -874,7 +981,7 @@ export class FormsAndApiService {
     spamFlagged: number;
   }> {
     const targetDashboardId = await this.resolveDashboardId(userId, dashboardId);
-    return this.repository.getStats(targetDashboardId);
+    return this.repository.getStats(targetDashboardId, environment);
   }
 }
 

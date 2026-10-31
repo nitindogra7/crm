@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Star, Quote } from "lucide-react";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 
 const TESTIMONIALS = [
   {
@@ -104,9 +105,11 @@ export function Teams() {
               key={av.id}
               className={`hidden md:block absolute ${av.pos} w-10 h-10 rounded-full border-2 border-white/10 shadow-lg overflow-hidden opacity-75 hover:opacity-100 hover:scale-110 hover:border-[#ff995e]/60 transition-all duration-300 pointer-events-auto`}
             >
-              <img
+              <Image
                 src={av.img}
                 alt={av.name}
+                width={40}
+                height={40}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -115,9 +118,11 @@ export function Teams() {
           {/* Featured Center Avatar with Gold Ring */}
           <div className="relative mb-6">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-gradient-to-tr from-[#ff995e] to-[#f59e0b] shadow-[0_0_24px_rgba(255,153,94,0.35)]">
-              <img
+              <Image
                 src={current.img}
                 alt={current.author}
+                width={80}
+                height={80}
                 className="w-full h-full object-cover rounded-full"
               />
             </div>

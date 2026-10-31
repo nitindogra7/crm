@@ -9,6 +9,7 @@ import { formsAndApiRouter } from "./modules/forms & api/formsAndApi.routes";
 import { formsAndApiController } from "./modules/forms & api/formsAndApi.controller";
 import { leadsRouter } from "./modules/leads/leads.routes";
 import { publicFormRateLimiter, publicFormBurstLimiter } from "./middleware/rateLimiter";
+import { dynamicFormCorsMiddleware } from "./middleware/corsOriginVerifier";
 
 const app: Application = express();
 
@@ -48,10 +49,8 @@ const dashboardCors = cors({
 const publicPathPrefixes = [
   "/api/forms-and-api/f",
   "/api/forms-and-api/submit",
-  "/api/forms-and-api/simulate",
   "/api/forms/f",
   "/api/forms/submit",
-  "/api/forms/simulate",
   "/api/v1/f",
   "/api/f",
   "/api/v1/leads",
@@ -69,10 +68,11 @@ function isPublicRoute(path: string): boolean {
   return false;
 }
 
-// Smart CORS routing: Public forms endpoints accept all origins; authenticated routes restrict to frontend
+// Smart CORS routing: Public forms & lead endpoints undergo dynamic environment CORS & origin verification;
+// Authenticated dashboard management routes are restricted to the verified frontend origin.
 app.use((req, res, next) => {
   if (isPublicRoute(req.path)) {
-    publicSubmissionCors(req, res, next);
+    dynamicFormCorsMiddleware(req, res, next);
   } else {
     dashboardCors(req, res, next);
   }
@@ -91,8 +91,8 @@ app.get("/health", async (_req, res) => {
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // Scoped Clerk Authentication: Run JWT verification only for authenticated dashboard routes
 const clerkAuth = clerkMiddleware();

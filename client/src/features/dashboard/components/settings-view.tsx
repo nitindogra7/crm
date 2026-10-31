@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { useDashboard } from "../context/dashboard-context";
 import { SettingsSkeleton } from "./dashboard-skeleton";
@@ -17,12 +18,18 @@ import {
   Plus,
   Check,
   Loader2,
+  Globe,
+  ShieldCheck,
+  FlaskConical,
+  AlertTriangle,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
+import { EnvironmentSwitcher } from "./environment-switcher";
 
-type SettingsTab = "general" | "notifications" | "webhooks" | "logs";
+type SettingsTab = "general" | "origins" | "notifications" | "webhooks" | "logs";
 
 export function SettingsView() {
+  const searchParams = useSearchParams();
   const { user } = useUser();
   const { getToken } = useAuth();
   const {
@@ -30,6 +37,9 @@ export function SettingsView() {
     updateWorkspace,
     organizations,
     activeDashboardId,
+    currentEnvironment,
+    switchEnvironment,
+    updateProductionOriginAsync,
     switchOrganization,
     setIsCreateOrgOpen,
     isLoading,
@@ -41,9 +51,25 @@ export function SettingsView() {
     addToast,
   } = useDashboard();
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
+  const tabParam = searchParams.get("tab") as SettingsTab | null;
+  const [activeTab, setActiveTab] = useState<SettingsTab>(
+    tabParam === "origins" ? "origins" : "general"
+  );
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [switchingOrgId, setSwitchingOrgId] = useState<string | null>(null);
+
+  // Environment & Origins state
+  const [prodOriginInput, setProdOriginInput] = useState(workspace.productionOrigin || "");
+  const [isSavingOrigin, setIsSavingOrigin] = useState(false);
+  const [testOriginUrl, setTestOriginUrl] = useState("");
+  const [testResult, setTestResult] = useState<{ allowed: boolean; message: string } | null>(null);
+
+  // Keep input in sync with workspace
+  const [prevWorkspaceOrigin, setPrevWorkspaceOrigin] = useState(workspace.productionOrigin);
+  if (workspace.productionOrigin !== prevWorkspaceOrigin) {
+    setPrevWorkspaceOrigin(workspace.productionOrigin);
+    setProdOriginInput(workspace.productionOrigin || "");
+  }
 
   // General tab state
   const [customWsName, setCustomWsName] = useState<string | null>(null);
@@ -132,6 +158,65 @@ export function SettingsView() {
     addToast("Alert Preferences Saved", "Notification email updated.");
   };
 
+  const handleSaveOrigin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSavingOrigin) return;
+    setIsSavingOrigin(true);
+
+    try {
+      let clean = prodOriginInput.trim();
+      if (clean && !clean.startsWith("http://") && !clean.startsWith("https://") && !clean.startsWith("localhost")) {
+        clean = `https://${clean}`;
+        setProdOriginInput(clean);
+      }
+      await updateProductionOriginAsync(clean);
+    } finally {
+      setIsSavingOrigin(false);
+    }
+  };
+
+  const handleTestOrigin = () => {
+    if (!testOriginUrl.trim()) return;
+    const target = testOriginUrl.trim().toLowerCase();
+    if (currentEnvironment === "development") {
+      setTestResult({
+        allowed: true,
+        message: "ALLOWED (200): In Development mode, all origins are permitted (* or reflection).",
+      });
+      return;
+    }
+
+    const prod = (workspace.productionOrigin || "").trim().toLowerCase();
+    if (!prod) {
+      setTestResult({
+        allowed: false,
+        message: "REJECTED (403): Mandatory production origin is not configured yet for this workspace.",
+      });
+      return;
+    }
+
+    // Check exact or domain match
+    const cleanProd = prod.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/:\d+$/, "");
+    const cleanTarget = target.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/:\d+$/, "");
+
+    const isMatch =
+      cleanTarget === cleanProd ||
+      cleanTarget.endsWith("." + cleanProd) ||
+      cleanProd === "*";
+
+    if (isMatch) {
+      setTestResult({
+        allowed: true,
+        message: `ALLOWED (200 OK): Origin '${cleanTarget}' matches production origin '${prod}'. Backend CORS dynamically injects Access-Control-Allow-Origin: ${testOriginUrl.trim()}.`,
+      });
+    } else {
+      setTestResult({
+        allowed: false,
+        message: `REJECTED (403 Forbidden): Origin '${cleanTarget}' does not match registered production origin '${prod}'. Backend rejects request with HTTP 403.`,
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -157,6 +242,19 @@ export function SettingsView() {
         >
           <User className="w-3.5 h-3.5" />
           <span>General</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("origins")}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === "origins"
+              ? "bg-white text-slate-900 border border-slate-200 font-semibold shadow-2xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium"
+          }`}
+        >
+          <Globe className="w-3.5 h-3.5" />
+          <span>Environments & Origins</span>
         </button>
 
         <button
@@ -383,7 +481,221 @@ export function SettingsView() {
         </div>
       )}
 
-      {/* TAB 2: NOTIFICATIONS */}
+      {/* TAB 2: ENVIRONMENTS & ORIGINS (CLERK-STYLE ARCHITECTURE) */}
+      {activeTab === "origins" && (
+        <div className="space-y-6 max-w-3xl">
+          {/* Clerk-Style Architecture Header Card */}
+          <div className="p-5 sm:p-6 rounded-2xl border border-slate-200/80 bg-white shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-heading font-bold text-slate-900">
+                    Workspace Environments
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80">
+                    Clerk-Style Isolation
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Each workspace operates in two partitioned environments: Development (test) and Production (live). Data, forms, leads, and API tokens are completely isolated between modes.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-xs font-medium text-slate-500">Active Mode:</span>
+                <EnvironmentSwitcher />
+              </div>
+            </div>
+
+            {/* Environment Summary Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* Development Mode Card */}
+              <div
+                onClick={() => switchEnvironment("development")}
+                className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                  currentEnvironment === "development"
+                    ? "border-amber-300 bg-amber-50/50 ring-2 ring-amber-400/20 shadow-xs"
+                    : "border-slate-200 bg-slate-50/50 hover:bg-slate-50 text-slate-600"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <FlaskConical className="w-4 h-4 text-amber-600" />
+                    <span className="font-semibold text-xs text-slate-900">
+                      Development Mode
+                    </span>
+                  </div>
+                  {currentEnvironment === "development" && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200/70 text-amber-800">
+                      CURRENT
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  • Origin: <span className="font-mono text-slate-800 font-semibold">* (Any origin permitted)</span>
+                  <br />
+                  • Tokens: <span className="font-mono text-slate-800">sln_test_...</span>
+                  <br />
+                  • Purpose: Rapid local testing on localhost:3000, staging previews, or cURL.
+                </p>
+              </div>
+
+              {/* Production Mode Card */}
+              <div
+                onClick={() => switchEnvironment("production")}
+                className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                  currentEnvironment === "production"
+                    ? "border-emerald-300 bg-emerald-50/50 ring-2 ring-emerald-400/20 shadow-xs"
+                    : "border-slate-200 bg-slate-50/50 hover:bg-slate-50 text-slate-600"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span className="font-semibold text-xs text-slate-900">
+                      Production Mode
+                    </span>
+                  </div>
+                  {currentEnvironment === "production" && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200/70 text-emerald-800">
+                      CURRENT
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  • Origin: <span className="font-mono text-slate-800 font-semibold">Mandatory Verified Domain</span>
+                  <br />
+                  • Tokens: <span className="font-mono text-slate-800">sln_live_...</span>
+                  <br />
+                  • Security: Backend strictly rejects unauthorized domains with HTTP 403 Forbidden.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Production Origin Configuration Form */}
+          <form
+            onSubmit={handleSaveOrigin}
+            className="p-5 sm:p-6 rounded-2xl border border-slate-200/80 bg-white space-y-4 shadow-xs"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-heading font-bold text-slate-900">
+                  Production Allowed Origin
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Mandatory domain where your live production website is hosted (e.g. <span className="font-mono text-slate-700">https://mycompany.com</span>).
+                </p>
+              </div>
+
+              <div className="shrink-0">
+                {workspace.productionOrigin ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    Verified & Enforced
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                    Origin Required
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-700 text-xs font-semibold mb-1.5">
+                Primary Origin URL (Mandatory in Production)
+              </label>
+              <div className="relative">
+                <Globe className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="https://mycompany.com"
+                  value={prodOriginInput}
+                  onChange={(e) => setProdOriginInput(e.target.value)}
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 transition-all font-mono"
+                />
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                The backend inspects the <span className="font-mono text-slate-600">Origin</span> and <span className="font-mono text-slate-600">Referer</span> headers. If matched, it dynamically adds <span className="font-mono text-slate-600">Access-Control-Allow-Origin</span> to the response.
+              </p>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between border-t border-slate-100">
+              <span className="text-[11.5px] text-slate-500">
+                Origin changes take effect immediately on all server endpoints.
+              </span>
+              <button
+                type="submit"
+                disabled={isSavingOrigin}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all disabled:opacity-70 cursor-pointer"
+              >
+                {isSavingOrigin ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Check className="w-3.5 h-3.5" />
+                )}
+                <span>{isSavingOrigin ? "Saving Origin..." : "Save Production Origin"}</span>
+              </button>
+            </div>
+          </form>
+
+          {/* Interactive Server CORS Verification Tester */}
+          <div className="p-5 sm:p-6 rounded-2xl border border-slate-200/80 bg-white space-y-4 shadow-xs">
+            <div>
+              <h3 className="text-base font-heading font-bold text-slate-900">
+                Server CORS Origin Simulator
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Test how the backend server CORS middleware will respond to requests originating from a specific domain.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="relative flex-1">
+                <Globe className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="e.g. https://mycompany.com or http://localhost:3000"
+                  value={testOriginUrl}
+                  onChange={(e) => setTestOriginUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleTestOrigin()}
+                  className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-mono"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleTestOrigin}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs shadow-2xs transition-colors cursor-pointer shrink-0"
+              >
+                Test Origin Verification
+              </button>
+            </div>
+
+            {testResult && (
+              <div
+                className={`p-3.5 rounded-xl border text-xs leading-relaxed animate-in fade-in duration-150 ${
+                  testResult.allowed
+                    ? "bg-emerald-50/80 border-emerald-200 text-emerald-900"
+                    : "bg-red-50/80 border-red-200 text-red-900"
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {testResult.allowed ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  )}
+                  <span className="font-mono text-[11.5px]">{testResult.message}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: NOTIFICATIONS */}
       {activeTab === "notifications" && (
         <div className="space-y-4 max-w-2xl">
           <div className="p-3.5 rounded-xl border border-blue-100 bg-blue-50/50 text-xs text-blue-900 leading-relaxed">

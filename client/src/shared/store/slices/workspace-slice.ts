@@ -13,6 +13,7 @@ export const createWorkspaceSlice: StateCreator<
   workspace: INITIAL_WORKSPACE,
   organizations: [],
   activeDashboardId: null,
+  currentEnvironment: "development",
   updateWorkspace: (updates) =>
     set((state) => ({
       workspace: { ...state.workspace, ...updates },
@@ -25,9 +26,13 @@ export const createWorkspaceSlice: StateCreator<
         ownerEmail: config.ownerEmail,
         plan: config.teamSize === "team" ? "Team Workspace" : "Free Tier",
         avatarTone: config.avatarTone,
+        productionOrigin: null,
+        allowedOrigins: [],
+        activeEnvironment: "development",
         createdAt: new Date().toISOString(),
       },
     }),
   setOrganizations: (orgs) => set({ organizations: orgs }),
   setActiveDashboardId: (id) => set({ activeDashboardId: id }),
+  setCurrentEnvironment: (env) => set({ currentEnvironment: env }),
 });

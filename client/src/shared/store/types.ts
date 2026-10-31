@@ -16,6 +16,7 @@ export interface WorkspaceSlice {
   workspace: WorkspaceConfig;
   organizations: OrganizationDashboard[];
   activeDashboardId: string | null;
+  currentEnvironment: "development" | "production";
   updateWorkspace: (updates: Partial<WorkspaceConfig>) => void;
   initWorkspace: (config: {
     name: string;
@@ -26,6 +27,7 @@ export interface WorkspaceSlice {
   }) => void;
   setOrganizations: (orgs: OrganizationDashboard[]) => void;
   setActiveDashboardId: (id: string) => void;
+  setCurrentEnvironment: (env: "development" | "production") => void;
 }
 
 export interface FormsSlice {

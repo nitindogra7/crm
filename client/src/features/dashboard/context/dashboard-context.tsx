@@ -18,6 +18,7 @@ import type {
   SpamItem,
   OrganizationDashboard,
   LeadStatus,
+  WorkspaceEnvironment,
 } from "@/shared/types";
 import { CreateOrganizationModal } from "../components/create-organization-modal";
 
@@ -25,9 +26,14 @@ interface DashboardContextType {
   // Direct access to state & store
   organizations: OrganizationDashboard[];
   activeDashboardId: string | null;
+  currentEnvironment: WorkspaceEnvironment;
   isLoading: boolean;
   isCreateOrgOpen: boolean;
   setIsCreateOrgOpen: (open: boolean) => void;
+
+  // Environment & Origin operations (Clerk-style)
+  switchEnvironment: (env: WorkspaceEnvironment) => Promise<void>;
+  updateProductionOriginAsync: (origin: string) => Promise<void>;
 
   // Multi-organization operations
   switchOrganization: (id: string) => Promise<void>;
@@ -36,12 +42,14 @@ interface DashboardContextType {
     slug: string;
     avatarTone?: string;
     plan?: string;
+    productionOrigin?: string;
   }) => Promise<OrganizationDashboard>;
 
   // Form operations
   createFormAsync: (input: {
     name: string;
     redirectUrl?: string;
+    environment?: WorkspaceEnvironment;
     allowedDomains?: string[];
     fields?: FormItem["fields"];
   }) => Promise<FormItem>;
@@ -50,8 +58,15 @@ interface DashboardContextType {
   deleteFormAsync: (id: string) => Promise<void>;
 
   // API Key operations
-  createApiKeyAsync: (name?: string, env?: "live" | "test") => Promise<ApiKeyItem>;
-  regenerateApiKeyAsync: () => Promise<ApiKeyItem>;
+  createApiKeyAsync: (
+    name?: string,
+    env?: "live" | "test",
+    environment?: WorkspaceEnvironment
+  ) => Promise<ApiKeyItem>;
+  regenerateApiKeyAsync: (
+    env?: "live" | "test",
+    environment?: WorkspaceEnvironment
+  ) => Promise<ApiKeyItem>;
   revokeApiKeyAsync: (id?: string) => Promise<void>;
 
   // Leads & Spam operations
@@ -83,6 +98,7 @@ export interface DashboardProviderProps {
     ownerEmail?: string | null;
     teamSize?: string;
     avatarTone?: string;
+    productionOrigin?: string | null;
     createdAt?: string;
   } | null;
 }
@@ -98,15 +114,9 @@ export function DashboardProvider({
   const [isCreateOrgOpen, setIsCreateOrgOpen] = useState(false);
   const isInitializedRef = useRef(false);
 
-  // Sync initial workspace name if empty
+  // Initialize workspace from props if provided
   useEffect(() => {
-    if (
-      initialWorkspace &&
-      initialWorkspace.name &&
-      (!store.workspace ||
-        store.workspace.name === "Acme Studio" ||
-        store.workspace.name === "My Workspace")
-    ) {
+    if (initialWorkspace?.name) {
       store.initWorkspace({
         name: initialWorkspace.name,
         slug: initialWorkspace.slug || "",
@@ -114,8 +124,59 @@ export function DashboardProvider({
         teamSize: initialWorkspace.teamSize === "solo" ? "solo" : "team",
         avatarTone: initialWorkspace.avatarTone || "zinc",
       });
+      if (initialWorkspace.productionOrigin) {
+        store.updateWorkspace({ productionOrigin: initialWorkspace.productionOrigin });
+      }
     }
   }, [initialWorkspace, store]);
+
+  // Load specific organization's forms, keys, leads, and spam filtered by environment
+  const loadDashboardData = useCallback(
+    async (dashboardId: string, envOverride?: WorkspaceEnvironment) => {
+      try {
+        const token = await getToken();
+        const activeEnv = envOverride || store.currentEnvironment || "development";
+
+        const [formsRes, keysRes, leadsRes, spamRes] = await Promise.all([
+          apiFetch<{ success: boolean; data: FormItem[] }>(
+            `/api/forms-and-api/forms?dashboardId=${dashboardId}&environment=${activeEnv}`,
+            { token }
+          ).catch(() => ({ success: false, data: [] })),
+
+          apiFetch<{ success: boolean; data: ApiKeyItem[] }>(
+            `/api/forms-and-api/keys?dashboardId=${dashboardId}&environment=${activeEnv}`,
+            { token }
+          ).catch(() => ({ success: false, data: [] })),
+
+          apiFetch<{ success: boolean; data: LeadItem[] }>(
+            `/api/leads?dashboardId=${dashboardId}&environment=${activeEnv}`,
+            { token }
+          ).catch(() => ({ success: false, data: [] })),
+
+          apiFetch<{ success: boolean; data: SpamItem[] }>(
+            `/api/forms-and-api/spam?dashboardId=${dashboardId}&environment=${activeEnv}`,
+            { token }
+          ).catch(() => ({ success: false, data: [] })),
+        ]);
+
+        if (formsRes.success && formsRes.data) {
+          store.setForms(formsRes.data);
+        }
+        if (keysRes.success && keysRes.data) {
+          store.setApiKeys(keysRes.data);
+        }
+        if (leadsRes.success && leadsRes.data) {
+          store.setLeads(leadsRes.data);
+        }
+        if (spamRes.success && spamRes.data) {
+          store.setSpam(spamRes.data);
+        }
+      } catch (err) {
+        console.warn("Failed loading dashboard data:", err);
+      }
+    },
+    [getToken, store]
+  );
 
   // Load all user's organizations / dashboards from backend
   const loadDashboards = useCallback(async () => {
@@ -140,6 +201,9 @@ export function DashboardProvider({
           store.setActiveDashboardId(targetOrg.id);
         }
 
+        const env = targetOrg.activeEnvironment || store.currentEnvironment || "development";
+        store.setCurrentEnvironment(env);
+
         store.updateWorkspace({
           id: targetOrg.id,
           name: targetOrg.name,
@@ -147,63 +211,19 @@ export function DashboardProvider({
           ownerEmail: targetOrg.ownerEmail || "",
           plan: targetOrg.plan || "Free Tier",
           avatarTone: targetOrg.avatarTone || "zinc",
+          productionOrigin: targetOrg.productionOrigin || null,
+          allowedOrigins: targetOrg.allowedOrigins || [],
+          activeEnvironment: env,
           createdAt: targetOrg.createdAt,
         });
 
-        return targetOrg.id;
+        return { id: targetOrg.id, env };
       }
     } catch (err) {
       console.warn("Could not fetch dashboards from backend:", err);
     }
     return null;
   }, [getToken, store]);
-
-  // Load specific organization's forms, keys, leads, and spam
-  const loadDashboardData = useCallback(
-    async (dashboardId: string) => {
-      try {
-        const token = await getToken();
-
-        const [formsRes, keysRes, leadsRes, spamRes] = await Promise.all([
-          apiFetch<{ success: boolean; data: FormItem[] }>(
-            `/api/forms-and-api/forms?dashboardId=${dashboardId}`,
-            { token }
-          ).catch(() => ({ success: false, data: [] })),
-
-          apiFetch<{ success: boolean; data: ApiKeyItem[] }>(
-            `/api/forms-and-api/keys?dashboardId=${dashboardId}`,
-            { token }
-          ).catch(() => ({ success: false, data: [] })),
-
-          apiFetch<{ success: boolean; data: LeadItem[] }>(
-            `/api/leads?dashboardId=${dashboardId}`,
-            { token }
-          ).catch(() => ({ success: false, data: [] })),
-
-          apiFetch<{ success: boolean; data: SpamItem[] }>(
-            `/api/forms-and-api/spam?dashboardId=${dashboardId}`,
-            { token }
-          ).catch(() => ({ success: false, data: [] })),
-        ]);
-
-        if (formsRes.success && formsRes.data) {
-          store.setForms(formsRes.data);
-        }
-        if (keysRes.success && keysRes.data) {
-          store.setApiKeys(keysRes.data);
-        }
-        if (leadsRes.success && leadsRes.data) {
-          store.setLeads(leadsRes.data);
-        }
-        if (spamRes.success && spamRes.data) {
-          store.setSpam(spamRes.data);
-        }
-      } catch (err) {
-        console.warn("Failed loading dashboard data:", err);
-      }
-    },
-    [getToken, store]
-  );
 
   // Initialize on mount
   useEffect(() => {
@@ -212,15 +232,87 @@ export function DashboardProvider({
 
     async function init() {
       setIsLoading(true);
-      const activeId = await loadDashboards();
-      if (activeId) {
-        await loadDashboardData(activeId);
+      const active = await loadDashboards();
+      if (active) {
+        await loadDashboardData(active.id, active.env);
       }
       setIsLoading(false);
     }
 
     init();
   }, [loadDashboards, loadDashboardData]);
+
+  // Switch Environment (Clerk-style Development <-> Production toggle)
+  const switchEnvironment = useCallback(
+    async (env: WorkspaceEnvironment) => {
+      store.setCurrentEnvironment(env);
+      store.updateWorkspace({ activeEnvironment: env });
+
+      if (store.activeDashboardId) {
+        setIsLoading(true);
+        await loadDashboardData(store.activeDashboardId, env);
+
+        // Persist activeEnvironment to backend
+        try {
+          const token = await getToken();
+          await apiFetch(`/api/forms-and-api/dashboards/${store.activeDashboardId}`, {
+            method: "PATCH",
+            token,
+            body: JSON.stringify({ activeEnvironment: env }),
+          });
+        } catch (err) {
+          console.warn("Could not sync activeEnvironment to backend:", err);
+        }
+
+        setIsLoading(false);
+        store.addToast(
+          `Switched to ${env === "production" ? "Production" : "Development"} Mode`,
+          env === "production"
+            ? "Now inspecting live production data. Origin verification is strictly enforced."
+            : "Now inspecting sandbox test data. Requests from any origin are permitted.",
+          "info"
+        );
+      }
+    },
+    [store, loadDashboardData, getToken]
+  );
+
+  // Update Production Origin
+  const updateProductionOriginAsync = useCallback(
+    async (origin: string) => {
+      if (!store.activeDashboardId) return;
+      const token = await getToken();
+      const trimmed = origin.trim();
+
+      const res = await apiFetch<{
+        success: boolean;
+        data: OrganizationDashboard;
+      }>(`/api/forms-and-api/dashboards/${store.activeDashboardId}`, {
+        method: "PATCH",
+        token,
+        body: JSON.stringify({ productionOrigin: trimmed || null }),
+      });
+
+      if (res.success && res.data) {
+        store.updateWorkspace({ productionOrigin: res.data.productionOrigin });
+        store.setOrganizations(
+          store.organizations.map((org) =>
+            org.id === store.activeDashboardId
+              ? { ...org, productionOrigin: res.data.productionOrigin }
+              : org
+          )
+        );
+        store.addToast(
+          "Production Origin Saved",
+          trimmed
+            ? `Production origin '${trimmed}' is now verified and active for server CORS.`
+            : "Production origin cleared.",
+          "success"
+        );
+      }
+    },
+    [store, getToken]
+  );
 
   // Switch organization
   const switchOrganization = useCallback(
@@ -230,6 +322,9 @@ export function DashboardProvider({
 
       setIsLoading(true);
       store.setActiveDashboardId(id);
+      const orgEnv = org.activeEnvironment || "development";
+      store.setCurrentEnvironment(orgEnv);
+
       store.updateWorkspace({
         id: org.id,
         name: org.name,
@@ -237,10 +332,13 @@ export function DashboardProvider({
         ownerEmail: org.ownerEmail || "",
         plan: org.plan || "Free Tier",
         avatarTone: org.avatarTone || "zinc",
+        productionOrigin: org.productionOrigin || null,
+        allowedOrigins: org.allowedOrigins || [],
+        activeEnvironment: orgEnv,
         createdAt: org.createdAt,
       });
 
-      await loadDashboardData(id);
+      await loadDashboardData(id, orgEnv);
       setIsLoading(false);
       store.addToast("Workspace switched", `Now viewing ${org.name}.`);
     },
@@ -254,6 +352,7 @@ export function DashboardProvider({
       slug: string;
       avatarTone?: string;
       plan?: string;
+      productionOrigin?: string;
     }) => {
       const token = await getToken();
       const res = await apiFetch<{
@@ -282,10 +381,13 @@ export function DashboardProvider({
     async (input: {
       name: string;
       redirectUrl?: string;
-    allowedDomains?: string[];
+      environment?: WorkspaceEnvironment;
+      allowedDomains?: string[];
       fields?: FormItem["fields"];
     }) => {
       const token = await getToken();
+      const targetEnv = input.environment || store.currentEnvironment || "development";
+
       const res = await apiFetch<{ success: boolean; data: FormItem }>(
         "/api/forms-and-api/forms",
         {
@@ -294,6 +396,7 @@ export function DashboardProvider({
           body: JSON.stringify({
             ...input,
             dashboardId: store.activeDashboardId || undefined,
+            environment: targetEnv,
           }),
         }
       );
@@ -307,7 +410,7 @@ export function DashboardProvider({
         form,
         ...store.forms.filter((f) => f.id !== form.id && !f.id.startsWith("form_")),
       ]);
-      store.addToast("Form created", `Endpoint generated for ${form.name}.`);
+      store.addToast("Form created", `Endpoint generated for ${form.name} in ${targetEnv} mode.`);
       return form;
     },
     [getToken, store]
@@ -370,8 +473,16 @@ export function DashboardProvider({
 
   // API Key operations
   const createApiKeyAsync = useCallback(
-    async (name: string = "Live API Key", env: "live" | "test" = "live") => {
+    async (
+      name?: string,
+      env?: "live" | "test",
+      environment?: WorkspaceEnvironment
+    ) => {
       const token = await getToken();
+      const targetEnv = environment || store.currentEnvironment || "development";
+      const keyEnv = env || (targetEnv === "production" ? "live" : "test");
+      const defaultName = targetEnv === "production" ? "Production API Key" : "Development API Key";
+
       const res = await apiFetch<{ success: boolean; data: ApiKeyItem }>(
         "/api/forms-and-api/keys",
         {
@@ -379,8 +490,9 @@ export function DashboardProvider({
           token,
           body: JSON.stringify({
             dashboardId: store.activeDashboardId || undefined,
-            name,
-            env,
+            name: name || defaultName,
+            env: keyEnv,
+            environment: targetEnv,
           }),
         }
       );
@@ -394,37 +506,45 @@ export function DashboardProvider({
         key,
         ...store.apiKeys.filter((k) => k.id !== key.id && !k.id.startsWith("key_") && !k.revoked),
       ]);
-      store.addToast("API Key created", "Ready to authenticate requests.");
+      store.addToast("API Key created", `New ${targetEnv} API Key ready to authenticate.`);
       return key;
     },
     [getToken, store]
   );
 
-  const regenerateApiKeyAsync = useCallback(async () => {
-    const token = await getToken();
-    const res = await apiFetch<{ success: boolean; data: ApiKeyItem }>(
-      "/api/forms-and-api/keys/regenerate",
-      {
-        method: "POST",
-        token,
-        body: JSON.stringify({
-          dashboardId: store.activeDashboardId || undefined,
-        }),
+  const regenerateApiKeyAsync = useCallback(
+    async (env?: "live" | "test", environment?: WorkspaceEnvironment) => {
+      const token = await getToken();
+      const targetEnv = environment || store.currentEnvironment || "development";
+      const keyEnv = env || (targetEnv === "production" ? "live" : "test");
+
+      const res = await apiFetch<{ success: boolean; data: ApiKeyItem }>(
+        "/api/forms-and-api/keys/regenerate",
+        {
+          method: "POST",
+          token,
+          body: JSON.stringify({
+            dashboardId: store.activeDashboardId || undefined,
+            env: keyEnv,
+            environment: targetEnv,
+          }),
+        }
+      );
+
+      if (!res.success || !res.data) {
+        throw new Error("Failed to regenerate API key");
       }
-    );
 
-    if (!res.success || !res.data) {
-      throw new Error("Failed to regenerate API key");
-    }
-
-    const key = res.data;
-    store.setApiKeys([key]);
-    store.addToast(
-      "API Key rotated",
-      "Prior key has been permanently invalidated."
-    );
-    return key;
-  }, [getToken, store]);
+      const key = res.data;
+      store.setApiKeys([key]);
+      store.addToast(
+        "API Key rotated",
+        `Prior ${targetEnv} key has been permanently invalidated.`
+      );
+      return key;
+    },
+    [getToken, store]
+  );
 
   const revokeApiKeyAsync = useCallback(
     async (id?: string) => {
@@ -460,6 +580,7 @@ export function DashboardProvider({
         extraFields?: Record<string, string>;
       }
     ) => {
+      const targetEnv = store.currentEnvironment || "development";
       store.simulateLeadSubmission(formId, payload);
       try {
         const token = await getToken();
@@ -469,6 +590,7 @@ export function DashboardProvider({
           body: JSON.stringify({
             formId,
             dashboardId: store.activeDashboardId || undefined,
+            environment: targetEnv,
             name: payload.name,
             email: payload.email,
             message: payload.message,
@@ -479,7 +601,7 @@ export function DashboardProvider({
 
         // Refresh leads & form counts
         if (store.activeDashboardId) {
-          loadDashboardData(store.activeDashboardId);
+          await loadDashboardData(store.activeDashboardId, targetEnv);
         }
       } catch (err) {
         console.warn("Simulation failed on server:", err);
@@ -586,16 +708,19 @@ export function DashboardProvider({
 
   const refreshDashboardData = useCallback(async () => {
     if (store.activeDashboardId) {
-      await loadDashboardData(store.activeDashboardId);
+      await loadDashboardData(store.activeDashboardId, store.currentEnvironment);
     }
-  }, [store.activeDashboardId, loadDashboardData]);
+  }, [store.activeDashboardId, store.currentEnvironment, loadDashboardData]);
 
   const value: DashboardContextType = {
     organizations: store.organizations,
     activeDashboardId: store.activeDashboardId,
+    currentEnvironment: store.currentEnvironment || "development",
     isLoading,
     isCreateOrgOpen,
     setIsCreateOrgOpen,
+    switchEnvironment,
+    updateProductionOriginAsync,
     switchOrganization,
     createOrganizationAsync,
     createFormAsync,
@@ -636,9 +761,12 @@ export function useDashboard() {
     ...(context || {
       organizations: store.organizations,
       activeDashboardId: store.activeDashboardId,
+      currentEnvironment: (store.currentEnvironment || "development") as WorkspaceEnvironment,
       isLoading: false,
       isCreateOrgOpen: false,
       setIsCreateOrgOpen: () => {},
+      switchEnvironment: async () => {},
+      updateProductionOriginAsync: async () => {},
       switchOrganization: async () => {},
       createOrganizationAsync: async () => ({} as OrganizationDashboard),
       createFormAsync: async () => ({} as FormItem),
@@ -692,7 +820,8 @@ export function useDashboard() {
     addForm: (input: {
       name: string;
       redirectUrl?: string;
-    allowedDomains?: string[];
+      environment?: WorkspaceEnvironment;
+      allowedDomains?: string[];
       fields?: FormItem["fields"];
     }) => {
       const localForm = store.addForm(input);
@@ -727,19 +856,26 @@ export function useDashboard() {
         });
       }
     },
-    createApiKey: (name?: string, env?: "live" | "test") => {
+    createApiKey: (
+      name?: string,
+      env?: "live" | "test",
+      environment?: WorkspaceEnvironment
+    ) => {
       const localKey = store.createApiKey(name, env);
       if (context?.createApiKeyAsync) {
-        context.createApiKeyAsync(name, env).catch((e) => {
+        context.createApiKeyAsync(name, env, environment).catch((e) => {
           console.warn("Backend API key generation error:", e);
         });
       }
       return localKey;
     },
-    regenerateApiKey: () => {
+    regenerateApiKey: (
+      env?: "live" | "test",
+      environment?: WorkspaceEnvironment
+    ) => {
       const localKey = store.regenerateApiKey();
       if (context?.regenerateApiKeyAsync) {
-        context.regenerateApiKeyAsync().catch((e) => {
+        context.regenerateApiKeyAsync(env, environment).catch((e) => {
           console.warn("Backend API key regeneration error:", e);
         });
       }

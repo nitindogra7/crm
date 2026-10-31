@@ -15,6 +15,8 @@ import {
   RotateCcw,
   X,
   Loader2,
+  ShieldCheck,
+  FlaskConical,
 } from "lucide-react";
 
 type ViewTab = "forms" | "key" | "integration";
@@ -24,6 +26,8 @@ export function FormsView() {
   const {
     forms,
     apiKeys,
+    currentEnvironment,
+    workspace,
     isLoading,
     createApiKeyAsync,
     regenerateApiKeyAsync,
@@ -34,8 +38,18 @@ export function FormsView() {
     addToast,
   } = useDashboard();
 
-  // Active workspace API key
-  const apiKey = apiKeys.find((k) => !k.revoked) || null;
+  // Active workspace API key matching current environment
+  const apiKey =
+    apiKeys.find(
+      (k) =>
+        !k.revoked &&
+        (k.environment === currentEnvironment ||
+          (currentEnvironment === "production"
+            ? k.keyPrefix.includes("live")
+            : k.keyPrefix.includes("test")))
+    ) ||
+    apiKeys.find((k) => !k.revoked) ||
+    null;
   const hasApiKey = !!apiKey;
 
   // Active top-level subtab
@@ -98,8 +112,17 @@ export function FormsView() {
     if (isGeneratingKey) return;
     setIsGeneratingKey(true);
     try {
-      await createApiKeyAsync("Inbound Live Key");
-      addToast("API Key Created", "Key created successfully.", "success");
+      const isProd = currentEnvironment === "production";
+      await createApiKeyAsync(
+        isProd ? "Production API Key" : "Development API Key",
+        isProd ? "live" : "test",
+        currentEnvironment
+      );
+      addToast(
+        "API Key Created",
+        `Created ${currentEnvironment} key (${isProd ? "sln_live_" : "sln_test_"}).`,
+        "success"
+      );
     } catch {
       addToast("Error", "Failed to generate API key", "error");
     } finally {
@@ -112,8 +135,13 @@ export function FormsView() {
     if (!apiKey || isRegeneratingKey) return;
     setIsRegeneratingKey(true);
     try {
-      await regenerateApiKeyAsync();
-      addToast("Key Regenerated", "Old key revoked, new key generated.", "success");
+      const isProd = currentEnvironment === "production";
+      await regenerateApiKeyAsync(isProd ? "live" : "test", currentEnvironment);
+      addToast(
+        "Key Regenerated",
+        `Old key revoked, new ${currentEnvironment} key generated.`,
+        "success"
+      );
       setIsRegenerateModalOpen(false);
     } catch {
       addToast("Error", "Failed to regenerate API key", "error");
@@ -188,9 +216,13 @@ export async function POST(req) {
 }`;
 
       case "html":
-        return `<!-- Direct HTML5 Form Submission (Protected by IP Rate Limiter & Honeypot) -->
-<!-- Uses public form slug: No secret API key leaked in browser DevTools! -->
-<form action="${currentEndpoint}" method="POST">
+        return `<!-- Direct HTML5 Form Submission (Protected by Honeypot & Origin Verification) -->
+<!-- Target Environment: ${(currentFormForCode?.environment || currentEnvironment).toUpperCase()} -->
+${
+  (currentFormForCode?.environment || currentEnvironment) === "production"
+    ? `<!-- Mandatory: Submissions must originate from ${workspace?.productionOrigin || "your registered Production Origin (Settings)"} -->\n`
+    : `<!-- Permissive: Development mode allows submissions from localhost, staging, or any origin -->\n`
+}<form action="${currentEndpoint}" method="POST">
   <input type="text" name="name" required placeholder="Full Name" />
   <input type="email" name="email" required placeholder="Work Email" />
   <textarea name="message" required placeholder="Your message..."></textarea>
@@ -402,9 +434,20 @@ print(response.json())`;
                           {form.name}
                         </h3>
                       </div>
-                      <span className="text-[11px] font-mono text-slate-400 flex-none">
-                        /{form.slug}
-                      </span>
+                      <div className="flex items-center gap-2 flex-none">
+                        <span
+                          className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
+                            form.environment === "production"
+                              ? "bg-purple-50 text-purple-700 border border-purple-200/80"
+                              : "bg-amber-50 text-amber-700 border border-amber-200/80"
+                          }`}
+                        >
+                          {form.environment === "production" ? "PROD" : "DEV"}
+                        </span>
+                        <span className="text-[11px] font-mono text-slate-400">
+                          /{form.slug}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Redirect & Origin Shield Info */}
@@ -534,10 +577,11 @@ print(response.json())`;
 
               <div className="space-y-1">
                 <h3 className="text-base font-heading font-bold text-slate-900">
-                  Workspace API Key
+                  {currentEnvironment === "production" ? "Production API Key" : "Development API Key"}
                 </h3>
                 <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-                  Generate an authorized key to protect your endpoints and authenticate incoming submissions.
+                  Generate an authorized key to protect your endpoints and authenticate incoming submissions for the{" "}
+                  <span className="font-semibold text-slate-800">{currentEnvironment}</span> environment.
                 </p>
               </div>
 
@@ -554,7 +598,7 @@ print(response.json())`;
                       <span>Generating Key...</span>
                     </>
                   ) : (
-                    <span>Generate Key</span>
+                    <span>Generate {currentEnvironment === "production" ? "Live" : "Test"} Key</span>
                   )}
                 </button>
               </div>
@@ -563,11 +607,22 @@ print(response.json())`;
             <div className="p-6 rounded-2xl border border-slate-200/80 bg-white space-y-5 shadow-xs">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-heading font-bold text-slate-900">
-                    Workspace Inbound Key
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-heading font-bold text-slate-900">
+                      Workspace Inbound Key
+                    </h3>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
+                        (apiKey?.environment || currentEnvironment) === "production"
+                          ? "bg-purple-50 text-purple-700 border border-purple-200/80"
+                          : "bg-amber-50 text-amber-700 border border-amber-200/80"
+                      }`}
+                    >
+                      {(apiKey?.environment || currentEnvironment) === "production" ? "PROD (LIVE)" : "DEV (TEST)"}
+                    </span>
+                  </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Authorized for all form endpoints across your workspace.
+                    Authorized for all form endpoints across your {currentEnvironment} workspace partition.
                   </p>
                 </div>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs text-emerald-700 bg-emerald-50 border border-emerald-200/80 font-semibold font-mono">
@@ -611,6 +666,48 @@ print(response.json())`;
                   </button>
                 </div>
               </div>
+
+              {/* Origin Verification & CORS status box */}
+              {currentEnvironment === "production" ? (
+                <div className="p-4 rounded-xl border border-purple-200/70 bg-purple-50/50 space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-purple-950 flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-purple-600" />
+                      Production Origin Verification Active
+                    </span>
+                    <span className="font-mono text-[11px] text-purple-700 font-medium">
+                      Mandatory
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-purple-800 leading-relaxed">
+                    Browser submissions to production endpoints are strictly verified against your workspace origin:{" "}
+                    <code className="font-mono font-semibold bg-white/80 px-1.5 py-0.5 rounded border border-purple-200">
+                      {workspace?.productionOrigin || "Not configured (Required)"}
+                    </code>
+                    . Untrusted origins are rejected with HTTP 403 Forbidden.
+                  </p>
+                  {!workspace?.productionOrigin && (
+                    <p className="text-[11px] text-rose-700 font-semibold pt-1">
+                      ⚠️ Go to Settings → Environments & Origins to register your production website URL.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl border border-amber-200/70 bg-amber-50/50 space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-amber-950 flex items-center gap-1.5">
+                      <FlaskConical className="w-4 h-4 text-amber-600" />
+                      Development Mode (Permissive CORS)
+                    </span>
+                    <span className="font-mono text-[11px] text-amber-700 font-medium">
+                      Sandbox
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    Incoming submissions can originate from any host (<code className="font-mono">localhost</code>, staging preview branches, curl). All test leads are isolated strictly to the Development database.
+                  </p>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">

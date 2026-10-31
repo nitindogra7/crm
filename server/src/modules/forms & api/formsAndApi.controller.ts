@@ -115,7 +115,8 @@ export class FormsAndApiController {
       }
 
       const dashboardId = req.query.dashboardId as string | undefined;
-      const forms = await this.service.getForms(userId, dashboardId);
+      const environment = req.query.environment as string | undefined;
+      const forms = await this.service.getForms(userId, dashboardId, environment);
 
       res.status(200).json({ success: true, data: forms });
     } catch (error) {
@@ -244,7 +245,8 @@ export class FormsAndApiController {
       }
 
       const dashboardId = req.query.dashboardId as string | undefined;
-      const keys = await this.service.getApiKeys(userId, dashboardId);
+      const environment = req.query.environment as string | undefined;
+      const keys = await this.service.getApiKeys(userId, dashboardId, environment);
 
       res.status(200).json({ success: true, data: keys });
     } catch (error) {
@@ -267,7 +269,8 @@ export class FormsAndApiController {
         userId,
         validated.dashboardId,
         validated.name,
-        validated.env
+        validated.env,
+        validated.environment
       );
 
       res.status(201).json({ success: true, data: key });
@@ -287,7 +290,9 @@ export class FormsAndApiController {
       }
 
       const dashboardId = req.body?.dashboardId as string | undefined;
-      const newKey = await this.service.regenerateApiKey(userId, dashboardId);
+      const env = req.body?.env as "live" | "test" | undefined;
+      const environment = req.body?.environment as string | undefined;
+      const newKey = await this.service.regenerateApiKey(userId, dashboardId, env, environment);
 
       res.status(200).json({ success: true, data: newKey });
     } catch (error) {
@@ -622,7 +627,8 @@ export class FormsAndApiController {
       }
 
       const dashboardId = req.query.dashboardId as string | undefined;
-      const spam = await this.service.getSpam(userId, dashboardId);
+      const environment = req.query.environment as string | undefined;
+      const spam = await this.service.getSpam(userId, dashboardId, environment);
 
       res.status(200).json({ success: true, data: spam });
     } catch (error) {
@@ -665,7 +671,8 @@ export class FormsAndApiController {
       }
 
       const dashboardId = req.query.dashboardId as string | undefined;
-      const stats = await this.service.getStats(userId, dashboardId);
+      const environment = req.query.environment as string | undefined;
+      const stats = await this.service.getStats(userId, dashboardId, environment);
 
       res.status(200).json({ success: true, data: stats });
     } catch (error) {

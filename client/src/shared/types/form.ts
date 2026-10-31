@@ -12,6 +12,7 @@ export interface FormItem {
   slug: string;
   endpointUrl: string;
   enabled: boolean;
+  environment?: "development" | "production";
   leadCount: number;
   spamCount: number;
   createdAt: string;

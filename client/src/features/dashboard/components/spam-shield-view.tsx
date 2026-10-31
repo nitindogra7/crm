@@ -90,7 +90,7 @@ export function SpamShieldView() {
   }
 
   return (
-    <div className="space-y-6 select-none">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -257,9 +257,22 @@ export function SpamShieldView() {
                     </td>
 
                     <td className="py-3.5 px-4 hidden sm:table-cell">
-                      <span className="text-slate-600 truncate block max-w-[140px] font-medium">
-                        {item.formName}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {item.environment && (
+                          <span
+                            className={`inline-flex items-center px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold uppercase tracking-wider ${
+                              item.environment === "production"
+                                ? "bg-purple-50 text-purple-700 border border-purple-200/70"
+                                : "bg-amber-50 text-amber-700 border border-amber-200/70"
+                            }`}
+                          >
+                            {item.environment === "production" ? "PROD" : "DEV"}
+                          </span>
+                        )}
+                        <span className="text-slate-600 truncate block max-w-[140px] font-medium">
+                          {item.formName}
+                        </span>
+                      </div>
                     </td>
 
                     <td className="py-3.5 px-4">

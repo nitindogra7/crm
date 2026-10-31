@@ -246,6 +246,15 @@ curl -X POST ${form.endpointUrl} \\
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span
+                className={`px-2 py-0.5 rounded text-[10px] font-mono border font-bold uppercase tracking-wider ${
+                  form.environment === "production"
+                    ? "bg-purple-50 text-purple-700 border-purple-200/80"
+                    : "bg-amber-50 text-amber-700 border-amber-200/80"
+                }`}
+              >
+                {form.environment === "production" ? "PROD" : "DEV"}
+              </span>
+              <span
                 className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-mono border font-semibold ${
                   form.enabled
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"

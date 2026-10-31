@@ -13,6 +13,7 @@ import {
   Compass,
   Loader2,
 } from "lucide-react";
+import { EnvironmentSwitcher } from "./environment-switcher";
 
 interface TopbarProps {
   onOpenMobileMenu: () => void;
@@ -105,9 +106,16 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
               {getPageTitle()}
             </span>
           </div>
+
+          <div className="hidden sm:block ml-2">
+            <EnvironmentSwitcher compact />
+          </div>
         </div>
 
         <div className="flex items-center gap-2.5">
+          <div className="sm:hidden">
+            <EnvironmentSwitcher compact />
+          </div>
           {/* Subtle Product Tour Button */}
           <button
             type="button"

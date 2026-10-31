@@ -81,6 +81,7 @@ export class LeadsService {
 
     return this.repository.findLeadsWithPagination({
       dashboardId,
+      environment: query?.environment,
       page: query?.page,
       limit: query?.limit,
       search: query?.search,
@@ -96,10 +97,11 @@ export class LeadsService {
    */
   async getAllLeads(
     userId: string,
-    dashboardId?: string
+    dashboardId?: string,
+    environment?: string
   ): Promise<LeadRecord[]> {
     const targetDashboardId = await this.resolveDashboardId(userId, dashboardId);
-    return this.repository.findLeadsByDashboardId(targetDashboardId);
+    return this.repository.findLeadsByDashboardId(targetDashboardId, environment);
   }
 
   /**
@@ -208,6 +210,7 @@ export class LeadsService {
       message: input.message,
       source: input.source || "Sandbox Simulator",
       status: "New",
+      environment: input.environment || "development",
       extraFields: input.extraFields,
     });
 

@@ -60,6 +60,17 @@ export function SpamDetailDrawer() {
           <div className="p-5 border-b border-slate-100 flex items-start justify-between gap-4 bg-slate-50/50">
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                {item.environment && (
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
+                      item.environment === "production"
+                        ? "bg-purple-50 text-purple-700 border border-purple-200/80"
+                        : "bg-amber-50 text-amber-700 border border-amber-200/80"
+                    }`}
+                  >
+                    {item.environment === "production" ? "PROD" : "DEV"}
+                  </span>
+                )}
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold border ${
                     item.disposition === "Quarantined"

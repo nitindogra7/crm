@@ -7,11 +7,17 @@ export const LEAD_STATUSES = [
   "Archived",
 ] as const;
 
+export const WORKSPACE_ENVIRONMENTS = [
+  "development",
+  "production",
+] as const;
+
 /**
  * Query schema for fetching leads with search, filters, and pagination
  */
 export const getLeadsQuerySchema = z.object({
   dashboardId: z.string().optional(),
+  environment: z.enum(WORKSPACE_ENVIRONMENTS).optional(),
   page: z.coerce.number().int().positive().optional().default(1),
   limit: z.coerce.number().int().positive().max(500).optional().default(10),
   search: z.string().optional(),
@@ -51,6 +57,7 @@ export const batchDeleteLeadsSchema = z.object({
 export const simulateLeadSchema = z.object({
   formId: z.string().min(1, "Form ID is required"),
   dashboardId: z.string().optional(),
+  environment: z.enum(WORKSPACE_ENVIRONMENTS).optional(),
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Valid email is required"),
   message: z.string().default(""),
@@ -63,6 +70,7 @@ export const simulateLeadSchema = z.object({
  */
 export const createLeadSchema = z.object({
   dashboardId: z.string().optional(),
+  environment: z.enum(WORKSPACE_ENVIRONMENTS).default("development").optional(),
   formId: z.string().optional().nullable(),
   formName: z.string().default("Direct / Manual Entry"),
   name: z.string().min(1, "Name is required"),

@@ -3,6 +3,7 @@ export interface ApiKeyItem {
   name: string;
   keyPrefix: string;
   fullKeyMock: string;
+  environment?: "development" | "production";
   createdAt: string;
   lastUsedAt?: string | null;
   revoked: boolean;

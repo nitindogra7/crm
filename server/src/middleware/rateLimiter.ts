@@ -12,8 +12,8 @@ export const publicFormRateLimiter = rateLimit({
   standardHeaders: "draft-7",
   legacyHeaders: false,
   skip: (req: Request) => {
-    // Skip if test bypass header is present or during unit tests with bypass
-    if (req.headers["x-test-bypass"] === "qa-test") return true;
+    // Only allow test bypass in test environment to prevent production rate limit evasion
+    if (process.env.NODE_ENV === "test" && req.headers["x-test-bypass"] === "qa-test") return true;
     return false;
   },
   handler: (req: Request, res: Response) => {
@@ -65,7 +65,7 @@ export const publicFormBurstLimiter = rateLimit({
   standardHeaders: false,
   legacyHeaders: false,
   skip: (req: Request) => {
-    if (req.headers["x-test-bypass"] === "qa-test") return true;
+    if (process.env.NODE_ENV === "test" && req.headers["x-test-bypass"] === "qa-test") return true;
     return false;
   },
   handler: (req: Request, res: Response) => {

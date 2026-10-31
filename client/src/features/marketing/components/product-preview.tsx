@@ -2,23 +2,18 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { ShieldIcon, InboxIcon, PlusIcon, PlayIcon } from "./icons";
+import { InboxIcon, PlusIcon } from "./icons";
 import {
   TrendingUp,
-  Users,
   Clock,
-  DollarSign,
   Search,
-  Bell,
   CheckCircle2,
   BarChart3,
   Layers,
   Settings,
   ShieldCheck,
-  FileText,
   Activity,
   ArrowUpRight,
-  Filter,
 } from "lucide-react";
 
 export interface LeadItem {
@@ -42,22 +37,6 @@ interface ProductPreviewProps {
   onToggleMotion: () => void;
 }
 
-// Monthly graph data points for the curved line chart
-const MONTHLY_DATA = [
-  { month: "Jan", leads: 1200, converted: 840, val: 32 },
-  { month: "Feb", leads: 1500, converted: 1050, val: 40 },
-  { month: "Mar", leads: 1400, converted: 980, val: 38 },
-  { month: "Apr", leads: 1900, converted: 1380, val: 52 },
-  { month: "May", leads: 2200, converted: 1650, val: 64 },
-  { month: "Jun", leads: 2100, converted: 1520, val: 59 },
-  { month: "Jul", leads: 2600, converted: 1950, val: 74 },
-  { month: "Aug", leads: 2900, converted: 2200, val: 86 },
-  { month: "Sep", leads: 2750, converted: 2050, val: 78 },
-  { month: "Oct", leads: 3400, converted: 2620, val: 98, active: true },
-  { month: "Nov", leads: 3200, converted: 2450, val: 90 },
-  { month: "Dec", leads: 3800, converted: 2950, val: 110 },
-];
-
 export function ProductPreview({
   leads,
   spam,
@@ -73,7 +52,6 @@ export function ProductPreview({
   const [activeRange, setActiveRange] = useState<"12M" | "30D" | "7D">("12M");
 
   const activeEntries = view === "leads" ? leads : spam;
-  const newCount = leads.filter((l) => l.status === "New").length;
 
   return (
     <section className="pb-20 pt-4" id="product">

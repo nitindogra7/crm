@@ -21,6 +21,9 @@ export class FormsAndApiRepository {
     ownerEmail?: string | null;
     avatarTone?: string;
     plan?: string;
+    productionOrigin?: string | null;
+    allowedOrigins?: string[];
+    activeEnvironment?: string;
   }): Promise<DashboardRecord> {
     return prisma.dashboard.create({
       data: {
@@ -31,6 +34,9 @@ export class FormsAndApiRepository {
         ownerEmail: data.ownerEmail ?? null,
         avatarTone: data.avatarTone ?? "zinc",
         plan: data.plan ?? "Free Tier",
+        productionOrigin: data.productionOrigin ?? null,
+        allowedOrigins: data.allowedOrigins ?? [],
+        activeEnvironment: data.activeEnvironment ?? "development",
       },
     });
   }
@@ -62,6 +68,9 @@ export class FormsAndApiRepository {
       ownerEmail: string | null;
       avatarTone: string;
       plan: string;
+      productionOrigin: string | null;
+      allowedOrigins: string[];
+      activeEnvironment: string;
     }>
   ): Promise<DashboardRecord> {
     return prisma.dashboard.update({
@@ -79,6 +88,7 @@ export class FormsAndApiRepository {
     name: string;
     slug: string;
     endpointUrl: string;
+    environment?: string;
     redirectUrl?: string | null;
     allowedDomains?: string[];
     fields: Prisma.InputJsonValue;
@@ -89,6 +99,7 @@ export class FormsAndApiRepository {
         name: data.name,
         slug: data.slug,
         endpointUrl: data.endpointUrl,
+        environment: data.environment ?? "development",
         redirectUrl: data.redirectUrl ?? null,
         allowedDomains: data.allowedDomains ?? [],
         fields: data.fields,
@@ -99,9 +110,13 @@ export class FormsAndApiRepository {
     });
   }
 
-  async findFormsByDashboardId(dashboardId: string): Promise<FormRecord[]> {
+  async findFormsByDashboardId(dashboardId: string, environment?: string): Promise<FormRecord[]> {
+    const where: Prisma.FormWhereInput = { dashboardId };
+    if (environment) {
+      where.environment = environment;
+    }
     return prisma.form.findMany({
-      where: { dashboardId },
+      where,
       orderBy: { createdAt: "desc" },
     });
   }
@@ -140,6 +155,7 @@ export class FormsAndApiRepository {
       slug: string;
       endpointUrl: string;
       enabled: boolean;
+      environment: string;
       redirectUrl: string | null;
       allowedDomains: string[];
       fields: Prisma.InputJsonValue;
@@ -196,6 +212,7 @@ export class FormsAndApiRepository {
     name: string;
     key: string;
     keyPrefix: string;
+    environment?: string;
     fullKeyMock?: string | null;
   }): Promise<ApiKeyRecord> {
     return prisma.apiKey.create({
@@ -204,15 +221,20 @@ export class FormsAndApiRepository {
         name: data.name,
         key: data.key,
         keyPrefix: data.keyPrefix,
+        environment: data.environment ?? (data.keyPrefix.includes("live") ? "production" : "development"),
         fullKeyMock: data.fullKeyMock ?? data.key,
         revoked: false,
       },
     });
   }
 
-  async findApiKeysByDashboardId(dashboardId: string): Promise<ApiKeyRecord[]> {
+  async findApiKeysByDashboardId(dashboardId: string, environment?: string): Promise<ApiKeyRecord[]> {
+    const where: Prisma.ApiKeyWhereInput = { dashboardId, revoked: false };
+    if (environment) {
+      where.environment = environment;
+    }
     return prisma.apiKey.findMany({
-      where: { dashboardId, revoked: false },
+      where,
       orderBy: { createdAt: "desc" },
     });
   }
@@ -230,9 +252,13 @@ export class FormsAndApiRepository {
     });
   }
 
-  async revokeAllActiveKeysForDashboard(dashboardId: string): Promise<void> {
+  async revokeAllActiveKeysForDashboard(dashboardId: string, environment?: string): Promise<void> {
+    const where: Prisma.ApiKeyWhereInput = { dashboardId, revoked: false };
+    if (environment) {
+      where.environment = environment;
+    }
     await prisma.apiKey.updateMany({
-      where: { dashboardId, revoked: false },
+      where,
       data: { revoked: true },
     });
   }
@@ -257,6 +283,7 @@ export class FormsAndApiRepository {
     message?: string;
     source?: string;
     status?: string;
+    environment?: string;
     extraFields?: Prisma.InputJsonValue;
     metadata?: Prisma.InputJsonValue;
   }): Promise<LeadRecord> {
@@ -270,15 +297,20 @@ export class FormsAndApiRepository {
         message: data.message ?? "",
         source: data.source ?? "Website embed",
         status: data.status ?? "New",
+        environment: data.environment ?? "development",
         extraFields: data.extraFields ?? Prisma.JsonNull,
         metadata: data.metadata ?? Prisma.JsonNull,
       },
     });
   }
 
-  async findLeadsByDashboardId(dashboardId: string): Promise<LeadRecord[]> {
+  async findLeadsByDashboardId(dashboardId: string, environment?: string): Promise<LeadRecord[]> {
+    const where: Prisma.LeadWhereInput = { dashboardId };
+    if (environment) {
+      where.environment = environment;
+    }
     return prisma.lead.findMany({
-      where: { dashboardId },
+      where,
       orderBy: { receivedAt: "desc" },
     });
   }
@@ -358,6 +390,7 @@ export class FormsAndApiRepository {
 
   async findLeadsWithPagination(params: {
     dashboardId: string;
+    environment?: string;
     page?: number;
     limit?: number;
     search?: string;
@@ -378,6 +411,10 @@ export class FormsAndApiRepository {
     const where: Prisma.LeadWhereInput = {
       dashboardId: params.dashboardId,
     };
+
+    if (params.environment) {
+      where.environment = params.environment;
+    }
 
     if (params.formId && params.formId !== "all") {
       where.formId = params.formId;
@@ -450,6 +487,7 @@ export class FormsAndApiRepository {
     messageSnippet?: string;
     rawPayload: Prisma.InputJsonValue;
     triggerRule?: string;
+    environment?: string;
     metadata?: Prisma.InputJsonValue;
   }): Promise<SpamRecord> {
     return prisma.spam.create({
@@ -464,14 +502,19 @@ export class FormsAndApiRepository {
         messageSnippet: data.messageSnippet ?? "",
         rawPayload: data.rawPayload,
         triggerRule: data.triggerRule ?? "honeypot",
+        environment: data.environment ?? "development",
         metadata: data.metadata ?? Prisma.JsonNull,
       },
     });
   }
 
-  async findSpamByDashboardId(dashboardId: string): Promise<SpamRecord[]> {
+  async findSpamByDashboardId(dashboardId: string, environment?: string): Promise<SpamRecord[]> {
+    const where: Prisma.SpamWhereInput = { dashboardId };
+    if (environment) {
+      where.environment = environment;
+    }
     return prisma.spam.findMany({
-      where: { dashboardId },
+      where,
       orderBy: { receivedAt: "desc" },
     });
   }
@@ -492,7 +535,7 @@ export class FormsAndApiRepository {
   // STATS
   // ==========================================
 
-  async getStats(dashboardId: string): Promise<{
+  async getStats(dashboardId: string, environment?: string): Promise<{
     totalLeads: number;
     leadsToday: number;
     leadsThisWeek: number;
@@ -502,18 +545,36 @@ export class FormsAndApiRepository {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const sevenDaysAgo = new Date(startOfToday.getTime() - 6 * 24 * 60 * 60 * 1000);
 
+    const leadWhere: Prisma.LeadWhereInput = { dashboardId };
+    const spamWhere: Prisma.SpamWhereInput = { dashboardId };
+    if (environment) {
+      leadWhere.environment = environment;
+      spamWhere.environment = environment;
+    }
+
     const [leadStats, spamFlagged] = await Promise.all([
       prisma.$queryRaw<
         Array<{ totalLeads: number; leadsToday: number; leadsThisWeek: number }>
-      >`
-        SELECT
-          COUNT(*)::int AS "totalLeads",
-          COUNT(*) FILTER (WHERE "receivedAt" >= ${startOfToday})::int AS "leadsToday",
-          COUNT(*) FILTER (WHERE "receivedAt" >= ${sevenDaysAgo})::int AS "leadsThisWeek"
-        FROM "leads"
-        WHERE "dashboardId" = ${dashboardId}
-      `,
-      prisma.spam.count({ where: { dashboardId } }),
+      >(
+        environment
+          ? Prisma.sql`
+            SELECT
+              COUNT(*)::int AS "totalLeads",
+              COUNT(*) FILTER (WHERE "receivedAt" >= ${startOfToday})::int AS "leadsToday",
+              COUNT(*) FILTER (WHERE "receivedAt" >= ${sevenDaysAgo})::int AS "leadsThisWeek"
+            FROM "leads"
+            WHERE "dashboardId" = ${dashboardId} AND "environment" = ${environment}
+          `
+          : Prisma.sql`
+            SELECT
+              COUNT(*)::int AS "totalLeads",
+              COUNT(*) FILTER (WHERE "receivedAt" >= ${startOfToday})::int AS "leadsToday",
+              COUNT(*) FILTER (WHERE "receivedAt" >= ${sevenDaysAgo})::int AS "leadsThisWeek"
+            FROM "leads"
+            WHERE "dashboardId" = ${dashboardId}
+          `
+      ),
+      prisma.spam.count({ where: spamWhere }),
     ]);
 
     const stats = leadStats[0] || { totalLeads: 0, leadsToday: 0, leadsThisWeek: 0 };

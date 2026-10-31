@@ -12,6 +12,7 @@ export class LeadsRepository {
     message?: string;
     source?: string;
     status?: string;
+    environment?: string;
     extraFields?: Prisma.InputJsonValue;
     metadata?: Prisma.InputJsonValue;
   }): Promise<LeadRecord> {
@@ -25,6 +26,7 @@ export class LeadsRepository {
         message: data.message ?? "",
         source: data.source ?? "Website embed",
         status: data.status ?? "New",
+        environment: data.environment ?? "development",
         extraFields: data.extraFields ?? Prisma.JsonNull,
         metadata: data.metadata ?? Prisma.JsonNull,
       },
@@ -37,15 +39,20 @@ export class LeadsRepository {
     });
   }
 
-  async findLeadsByDashboardId(dashboardId: string): Promise<LeadRecord[]> {
+  async findLeadsByDashboardId(dashboardId: string, environment?: string): Promise<LeadRecord[]> {
+    const where: Prisma.LeadWhereInput = { dashboardId };
+    if (environment) {
+      where.environment = environment;
+    }
     return prisma.lead.findMany({
-      where: { dashboardId },
+      where,
       orderBy: { receivedAt: "desc" },
     });
   }
 
   async findLeadsWithPagination(params: {
     dashboardId: string;
+    environment?: string;
     page?: number;
     limit?: number;
     search?: string;
@@ -60,6 +67,10 @@ export class LeadsRepository {
     const where: Prisma.LeadWhereInput = {
       dashboardId: params.dashboardId,
     };
+
+    if (params.environment) {
+      where.environment = params.environment;
+    }
 
     if (params.formId && params.formId !== "all") {
       where.formId = params.formId;

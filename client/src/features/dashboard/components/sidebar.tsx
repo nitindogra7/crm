@@ -20,6 +20,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
+import { EnvironmentSwitcher } from "./environment-switcher";
 
 interface SidebarProps {
   onClose?: () => void;
@@ -261,6 +262,16 @@ export function Sidebar({ onClose }: SidebarProps) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Clerk-Style Environment Switcher (Development vs Production) */}
+      <div className="px-3 pb-2">
+        <div className="flex items-center justify-between p-1.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
+          <span className="text-[11px] font-semibold text-slate-500 pl-1">
+            Environment
+          </span>
+          <EnvironmentSwitcher compact />
+        </div>
       </div>
 
       {/* Main Navigation - Clean Infraly Style */}

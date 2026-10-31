@@ -9,8 +9,6 @@ import {
   ShieldCheck,
   Bell,
   Database,
-  ArrowUpRight,
-  Sliders,
 } from "lucide-react";
 
 export function FeaturesGrid() {

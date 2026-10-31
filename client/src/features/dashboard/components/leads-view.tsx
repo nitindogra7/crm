@@ -21,6 +21,7 @@ import {
   ExternalLink,
   ChevronDown,
   Sparkles,
+  Download,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
 import { LeadsSkeleton } from "./dashboard-skeleton";
@@ -271,6 +272,37 @@ export function LeadsView() {
     setOpenActionMenuId(null);
   };
 
+  const handleExportLeadsCSV = () => {
+    if (filteredLeads.length === 0) return;
+    const sanitizeCsvCell = (val: string) => {
+      let clean = (val || "").replace(/"/g, '""');
+      if (/^[=+\-@\t\r]/.test(clean)) {
+        clean = `'${clean}`;
+      }
+      return `"${clean}"`;
+    };
+
+    const headers = ["Name", "Email", "Form", "Status", "Source", "Date", "Message"];
+    const rows = filteredLeads.map((l) => [
+      sanitizeCsvCell(l.name),
+      sanitizeCsvCell(l.email),
+      sanitizeCsvCell(l.formName || ""),
+      sanitizeCsvCell(l.status),
+      sanitizeCsvCell(l.source || ""),
+      sanitizeCsvCell(l.receivedAt ? new Date(l.receivedAt).toISOString() : ""),
+      sanitizeCsvCell((l.message || "").replace(/\r?\n/g, " ")),
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `infraly_leads_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    addToast("Export Complete", `Exported ${filteredLeads.length} lead(s) to CSV.`);
+  };
+
   if (isLoading) {
     return <LeadsSkeleton />;
   }
@@ -278,13 +310,25 @@ export function LeadsView() {
   return (
     <div ref={menuContainerRef} className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-slate-900">
-          Leads Inbox
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-500 mt-1">
-          Review, filter, and track inquiries received from your live form endpoints.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-slate-900">
+            Leads Inbox
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Review, filter, and track inquiries received from your live form endpoints.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleExportLeadsCSV}
+          disabled={filteredLeads.length === 0}
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-all disabled:opacity-40 cursor-pointer self-start sm:self-auto"
+          title="Export filtered leads as a secure CSV spreadsheet"
+        >
+          <Download className="w-3.5 h-3.5 text-slate-500" />
+          <span>Export CSV</span>
+        </button>
       </div>
 
       {/* Filter and Search Bar */}
@@ -545,9 +589,22 @@ export function LeadsView() {
 
                       {/* Form */}
                       <td className="py-3.5 px-4 hidden sm:table-cell">
-                        <span className="font-sans text-slate-600 truncate block max-w-[160px] font-medium">
-                          {lead.formName}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {lead.environment && (
+                            <span
+                              className={`inline-flex items-center px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold uppercase tracking-wider ${
+                                lead.environment === "production"
+                                  ? "bg-purple-50 text-purple-700 border border-purple-200/70"
+                                  : "bg-amber-50 text-amber-700 border border-amber-200/70"
+                              }`}
+                            >
+                              {lead.environment === "production" ? "PROD" : "DEV"}
+                            </span>
+                          )}
+                          <span className="font-sans text-slate-600 truncate block max-w-[160px] font-medium">
+                            {lead.formName}
+                          </span>
+                        </div>
                       </td>
 
                       {/* Source */}

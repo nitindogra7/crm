@@ -7,6 +7,7 @@ import { LoadingBar } from "./dashboard-skeleton";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { ToastNotificationContainer } from "./toast-notification";
+import { ProductionOriginBanner } from "./production-origin-banner";
 
 const LeadDetailDrawer = dynamic(
   () => import("./lead-detail-drawer").then((m) => m.LeadDetailDrawer),
@@ -91,6 +92,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         <Topbar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
 
         <main className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 max-w-7xl w-full mx-auto">
+          <ProductionOriginBanner />
           {children}
         </main>
       </div>

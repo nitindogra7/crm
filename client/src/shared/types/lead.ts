@@ -8,6 +8,7 @@ export interface LeadItem {
   formName: string;
   source: string;
   status: LeadStatus;
+  environment?: "development" | "production";
   receivedAt: string;
   message: string;
   extraFields?: Record<string, string>;
@@ -27,6 +28,7 @@ export interface LeadsPagination {
 
 export interface GetLeadsParams {
   dashboardId?: string;
+  environment?: "development" | "production";
   page?: number;
   limit?: number;
   search?: string;

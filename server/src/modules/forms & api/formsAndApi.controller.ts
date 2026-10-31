@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { ZodError } from "zod";
+import { WorkspaceAccessError } from "../../errors";
 import { getAuth } from "@clerk/express";
 import { formsAndApiService, FormsAndApiService } from "./formsAndApi.services";
 import {
@@ -36,6 +37,10 @@ export class FormsAndApiController {
       const dashboards = await this.service.getOrCreateDashboards(userId);
       res.status(200).json({ success: true, data: dashboards });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error retrieving dashboards:", error);
       res.status(500).json({ success: false, error: "Failed to load dashboards" });
     }
@@ -55,6 +60,10 @@ export class FormsAndApiController {
 
       res.status(201).json({ success: true, data: dashboard });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -88,6 +97,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, data: updated });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -120,6 +133,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, data: forms });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error fetching forms:", error);
       res.status(500).json({ success: false, error: "Failed to fetch forms" });
     }
@@ -143,6 +160,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, data: form });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error fetching form:", error);
       res.status(500).json({ success: false, error: "Failed to retrieve form" });
     }
@@ -162,6 +183,10 @@ export class FormsAndApiController {
 
       res.status(201).json({ success: true, data: form });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -195,6 +220,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, data: updated });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -226,6 +255,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, message: "Form deleted successfully" });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error deleting form:", error);
       res.status(500).json({ success: false, error: "Failed to delete form" });
     }
@@ -250,6 +283,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, data: keys });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error getting API keys:", error);
       res.status(500).json({ success: false, error: "Failed to retrieve API keys" });
     }
@@ -275,6 +312,10 @@ export class FormsAndApiController {
 
       res.status(201).json({ success: true, data: key });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error creating API key:", error);
       res.status(500).json({ success: false, error: "Failed to generate API key" });
     }
@@ -296,6 +337,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, data: newKey });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error regenerating API key:", error);
       res.status(500).json({ success: false, error: "Failed to regenerate API key" });
     }
@@ -319,6 +364,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, message: "API key revoked" });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error revoking API key:", error);
       res.status(500).json({ success: false, error: "Failed to revoke API key" });
     }
@@ -355,10 +404,7 @@ export class FormsAndApiController {
         (req.body?.apiKey as string) ||
         (req.headers.authorization?.replace(/^Bearer\s+/i, ""));
 
-      const clientIp =
-        (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
-        req.socket.remoteAddress ||
-        "127.0.0.1";
+      const clientIp = req.ip || req.socket.remoteAddress || "127.0.0.1";
 
       const result = await this.service.ingestSubmission({
         formSlug,
@@ -427,6 +473,10 @@ export class FormsAndApiController {
         ...result,
       });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error processing form submission:", error);
       res.status(500).json({
         success: false,
@@ -453,6 +503,10 @@ export class FormsAndApiController {
 
       res.status(201).json({ success: true, data: lead });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -484,6 +538,10 @@ export class FormsAndApiController {
         pagination: result.pagination,
       });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -516,6 +574,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, message: "Lead deleted successfully" });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error deleting lead:", error);
       res.status(500).json({ success: false, error: "Failed to delete lead" });
     }
@@ -543,6 +605,10 @@ export class FormsAndApiController {
         data: { count: result.count },
       });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -579,6 +645,10 @@ export class FormsAndApiController {
         data: { count: result.count },
       });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -612,6 +682,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, data: updated });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error updating lead status:", error);
       res.status(500).json({ success: false, error: "Failed to update lead status" });
     }
@@ -632,6 +706,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, data: spam });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error getting quarantined spam:", error);
       res.status(500).json({ success: false, error: "Failed to retrieve spam records" });
     }
@@ -656,6 +734,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, data: rescued });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error rescuing spam record:", error);
       res.status(500).json({ success: false, error: "Failed to rescue spam record" });
     }
@@ -676,6 +758,10 @@ export class FormsAndApiController {
 
       res.status(200).json({ success: true, data: stats });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error getting stats:", error);
       res.status(500).json({ success: false, error: "Failed to retrieve dashboard stats" });
     }

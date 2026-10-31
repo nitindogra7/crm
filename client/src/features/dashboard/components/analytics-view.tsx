@@ -17,7 +17,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, Download } from "lucide-react";
+import { Download } from "lucide-react";
 
 type TimeRange = "7d" | "30d" | "90d";
 
@@ -44,8 +44,8 @@ function CustomTooltip({
 }) {
   if (active && payload && payload.length) {
     return (
-      <div className="p-3 rounded-xl border border-slate-200 bg-white/95 backdrop-blur-md shadow-xl text-xs space-y-1.5 font-sans">
-        <p className="font-mono text-slate-500 text-[11px] font-semibold border-b border-slate-100 pb-1">
+      <div className="p-3 rounded-xl border border-slate-200 bg-white/95 backdrop-blur-md shadow-xl text-[13px] space-y-1.5 font-sans">
+        <p className="font-sans text-slate-500 text-[13px] font-semibold border-b border-slate-100 pb-1">
           {label}
         </p>
         {payload.map((entry, index) => (
@@ -57,7 +57,7 @@ function CustomTooltip({
               />
               {entry.name}:
             </span>
-            <span className="font-mono font-bold text-slate-900 tabular-nums">
+            <span className="font-sans font-bold text-slate-900 tabular-nums">
               {entry.value}
             </span>
           </div>
@@ -69,43 +69,32 @@ function CustomTooltip({
 }
 
 export function AnalyticsView() {
-  const { leads, spam, forms, isLoading, addToast } = useDashboard();
+  const { leads: allLeads, spam: allSpam, forms, isLoading, addToast } = useDashboard(["leads","spam","forms","isLoading","addToast"]);
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const isMounted = useHydrated();
 
+  const daysCount = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
+  const { leads, spam, days } = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const days = Array.from({ length: daysCount }, (_, index) => {
+      const day = new Date(today);
+      day.setDate(day.getDate() - daysCount + index + 1);
+      return day;
+    });
+    const start = days[0].getTime();
+    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).getTime();
+    const inRange = (item: { receivedAt: string }) => { const time = new Date(item.receivedAt).getTime(); return time >= start && time < end; };
+    return { leads: allLeads.filter(inRange), spam: allSpam.filter(inRange), days };
+  }, [allLeads, allSpam, daysCount]);
+
   // 1. Calculate Daily Timeline Data
   const timelineData = useMemo(() => {
-    const daysCount = timeRange === "7d" ? 7 : timeRange === "30d" ? 14 : 30;
-    const now = new Date();
-    const result = [];
-
-    for (let i = daysCount - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-      const dayEnd = dayStart + 24 * 60 * 60 * 1000;
-
-      const dateLabel = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-
-      const dayLeads = leads.filter((l) => {
-        const t = new Date(l.receivedAt).getTime();
-        return t >= dayStart && t < dayEnd;
-      }).length;
-
-      const daySpam = spam.filter((s) => {
-        const t = new Date(s.receivedAt).getTime();
-        return t >= dayStart && t < dayEnd;
-      }).length;
-
-      result.push({
-        date: dateLabel,
-        leads: dayLeads,
-        spam: daySpam,
-        total: dayLeads + daySpam,
-      });
-    }
-
-    return result;
-  }, [leads, spam, timeRange]);
+    const buckets = new Map(days.map(day => [day.toDateString(), { date: day.toLocaleDateString("en-US", { month: "short", day: "numeric" }), leads: 0, spam: 0, total: 0 }]));
+    leads.forEach(lead => { const bucket = buckets.get(new Date(lead.receivedAt).toDateString()); if (bucket) { bucket.leads++; bucket.total++; } });
+    spam.forEach(item => { const bucket = buckets.get(new Date(item.receivedAt).toDateString()); if (bucket) { bucket.spam++; bucket.total++; } });
+    return Array.from(buckets.values());
+  }, [leads, spam, days]);
 
   // 2. Calculate Form Performance Data
   const formData = useMemo(() => {
@@ -187,7 +176,7 @@ export function AnalyticsView() {
   const totalSubmissions = leads.length + spam.length;
   const cleanRate = totalSubmissions > 0 ? Math.round((leads.length / totalSubmissions) * 100) : 0;
   const spamRate = totalSubmissions > 0 ? Math.round((spam.length / totalSubmissions) * 100) : 0;
-  const avgDaily = (leads.length / (timeRange === "7d" ? 7 : 30)).toFixed(1);
+  const avgDaily = (leads.length / daysCount).toFixed(1);
 
   const handleExportCSV = () => {
     const rows = [
@@ -211,31 +200,28 @@ export function AnalyticsView() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="dashboard-page-header flex flex-col xl:flex-row justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200/80 text-[11px] font-mono font-semibold text-blue-700 mb-1.5">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Interactive Data Visualizations</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-slate-900">
-            Analytics & Insights
+          <h1 className="text-2xl sm:text-3xl font-heading font-semibold tracking-tight text-slate-900">
+            Analytics
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-sans">
-            Track submission volume trajectories, form conversion efficiency, and spam filtering benchmarks.
+          <p className="text-[13px] sm:text-sm text-slate-500 mt-1 font-sans">
+            Lead volume, sources, and spam activity.
           </p>
         </div>
 
         {/* Toolbar: Time Range Toggle + Export CSV */}
         <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
-          <div className="p-1 rounded-xl border border-slate-200/80 bg-slate-100/90 flex items-center text-xs">
+          <div className="p-1 rounded-xl border border-slate-200/80 bg-slate-100/90 flex items-center text-[13px]">
             {(["7d", "30d", "90d"] as TimeRange[]).map((range) => (
               <button
                 key={range}
                 type="button"
                 onClick={() => setTimeRange(range)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                aria-pressed={timeRange === range}
+                className={`px-3 py-1.5 rounded-lg text-[13px] font-sans transition-all cursor-pointer ${
                   timeRange === range
                     ? "bg-white text-slate-900 font-semibold shadow-2xs"
                     : "text-slate-600 hover:text-slate-900 font-medium"
@@ -249,7 +235,7 @@ export function AnalyticsView() {
           <button
             type="button"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-slate-900 transition-all cursor-pointer shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-[13px] font-semibold text-slate-700 hover:text-slate-900 transition-all cursor-pointer shadow-2xs"
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
             <span className="hidden sm:inline">Export CSV</span>
@@ -259,75 +245,75 @@ export function AnalyticsView() {
 
       {/* 4 Summary KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-          <span className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-500 block mb-1">
-            Total Submissions
+        <div className="p-4 sm:p-5 rounded-xl border border-slate-200/80 bg-white shadow-xs">
+          <span className="text-[13px] font-semibold normal-case tracking-normal text-slate-500 block min-h-10 mb-1">
+            Total submissions
           </span>
-          <div className="text-2xl sm:text-3xl font-heading font-bold text-slate-900 tabular-nums">
+          <div className="text-2xl sm:text-3xl font-heading font-semibold text-slate-900 tabular-nums">
             {totalSubmissions}
           </div>
-          <p className="text-[11.5px] text-slate-400 mt-1 font-sans">
-            Inbound payloads received
+          <p className="text-[13px] text-slate-500 mt-1 font-sans">
+            Leads and spam combined
           </p>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-          <span className="text-[11.5px] font-semibold uppercase tracking-wider text-emerald-700 block mb-1">
-            Clean Lead Quality
+        <div className="p-4 sm:p-5 rounded-xl border border-slate-200/80 bg-white shadow-xs">
+          <span className="text-[13px] font-semibold normal-case tracking-normal text-emerald-700 block min-h-10 mb-1">
+            Verified leads
           </span>
-          <div className="text-2xl sm:text-3xl font-heading font-bold text-emerald-600 tabular-nums">
+          <div className="text-2xl sm:text-3xl font-heading font-semibold text-emerald-600 tabular-nums">
             {cleanRate}%
           </div>
-          <p className="text-[11.5px] text-slate-400 mt-1 font-sans">
-            Passed verification cleanly
+          <p className="text-[13px] text-slate-500 mt-1 font-sans">
+            Share of all submissions
           </p>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-          <span className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-500 block mb-1">
-            Avg. Inbound Rate
+        <div className="p-4 sm:p-5 rounded-xl border border-slate-200/80 bg-white shadow-xs">
+          <span className="text-[13px] font-semibold normal-case tracking-normal text-slate-500 block min-h-10 mb-1">
+            Daily average
           </span>
-          <div className="text-2xl sm:text-3xl font-heading font-bold text-slate-900 tabular-nums">
-            {avgDaily} <span className="text-sm font-normal text-slate-400">/day</span>
+          <div className="text-2xl sm:text-3xl font-heading font-semibold text-slate-900 tabular-nums">
+            {avgDaily} <span className="text-sm font-normal text-slate-500">/day</span>
           </div>
-          <p className="text-[11.5px] text-slate-400 mt-1 font-sans">
+          <p className="text-[13px] text-slate-500 mt-1 font-sans">
             Average verified leads
           </p>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-          <span className="text-[11.5px] font-semibold uppercase tracking-wider text-amber-700 block mb-1">
-            Spam Block Rate
+        <div className="p-4 sm:p-5 rounded-xl border border-slate-200/80 bg-white shadow-xs">
+          <span className="text-[13px] font-semibold normal-case tracking-normal text-amber-700 block min-h-10 mb-1">
+            Spam rate
           </span>
-          <div className="text-2xl sm:text-3xl font-heading font-bold text-amber-600 tabular-nums">
+          <div className="text-2xl sm:text-3xl font-heading font-semibold text-amber-600 tabular-nums">
             {spamRate}%
           </div>
-          <p className="text-[11.5px] text-slate-400 mt-1 font-sans">
-            Filtered out by bot defense
+          <p className="text-[13px] text-slate-500 mt-1 font-sans">
+            Share flagged as spam
           </p>
         </div>
       </div>
 
       {/* Main Chart: Timeline Volume (AreaChart with Gradient) */}
-      <div className="p-5 sm:p-6 rounded-2xl border border-slate-200/80 bg-white space-y-4 shadow-xs">
+      <div className="p-5 sm:p-6 rounded-xl border border-slate-200/80 bg-white space-y-4 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h2 className="text-sm sm:text-base font-heading font-bold text-slate-900">
-              Inbound Pipeline Activity Over Time
+              Submission activity
             </h2>
-            <p className="text-[11.5px] text-slate-500">
-              Verified incoming leads contrasted with quarantined/rejected spam bots.
+            <p className="text-[13px] text-slate-500">
+              Leads and spam over time.
             </p>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-mono">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] font-sans">
             <span className="flex items-center gap-1.5 text-slate-700 font-medium">
               <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
               Verified Leads
             </span>
             <span className="flex items-center gap-1.5 text-slate-700 font-medium">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-              Spam Shield Blocks
+              Flagged spam
             </span>
           </div>
         </div>
@@ -362,7 +348,7 @@ export function AnalyticsView() {
                   allowDecimals={false}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Area
+                <Area isAnimationActive={false}
                   type="monotone"
                   dataKey="leads"
                   name="Verified Leads"
@@ -371,7 +357,7 @@ export function AnalyticsView() {
                   fillOpacity={1}
                   fill="url(#leadGradient)"
                 />
-                <Area
+                <Area isAnimationActive={false}
                   type="monotone"
                   dataKey="spam"
                   name="Blocked Spam"
@@ -383,8 +369,8 @@ export function AnalyticsView() {
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-full flex items-center justify-center text-xs text-slate-400 font-mono">
-              Loading graph visualizations...
+            <div className="h-full flex items-center justify-center text-[13px] text-slate-500 font-sans">
+              Loading chart...
             </div>
           )}
         </div>
@@ -393,26 +379,26 @@ export function AnalyticsView() {
       {/* Grid: Form Performance (Left) and Source Breakdown (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Form Conversion Comparison (7 cols) */}
-        <div className="lg:col-span-7 p-5 sm:p-6 rounded-2xl border border-slate-200/80 bg-white space-y-4 shadow-xs">
-          <div className="flex items-center justify-between">
+        <div className="min-w-0 lg:col-span-7 p-5 sm:p-6 rounded-xl border border-slate-200/80 bg-white space-y-4 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm sm:text-base font-heading font-bold text-slate-900">
-                Volume by Form Endpoint
+                Leads by form
               </h2>
-              <p className="text-[11.5px] text-slate-500">
-                Comparative submission volume per individual form endpoint.
+              <p className="text-[13px] text-slate-500">
+                Submission counts for each form.
               </p>
             </div>
-            <span className="text-[11px] font-mono text-slate-500">
+            <span className="text-[13px] font-sans text-slate-500">
               {forms.length} active endpoints
             </span>
           </div>
 
           <div className="h-64 w-full pt-2">
             {formData.length === 0 ? (
-              <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 border border-dashed border-slate-200 rounded-xl text-slate-400 text-xs gap-1.5">
+              <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 border border-dashed border-slate-200 rounded-xl text-slate-500 text-[13px] gap-1.5">
                 <p className="font-semibold text-slate-700">No form endpoints registered yet</p>
-                <p className="text-[11px] text-slate-400">Create forms to track comparative volume per endpoint.</p>
+                <p className="text-[13px] text-slate-500">Create forms to track comparative volume per endpoint.</p>
               </div>
             ) : isMounted ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -433,8 +419,8 @@ export function AnalyticsView() {
                     allowDecimals={false}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="leads" name="Verified Leads" fill="#2563eb" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="spam" name="Blocked Spam" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+                  <Bar isAnimationActive={false} dataKey="leads" name="Verified Leads" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                  <Bar isAnimationActive={false} dataKey="spam" name="Blocked Spam" fill="#f59e0b" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : null}
@@ -442,26 +428,26 @@ export function AnalyticsView() {
         </div>
 
         {/* Traffic Source Donut Breakdown (5 cols) */}
-        <div className="lg:col-span-5 p-5 sm:p-6 rounded-2xl border border-slate-200/80 bg-white space-y-4 flex flex-col justify-between shadow-xs">
+        <div className="min-w-0 lg:col-span-5 p-5 sm:p-6 rounded-xl border border-slate-200/80 bg-white space-y-4 flex flex-col justify-between shadow-xs">
           <div>
             <h2 className="text-sm sm:text-base font-heading font-bold text-slate-900">
-              Inbound Traffic Sources
+              Lead sources
             </h2>
-            <p className="text-[11.5px] text-slate-500">
-              Distribution of incoming leads across capture channels.
+            <p className="text-[13px] text-slate-500">
+              Where your leads come from.
             </p>
           </div>
 
           <div className="h-52 w-full relative flex items-center justify-center">
             {sourceData.length === 0 ? (
-              <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 border border-dashed border-slate-200 rounded-xl text-slate-400 text-xs gap-1.5">
+              <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 border border-dashed border-slate-200 rounded-xl text-slate-500 text-[13px] gap-1.5">
                 <p className="font-semibold text-slate-700">No traffic sources recorded yet</p>
-                <p className="text-[11px] text-slate-400">Source tags will populate as inquiries arrive.</p>
+                <p className="text-[13px] text-slate-500">Source tags will populate as inquiries arrive.</p>
               </div>
             ) : isMounted ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
+                  <Pie isAnimationActive={false}
                     data={sourceData}
                     cx="50%"
                     cy="50%"
@@ -489,7 +475,7 @@ export function AnalyticsView() {
                 <span className="text-xl font-heading font-bold text-slate-900 tabular-nums">
                   {leads.length}
                 </span>
-                <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold">
+                <span className="text-[10px] font-sans uppercase text-slate-500 font-semibold">
                   Total Leads
                 </span>
               </div>
@@ -498,14 +484,14 @@ export function AnalyticsView() {
 
           {/* Legend items */}
           {sourceData.length > 0 && (
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs">
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-[13px]">
               {sourceData.map((item, idx) => (
                 <div key={item.name} className="flex items-center gap-2">
                   <span
                     className="w-2.5 h-2.5 rounded-full flex-none"
                     style={{ backgroundColor: SOURCE_COLORS[idx % SOURCE_COLORS.length] }}
                   />
-                  <span className="text-slate-700 truncate text-[11px] font-mono font-medium">
+                  <span className="text-slate-700 truncate text-[13px] font-sans font-medium">
                     {item.name} ({item.value})
                   </span>
                 </div>
@@ -518,36 +504,36 @@ export function AnalyticsView() {
       {/* Grid: Spam Filter Breakdown & Hourly Peak Traffic */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Spam Reasons Breakdown */}
-        <div className="lg:col-span-6 p-5 sm:p-6 rounded-2xl border border-slate-200/80 bg-white space-y-4 shadow-xs">
+        <div className="min-w-0 lg:col-span-6 p-5 sm:p-6 rounded-xl border border-slate-200/80 bg-white space-y-4 shadow-xs">
           <div>
             <h2 className="text-sm sm:text-base font-heading font-bold text-slate-900">
-              Spam Detection Trigger Rules
+              Spam reasons
             </h2>
-            <p className="text-[11.5px] text-slate-500">
-              Breakdown of automated defenses that intercepted malicious or junk submissions.
+            <p className="text-[13px] text-slate-500">
+              Why submissions were flagged.
             </p>
           </div>
 
           <div className="space-y-3 pt-2">
             {spamReasonData.length === 0 ? (
-              <div className="py-8 text-center border border-dashed border-slate-200 rounded-xl text-slate-400 text-xs">
+              <div className="py-8 text-center border border-dashed border-slate-200 rounded-xl text-slate-500 text-[13px]">
                 <p className="font-semibold text-slate-700">No spam detected</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Automated bot defense triggers will be charted here.</p>
+                <p className="text-[13px] text-slate-500 mt-0.5">Automated bot defense triggers will be charted here.</p>
               </div>
             ) : (
               spamReasonData.map((item, idx) => {
                 const pct = spam.length > 0 ? Math.round((item.value / spam.length) * 100) : 0;
                 return (
-                  <div key={item.name} className="space-y-1 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-700 font-mono text-[11.5px] flex items-center gap-2 font-medium">
+                  <div key={item.name} className="space-y-1 text-[13px]">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="text-slate-700 font-sans text-[13px] flex items-center gap-2 font-medium">
                         <span
                           className="w-2 h-2 rounded-full"
                           style={{ backgroundColor: SPAM_COLORS[idx % SPAM_COLORS.length] }}
                         />
                         {item.name}
                       </span>
-                      <span className="text-slate-500 font-mono text-[11px] tabular-nums font-semibold">
+                      <span className="text-slate-500 font-sans text-[13px] tabular-nums font-semibold">
                         {item.value} ({pct}%)
                       </span>
                     </div>
@@ -568,23 +554,23 @@ export function AnalyticsView() {
         </div>
 
         {/* Hourly Peak Activity Heatmap */}
-        <div className="lg:col-span-6 p-5 sm:p-6 rounded-2xl border border-slate-200/80 bg-white space-y-4 shadow-xs">
-          <div className="flex items-center justify-between">
+        <div className="min-w-0 lg:col-span-6 p-5 sm:p-6 rounded-xl border border-slate-200/80 bg-white space-y-4 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm sm:text-base font-heading font-bold text-slate-900">
-                Submissions by Time of Day
+                Time of day
               </h2>
-              <p className="text-[11.5px] text-slate-500">
-                Hourly activity clusters to understand when prospects submit inquiries.
+              <p className="text-[13px] text-slate-500">
+                When leads submit your forms.
               </p>
             </div>
             {peakBucket ? (
-              <span className="text-[11px] font-mono text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200/80 font-semibold">
+              <span className="text-[13px] font-sans text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200/80 font-semibold">
                 Peak: {peakBucket}
               </span>
             ) : (
-              <span className="text-[11px] font-mono text-slate-400 bg-slate-50 px-2.5 py-0.5 rounded-full border border-slate-200 font-medium">
-                Awaiting Submissions
+              <span className="text-[13px] font-sans text-slate-500 bg-slate-50 px-2.5 py-0.5 rounded-full border border-slate-200 font-medium">
+                No activity yet
               </span>
             )}
           </div>
@@ -609,7 +595,7 @@ export function AnalyticsView() {
                     allowDecimals={false}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="count" name="Submissions" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                  <Bar isAnimationActive={false} dataKey="count" name="Submissions" fill="#2563eb" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : null}

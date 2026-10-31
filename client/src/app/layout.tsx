@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -42,13 +43,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${figtree.variable} ${inter.variable} h-full antialiased`}
-    >
-      <body className="min-h-full bg-white text-slate-900 font-sans selection:bg-blue-500/20 selection:text-blue-900">
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html
+        lang="en"
+        className={`${figtree.variable} ${inter.variable} h-full antialiased`}
+      >
+        <body className="min-h-full bg-white text-slate-900 font-sans selection:bg-blue-500/20 selection:text-blue-900">
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

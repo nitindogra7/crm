@@ -2,17 +2,18 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "prisma generate && tsc",
     "typecheck": "tsc --noEmit",
-    "start": "tsx src/index.ts",
+    "start": "node dist/index.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "test": "tsx test/leads-qa.test.ts && tsx test/leads-http.test.ts && tsx test/performance-regression.test.ts && tsx test/security-and-spam.test.ts && tsx test/environment-origin-verifier.test.ts"
+    "test": "tsx test/leads-qa.test.ts && tsx test/leads-http.test.ts && tsx test/performance-regression.test.ts && tsx test/security-and-spam.test.ts && tsx test/environment-origin-verifier.test.ts && tsx test/production-readiness.test.ts",
+    "test:isolated": "node test/run-isolated-qa.cjs"
   },
   "keywords": [],
   "author": "",
@@ -24,11 +25,9 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^18.0.5",
-    "express": "^5.2.1",
+    "express": "^5.3.0",
     "express-rate-limit": "^8.7.2",
     "helmet": "^8.3.0",
-    "prisma": "^6.19.3",
-    "tsx": "^4.23.15",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -36,6 +35,8 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.4",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "prisma": "^6.19.3",
+    "tsx": "^4.23.15"
   }
 }

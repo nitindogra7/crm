@@ -1,0 +1,41 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "links": 6,
+      "buttons": 0,
+      "images": 0,
+      "footers": 0,
+      "sidebars": 1,
+      "extraNav": 0,
+      "overflow": false,
+      "active": "Environments"
+    },
+    {
+      "width": 1440,
+      "dashboardFooter": {
+        "visible": true,
+        "settings": true
+      }
+    },
+    {
+      "width": 390,
+      "links": 6,
+      "buttons": 0,
+      "images": 0,
+      "footers": 0,
+      "sidebars": 1,
+      "extraNav": 0,
+      "overflow": false,
+      "active": "Environments"
+    },
+    {
+      "width": 390,
+      "dashboardFooter": {
+        "visible": true,
+        "settings": true
+      }
+    }
+  ],
+  "errors": []
+}

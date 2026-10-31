@@ -1,5 +1,6 @@
 import { prisma } from "../../prisma";
 import crypto from "crypto";
+import { WorkspaceAccessError } from "../../errors";
 import { leadsRepository, LeadsRepository } from "./leads.repository";
 import type {
   LeadRecord,
@@ -28,8 +29,8 @@ export class LeadsService {
       if (db && db.userId === userId) {
         return db.id;
       }
-      if (db && db.userId !== userId) {
-        throw new Error("Access denied: You do not have access to this workspace");
+      if (!db || db.userId !== userId) {
+        throw new WorkspaceAccessError();
       }
     }
 
@@ -188,6 +189,7 @@ export class LeadsService {
     const dashboardId = await this.resolveDashboardId(userId, input.dashboardId);
     let validFormId: string | null = null;
     let formName = "Sandbox Simulator";
+    let formEnvironment = "development";
 
     if (input.formId) {
       const form = await prisma.form.findUnique({
@@ -197,7 +199,7 @@ export class LeadsService {
       if (form && form.dashboardId === dashboardId) {
         validFormId = form.id;
         formName = form.name;
-        await this.repository.incrementLeadCount(form.id);
+        formEnvironment = form.environment;
       }
     }
 
@@ -210,7 +212,7 @@ export class LeadsService {
       message: input.message,
       source: input.source || "Sandbox Simulator",
       status: "New",
-      environment: input.environment || "development",
+      environment: validFormId ? formEnvironment : input.environment || "development",
       extraFields: input.extraFields,
     });
 

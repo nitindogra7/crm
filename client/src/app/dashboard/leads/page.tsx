@@ -1,15 +1,10 @@
 import React, { Suspense } from "react";
-import { LeadsView } from "@/features/dashboard";
+import { LeadsView } from "@/features/dashboard/components/leads-view";
+import { LeadsSkeleton } from "@/features/dashboard/components/dashboard-skeleton";
 
 export default function DashboardLeadsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-8 text-center text-xs text-zinc-500 font-mono">
-          Loading leads inbox...
-        </div>
-      }
-    >
+    <Suspense fallback={<LeadsSkeleton />}>
       <LeadsView />
     </Suspense>
   );

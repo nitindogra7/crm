@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/shared/components/app-link";
 import { Icon, IconName } from "./icons";
 import { cn } from "@/shared/lib/utils";
 

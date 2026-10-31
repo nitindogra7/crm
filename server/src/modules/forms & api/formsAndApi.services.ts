@@ -1,5 +1,7 @@
 import crypto from "crypto";
-import { prisma } from "../../prisma";
+import { WorkspaceAccessError } from "../../errors";
+import { matchesAllowedOrigin } from "../../middleware/corsOriginVerifier";
+import { prisma, sqlTable } from "../../prisma";
 import { Prisma } from "@prisma/client";
 import { formsAndApiRepository, FormsAndApiRepository } from "./formsAndApi.repository";
 import type {
@@ -88,6 +90,9 @@ export class FormsAndApiService {
       ownerEmail: input.ownerEmail ?? null,
       avatarTone: input.avatarTone ?? "zinc",
       plan: input.plan ?? "Free Tier",
+      productionOrigin: input.productionOrigin ?? null,
+      allowedOrigins: input.allowedOrigins ?? [],
+      activeEnvironment: input.activeEnvironment ?? "development",
     });
 
     // Auto-create API Key for the new organization
@@ -136,8 +141,8 @@ export class FormsAndApiService {
       if (db && db.userId === userId) {
         return db.id;
       }
-      if (db && db.userId !== userId) {
-        throw new Error("Access denied: You do not have access to this workspace");
+      if (!db || db.userId !== userId) {
+        throw new WorkspaceAccessError();
       }
     }
     const dashboards = await this.getOrCreateDashboards(userId);
@@ -342,6 +347,18 @@ export class FormsAndApiService {
       form = await this.repository.findFormByGlobalSlug(formSlug);
     }
 
+    if ((formId || formSlug) && !form) {
+      return { status: "rejected", statusCode: 404, message: "Target form not found" };
+    }
+
+    if (form && verifiedApiKey && form.environment !== verifiedApiKey.environment) {
+      return {
+        status: "rejected",
+        statusCode: 403,
+        message: "API key environment does not match the target form",
+      };
+    }
+
     // If form is found, verify API key alignment (if apiKey provided) and check if enabled
     if (form) {
       if (verifiedApiKey && verifiedApiKey.dashboardId !== form.dashboardId) {
@@ -423,22 +440,9 @@ export class FormsAndApiService {
           ...(form?.allowedDomains || []),
         ];
 
-        const isAllowed = allowedPool.some((allowed) => {
-          if (!allowed) return false;
-          let cleanAllowed = allowed
-            .trim()
-            .toLowerCase()
-            .replace(/^https?:\/\//, "")
-            .replace(/\/.*$/, "")
-            .replace(/:\d+$/, "");
-
-          if (cleanAllowed === "*") return true;
-          if (cleanAllowed.startsWith("*.")) {
-            cleanAllowed = cleanAllowed.slice(2);
-          }
-
-          return requestHost === cleanAllowed || requestHost.endsWith("." + cleanAllowed);
-        });
+        const isAllowed = allowedPool.some((allowed) =>
+          matchesAllowedOrigin(originHeader || refHeader, allowed || "")
+        );
 
         if (!isAllowed) {
           return {
@@ -468,22 +472,9 @@ export class FormsAndApiService {
           requestDomain = "";
         }
 
-        const isOriginAllowed = form.allowedDomains.some((allowed) => {
-          let cleanAllowed = allowed
-            .trim()
-            .toLowerCase()
-            .replace(/^https?:\/\//, "")
-            .replace(/\/.*$/, "")
-            .replace(/:\d+$/, "");
-
-          if (cleanAllowed === "*") return true;
-          if (cleanAllowed.startsWith("*.")) {
-            cleanAllowed = cleanAllowed.slice(2);
-          }
-
-          if (!cleanAllowed) return false;
-          return requestDomain === cleanAllowed || requestDomain.endsWith("." + cleanAllowed);
-        });
+        const isOriginAllowed = form.allowedDomains.some((allowed) =>
+          matchesAllowedOrigin(originHeader || refHeader, allowed)
+        );
 
         if (!isOriginAllowed) {
           return {
@@ -503,6 +494,11 @@ export class FormsAndApiService {
         message: "Target form endpoint or API key not found",
       };
     }
+
+    // Credentials authenticate the request; they must not become customer data.
+    const storedPayload = Object.fromEntries(
+      Object.entries(body).filter(([key]) => !["_api_key", "apiKey", "api_key"].includes(key))
+    );
 
     // 2. Extract core fields & honeypots
     const honeypotTriggers = ["_gotcha", "_hp", "honeypot", "website_url_check", "bot_field"];
@@ -599,6 +595,7 @@ export class FormsAndApiService {
       "honeypot",
       "_api_key",
       "apiKey",
+      "api_key",
       "website_url_check",
       "formId",
       "_formId",
@@ -636,7 +633,7 @@ export class FormsAndApiService {
               disposition: "Quarantined",
               reason: triggerReason || "Suspicious submission payload",
               messageSnippet: message.slice(0, 200),
-              rawPayload: body as Prisma.InputJsonValue,
+              rawPayload: storedPayload as Prisma.InputJsonValue,
               triggerRule: triggerReason || "heuristics",
               environment: targetEnvironment,
               metadata,
@@ -658,7 +655,7 @@ export class FormsAndApiService {
           disposition: "Quarantined",
           reason: triggerReason || "Suspicious submission payload",
           messageSnippet: message.slice(0, 200),
-          rawPayload: body as Prisma.InputJsonValue,
+          rawPayload: storedPayload as Prisma.InputJsonValue,
           triggerRule: triggerReason || "heuristics",
           environment: targetEnvironment,
           metadata,
@@ -751,7 +748,6 @@ export class FormsAndApiService {
         validFormId = form.id;
         formName = form.name;
         formEnv = form.environment || "development";
-        await this.repository.incrementLeadCount(form.id);
       }
     }
 
@@ -764,7 +760,7 @@ export class FormsAndApiService {
       message: input.message,
       source: input.source || "Sandbox Simulator",
       status: "New",
-      environment: input.environment || formEnv || "development",
+      environment: validFormId ? formEnv : input.environment || "development",
       extraFields: input.extraFields,
     });
 
@@ -916,6 +912,7 @@ export class FormsAndApiService {
         "honeypot",
         "_api_key",
         "apiKey",
+      "api_key",
       ];
 
       const extracted: Record<string, string> = Object.create(null);
@@ -959,7 +956,7 @@ export class FormsAndApiService {
           data: { leadCount: { increment: 1 } },
         });
         await tx.$executeRaw`
-          UPDATE "forms"
+          UPDATE ${sqlTable("forms")}
           SET "spamCount" = GREATEST(0, "spamCount" - 1)
           WHERE "id" = ${spam.formId}
         `;

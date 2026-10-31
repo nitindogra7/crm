@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+function isSafeRedirect(value: string | null | undefined): boolean {
+  if (!value) return true;
+  if (/[\\\x00-\x1f\x7f]/.test(value)) return false;
+  if (value.startsWith("/")) return !value.startsWith("//");
+  try {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
+
 export const AVATAR_TONES = ["zinc", "emerald", "slate", "white"] as const;
 export const FIELD_TYPES = ["text", "email", "textarea", "tel", "number"] as const;
 export const LEAD_STATUSES = ["New", "Contacted", "Qualified", "Archived"] as const;
@@ -82,7 +94,7 @@ export const createFormSchema = z.object({
     .optional()
     .nullable()
     .refine(
-      (val) => !val || val === "" || /^https?:\/\//i.test(val) || (val.startsWith("/") && !val.startsWith("//")),
+      isSafeRedirect,
       { message: "Redirect URL must be a valid URL or safe relative path" }
     ),
   environment: z.enum(WORKSPACE_ENVIRONMENTS).default("development").optional(),
@@ -110,7 +122,7 @@ export const updateFormSchema = z.object({
     .optional()
     .nullable()
     .refine(
-      (val) => !val || val === "" || /^https?:\/\//i.test(val) || (val.startsWith("/") && !val.startsWith("//")),
+      isSafeRedirect,
       { message: "Redirect URL must be a valid URL or safe relative path" }
     ),
   enabled: z.boolean().optional(),

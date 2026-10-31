@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma";
+import { prisma, sqlTable } from "../../prisma";
 import { Prisma } from "@prisma/client";
 import type {
   DashboardRecord,
@@ -189,7 +189,7 @@ export class FormsAndApiRepository {
 
   async decrementSpamCount(formId: string, count: number = 1): Promise<void> {
     await prisma.$executeRaw`
-      UPDATE "forms"
+      UPDATE ${sqlTable("forms")}
       SET "spamCount" = GREATEST(0, "spamCount" - ${count})
       WHERE "id" = ${formId}
     `;
@@ -197,7 +197,7 @@ export class FormsAndApiRepository {
 
   async decrementLeadCount(formId: string, count: number = 1): Promise<void> {
     await prisma.$executeRaw`
-      UPDATE "forms"
+      UPDATE ${sqlTable("forms")}
       SET "leadCount" = GREATEST(0, "leadCount" - ${count})
       WHERE "id" = ${formId}
     `;
@@ -287,20 +287,29 @@ export class FormsAndApiRepository {
     extraFields?: Prisma.InputJsonValue;
     metadata?: Prisma.InputJsonValue;
   }): Promise<LeadRecord> {
-    return prisma.lead.create({
-      data: {
-        dashboardId: data.dashboardId,
-        formId: data.formId ?? null,
-        formName: data.formName,
-        name: data.name,
-        email: data.email,
-        message: data.message ?? "",
-        source: data.source ?? "Website embed",
-        status: data.status ?? "New",
-        environment: data.environment ?? "development",
-        extraFields: data.extraFields ?? Prisma.JsonNull,
-        metadata: data.metadata ?? Prisma.JsonNull,
-      },
+    return prisma.$transaction(async (tx) => {
+      const lead = await tx.lead.create({
+        data: {
+          dashboardId: data.dashboardId,
+          formId: data.formId ?? null,
+          formName: data.formName,
+          name: data.name,
+          email: data.email,
+          message: data.message ?? "",
+          source: data.source ?? "Website embed",
+          status: data.status ?? "New",
+          environment: data.environment ?? "development",
+          extraFields: data.extraFields ?? Prisma.JsonNull,
+          metadata: data.metadata ?? Prisma.JsonNull,
+        },
+      });
+      if (lead.formId) {
+        await tx.form.update({
+          where: { id: lead.formId },
+          data: { leadCount: { increment: 1 } },
+        });
+      }
+      return lead;
     });
   }
 
@@ -335,7 +344,7 @@ export class FormsAndApiRepository {
       await tx.lead.delete({ where: { id } });
       if (lead.formId) {
         await tx.$executeRaw`
-          UPDATE "forms"
+          UPDATE ${sqlTable("forms")}
           SET "leadCount" = GREATEST(0, "leadCount" - 1)
           WHERE "id" = ${lead.formId}
         `;
@@ -345,34 +354,26 @@ export class FormsAndApiRepository {
   }
 
   async deleteLeads(dashboardId: string, ids: string[]): Promise<number> {
+    if (ids.length === 0) return 0;
     return prisma.$transaction(async (tx) => {
-      const leads = await tx.lead.findMany({
-        where: { id: { in: ids }, dashboardId },
-        select: { formId: true },
-      });
-
-      if (leads.length === 0) return 0;
-
-      const formCounts: Record<string, number> = {};
-      for (const lead of leads) {
-        if (lead.formId) {
-          formCounts[lead.formId] = (formCounts[lead.formId] || 0) + 1;
-        }
+      const deleted = await tx.$queryRaw<Array<{ formId: string | null }>>`
+        DELETE FROM ${sqlTable("leads")}
+        WHERE "dashboardId" = ${dashboardId} AND "id" IN (${Prisma.join(ids)})
+        RETURNING "formId"
+      `;
+      const formCounts = new Map<string, number>();
+      for (const lead of deleted) {
+        if (lead.formId) formCounts.set(lead.formId, (formCounts.get(lead.formId) || 0) + 1);
       }
-
-      const deleteResult = await tx.lead.deleteMany({
-        where: { id: { in: ids }, dashboardId },
-      });
-
-      for (const [formId, count] of Object.entries(formCounts)) {
+      // Consistent lock order avoids deadlocks when requests overlap across forms.
+      for (const [formId, count] of [...formCounts].sort(([left], [right]) => left.localeCompare(right))) {
         await tx.$executeRaw`
-          UPDATE "forms"
+          UPDATE ${sqlTable("forms")}
           SET "leadCount" = GREATEST(0, "leadCount" - ${count})
           WHERE "id" = ${formId}
         `;
       }
-
-      return deleteResult.count;
+      return deleted.length;
     });
   }
 
@@ -562,7 +563,7 @@ export class FormsAndApiRepository {
               COUNT(*)::int AS "totalLeads",
               COUNT(*) FILTER (WHERE "receivedAt" >= ${startOfToday})::int AS "leadsToday",
               COUNT(*) FILTER (WHERE "receivedAt" >= ${sevenDaysAgo})::int AS "leadsThisWeek"
-            FROM "leads"
+            FROM ${sqlTable("leads")}
             WHERE "dashboardId" = ${dashboardId} AND "environment" = ${environment}
           `
           : Prisma.sql`
@@ -570,7 +571,7 @@ export class FormsAndApiRepository {
               COUNT(*)::int AS "totalLeads",
               COUNT(*) FILTER (WHERE "receivedAt" >= ${startOfToday})::int AS "leadsToday",
               COUNT(*) FILTER (WHERE "receivedAt" >= ${sevenDaysAgo})::int AS "leadsThisWeek"
-            FROM "leads"
+            FROM ${sqlTable("leads")}
             WHERE "dashboardId" = ${dashboardId}
           `
       ),

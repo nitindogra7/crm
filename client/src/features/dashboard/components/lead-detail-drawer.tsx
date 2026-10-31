@@ -1,5 +1,7 @@
 "use client";
 
+import { DialogLayer } from "@/shared/components/dialog-layer";
+import { copyText } from "@/shared/lib/clipboard";
 import React, { useEffect, useState } from "react";
 import { useDashboard } from "../context/dashboard-context";
 import { LeadStatus } from "@/shared/types";
@@ -14,7 +16,6 @@ import {
   Trash2,
   Download,
   AlertTriangle,
-  Loader2,
   Sparkles,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
@@ -27,7 +28,7 @@ export function LeadDetailDrawer() {
     updateLeadStatusAsync,
     deleteLeadAsync,
     addToast,
-  } = useDashboard();
+  } = useDashboard(["leads","selectedLeadId","setSelectedLeadId","updateLeadStatusAsync","deleteLeadAsync","addToast"]);
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedPayload, setCopiedPayload] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -54,15 +55,15 @@ export function LeadDetailDrawer() {
 
   if (!lead) return null;
 
-  const handleCopyEmail = () => {
-    navigator.clipboard.writeText(lead.email);
+  const handleCopyEmail = async () => {
+    if (!(await copyText(lead.email))) return;
     setCopiedEmail(true);
     addToast("Email copied", `${lead.email} copied to clipboard.`);
     setTimeout(() => setCopiedEmail(false), 2000);
   };
 
-  const handleCopyPayload = () => {
-    navigator.clipboard.writeText(JSON.stringify(lead, null, 2));
+  const handleCopyPayload = async () => {
+    if (!(await copyText(JSON.stringify(lead, null, 2)))) return;
     setCopiedPayload(true);
     addToast("Lead details copied", "JSON payload copied to clipboard.");
     setTimeout(() => setCopiedPayload(false), 2000);
@@ -111,7 +112,7 @@ export function LeadDetailDrawer() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <DialogLayer label="Lead details" onClose={() => showDeleteConfirm ? setShowDeleteConfirm(false) : setSelectedLeadId(null)} className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
@@ -162,7 +163,7 @@ export function LeadDetailDrawer() {
               </h2>
               <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                 <span>{lead.email}</span>
-                <button
+                <button aria-label="Copy email address"
                   type="button"
                   onClick={handleCopyEmail}
                   className="hover:text-blue-600 transition-colors cursor-pointer"
@@ -194,7 +195,7 @@ export function LeadDetailDrawer() {
               <span className="text-[11px] font-mono text-slate-500 uppercase font-semibold">
                 Status:
               </span>
-              <select
+              <select aria-label="Lead status"
                 value={lead.status}
                 disabled={isUpdatingStatus}
                 onChange={(e) => handleStatusChange(e.target.value as LeadStatus)}
@@ -206,13 +207,13 @@ export function LeadDetailDrawer() {
                 <option value="Archived">Archived</option>
               </select>
               {isUpdatingStatus && (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
+                <span className="sr-only">Working</span>
               )}
             </div>
 
             {/* Actions group */}
             <div className="flex items-center gap-2">
-              <button
+              <button aria-label="Copy lead JSON payload"
                 type="button"
                 onClick={handleCopyPayload}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs text-slate-700 font-semibold transition-colors cursor-pointer shadow-2xs"
@@ -226,7 +227,7 @@ export function LeadDetailDrawer() {
                 <span>JSON</span>
               </button>
 
-              <button
+              <button aria-label="Delete this lead"
                 type="button"
                 onClick={() => setShowDeleteConfirm(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-xs text-rose-700 font-semibold transition-colors cursor-pointer"
@@ -260,7 +261,7 @@ export function LeadDetailDrawer() {
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {isDeleting ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span className="sr-only">Working</span>
                   ) : (
                     <Trash2 className="w-3 h-3" />
                   )}
@@ -409,6 +410,6 @@ export function LeadDetailDrawer() {
           </div>
         </aside>
       </div>
-    </div>
+    </DialogLayer>
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import { DialogLayer } from "@/shared/components/dialog-layer";
+import React, { useState, useEffect, useRef, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
+import styles from "./dashboard-shell.module.css";
 import dynamic from "next/dynamic";
 import { useDashboard } from "../context/dashboard-context";
-import { LoadingBar } from "./dashboard-skeleton";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { ToastNotificationContainer } from "./toast-notification";
@@ -30,70 +32,65 @@ const DashboardWalkthrough = dynamic(
   { ssr: false }
 );
 
+const desktopQuery = "(min-width: 768px)";
+const subscribeToViewport = (notify: () => void) => {
+  const media = window.matchMedia(desktopQuery);
+  media.addEventListener("change", notify);
+  return () => media.removeEventListener("change", notify);
+};
+const getDesktopSnapshot = () => window.matchMedia(desktopQuery).matches;
+const getServerDesktopSnapshot = () => true;
+
 interface DashboardShellProps {
   children: React.ReactNode;
 }
 
 export function DashboardShell({ children }: DashboardShellProps) {
-  const { isLoading } = useDashboard();
+  const { activeDashboardId, currentEnvironment, loadError, isRefreshing, refreshDashboardData } = useDashboard(["activeDashboardId", "currentEnvironment"]);
+  const pathname = usePathname();
+  const isDesktop = useSyncExternalStore(subscribeToViewport, getDesktopSnapshot, getServerDesktopSnapshot);
+  const mainRef = useRef<HTMLElement>(null);
+  useEffect(() => { mainRef.current?.scrollTo({ top: 0, behavior: "instant" }); }, [pathname]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const closeOnDesktop = () => { if (desktop.matches) setMobileMenuOpen(false); };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, []);
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] text-slate-900 font-sans overflow-hidden selection:bg-blue-500/20 selection:text-blue-900 relative">
-      {/* Ambient Top Gradient & Subtle Technical Grid matching Marketing, Login & Onboarding */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none" aria-hidden="true">
-        <div
-          className="absolute top-0 left-0 right-0 h-[360px] pointer-events-none opacity-85"
-          style={{
-            background:
-              "linear-gradient(to right, rgba(186, 218, 255, 0.65) 0%, rgba(206, 227, 255, 0.4) 25%, rgba(242, 237, 254, 0.25) 50%, rgba(253, 230, 244, 0.4) 75%, rgba(252, 216, 236, 0.65) 100%)",
-            maskImage:
-              "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0) 100%)",
-            WebkitMaskImage:
-              "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0) 100%)",
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-40 pointer-events-none"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(226, 232, 240, 0.6) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(226, 232, 240, 0.6) 1px, transparent 1px)
-            `,
-            backgroundSize: "64px 64px",
-          }}
-        />
-      </div>
-
-      {/* Global Top Loading Bar */}
-      {isLoading && <LoadingBar />}
-
+    <div className={`${styles.workspace} flex h-dvh bg-slate-50 text-slate-900 font-sans overflow-hidden selection:bg-blue-500/20 selection:text-blue-900 relative`}>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex h-full flex-none relative z-20">
+      {isDesktop && <div className="hidden md:flex h-full flex-none relative z-20">
         <Sidebar />
-      </div>
+      </div>}
 
       {/* Mobile Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
+      {!isDesktop && mobileMenuOpen && (
+        <DialogLayer label="Navigation" onClose={() => setMobileMenuOpen(false)} className="fixed inset-0 z-50 md:hidden flex">
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-2xl border-r border-slate-200 animate-in slide-in-from-left duration-200 z-10">
+          <div className="relative flex-1 flex flex-col min-h-0 h-dvh max-w-xs w-full bg-white shadow-2xl border-r border-slate-200 animate-in slide-in-from-left duration-200 z-10">
             <Sidebar onClose={() => setMobileMenuOpen(false)} />
           </div>
-        </div>
+        </DialogLayer>
       )}
 
       {/* Main Workspace Frame */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative z-10">
         <Topbar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
 
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 max-w-7xl w-full mx-auto">
-          <ProductionOriginBanner />
-          {children}
+        <main id="main-content" ref={mainRef} tabIndex={-1} className="flex-1 overflow-y-auto min-w-0 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
+          <div className="mx-auto w-full max-w-7xl min-w-0">
+            {loadError && <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><p>{loadError}</p><button type="button" disabled={isRefreshing} onClick={() => void refreshDashboardData()} className="rounded-lg border border-amber-300 bg-white px-3 py-2 font-semibold hover:bg-amber-100">{isRefreshing ? "Retrying..." : "Try again"}</button></div>}
+            <ProductionOriginBanner />
+            <div key={`${activeDashboardId}:${currentEnvironment}`}>{children}</div>
+          </div>
         </main>
       </div>
 

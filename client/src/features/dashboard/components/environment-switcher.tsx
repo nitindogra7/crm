@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   ExternalLink,
 } from "lucide-react";
-import Link from "next/link";
+import Link from "@/shared/components/app-link";
 import type { WorkspaceEnvironment } from "@/shared/types";
 
 interface EnvironmentSwitcherProps {
@@ -24,12 +24,13 @@ export function EnvironmentSwitcher({ compact = false }: EnvironmentSwitcherProp
     switchEnvironment,
     workspace,
     isLoading,
-  } = useDashboard();
+  } = useDashboard(["currentEnvironment","switchEnvironment","workspace","isLoading"]);
 
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    function handleEscape(e: KeyboardEvent) { if (e.key === "Escape") setIsOpen(false); }
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false);
@@ -37,7 +38,8 @@ export function EnvironmentSwitcher({ compact = false }: EnvironmentSwitcherProp
     }
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
+      return () => { document.removeEventListener("mousedown", handleClickOutside); document.removeEventListener("keydown", handleEscape); };
     }
   }, [isOpen]);
 
@@ -66,6 +68,7 @@ export function EnvironmentSwitcher({ compact = false }: EnvironmentSwitcherProp
             : "bg-amber-50 text-amber-900 border border-amber-200/90 hover:bg-amber-100/70 hover:border-amber-300 shadow-2xs"
         }`}
         aria-label="Switch Environment"
+        aria-expanded={isOpen}
       >
         {/* Pulsating Indicator Dot */}
         <span className="relative flex h-2 w-2">
@@ -104,13 +107,13 @@ export function EnvironmentSwitcher({ compact = false }: EnvironmentSwitcherProp
 
       {/* Clerk-Style Environment Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 sm:right-0 sm:left-auto mt-2 w-72 rounded-xl bg-white shadow-xl border border-slate-200 py-1.5 z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-xl bg-white shadow-xl border border-slate-200 py-1.5 z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-150">
           <div className="px-3 py-2 border-b border-slate-100">
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               Workspace Environment
             </p>
             <p className="text-xs text-slate-600 mt-0.5">
-              Isolated databases and CORS policies per mode.
+              Switch between test and live submissions.
             </p>
           </div>
 
@@ -138,7 +141,7 @@ export function EnvironmentSwitcher({ compact = false }: EnvironmentSwitcherProp
                   )}
                 </div>
                 <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                  Sandbox test data. Accepts submissions from any origin (localhost, previews).
+                  Use test submissions while building your form.
                 </p>
               </div>
             </button>
@@ -166,7 +169,7 @@ export function EnvironmentSwitcher({ compact = false }: EnvironmentSwitcherProp
                   )}
                 </div>
                 <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                  Live data inbox. Mandatory origin check enforced on every request.
+                  Accept live submissions from your website.
                 </p>
               </div>
             </button>

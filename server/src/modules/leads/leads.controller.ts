@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { ZodError } from "zod";
+import { WorkspaceAccessError } from "../../errors";
 import { getAuth } from "@clerk/express";
 import { leadsService, LeadsService } from "./leads.services";
 import {
@@ -24,8 +25,8 @@ export class LeadsController {
         return;
       }
 
-      const dashboardId = req.query.dashboardId as string | undefined;
-      const environment = req.query.environment as string | undefined;
+      const query = getLeadsQuerySchema.parse(req.query);
+      const { dashboardId, environment } = query;
       const isPaginationRequested =
         req.query.page !== undefined || req.query.limit !== undefined;
 
@@ -52,7 +53,6 @@ export class LeadsController {
         return;
       }
 
-      const query = getLeadsQuerySchema.parse(req.query);
       const result = await this.service.getLeads(userId, query);
 
       res.status(200).json({
@@ -61,6 +61,10 @@ export class LeadsController {
         pagination: result.pagination,
       });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -93,6 +97,10 @@ export class LeadsController {
 
       res.status(200).json({ success: true, data: lead });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error fetching lead:", error);
       res.status(500).json({ success: false, error: "Failed to retrieve lead" });
     }
@@ -118,6 +126,10 @@ export class LeadsController {
 
       res.status(200).json({ success: true, data: updated });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -150,6 +162,10 @@ export class LeadsController {
 
       res.status(200).json({ success: true, message: "Lead deleted successfully" });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       console.error("Error deleting lead:", error);
       res.status(500).json({ success: false, error: "Failed to delete lead" });
     }
@@ -177,6 +193,10 @@ export class LeadsController {
         data: { count: result.count },
       });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -213,6 +233,10 @@ export class LeadsController {
         data: { count: result.count },
       });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,
@@ -240,6 +264,10 @@ export class LeadsController {
 
       res.status(201).json({ success: true, data: lead });
     } catch (error) {
+      if (error instanceof WorkspaceAccessError) {
+        res.status(403).json({ success: false, error: error.message });
+        return;
+      }
       if (error instanceof ZodError) {
         res.status(400).json({
           success: false,

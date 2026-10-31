@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 import { marketingData } from "../data";
 
 export function Testimonials() {
@@ -30,16 +29,7 @@ export function Testimonials() {
 
             <div className="mt-8 sm:mt-10 pt-0 flex flex-col gap-5">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 bg-slate-100 relative">
-                  <Image
-                    src={testimonials.featured.avatar}
-                    alt={testimonials.featured.name}
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    className="w-full h-full object-cover select-none"
-                  />
-                </div>
+
                 <div>
                   <h3 className="text-[14px] sm:text-[14.5px] font-semibold text-slate-900 leading-tight">
                     {testimonials.featured.name}
@@ -67,16 +57,7 @@ export function Testimonials() {
               </p>
 
               <div className="mt-6 sm:mt-8 flex items-center gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 bg-slate-100 relative">
-                  <Image
-                    src={testimonials.stacked.top.avatar}
-                    alt={testimonials.stacked.top.name}
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    className="w-full h-full object-cover select-none"
-                  />
-                </div>
+
                 <div>
                   <h3 className="text-[14px] sm:text-[14.5px] font-semibold text-slate-900 leading-tight">
                     {testimonials.stacked.top.name}
@@ -95,16 +76,7 @@ export function Testimonials() {
               </p>
 
               <div className="mt-6 sm:mt-8 flex items-center gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 bg-slate-100 relative">
-                  <Image
-                    src={testimonials.stacked.bottom.avatar}
-                    alt={testimonials.stacked.bottom.name}
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    className="w-full h-full object-cover select-none"
-                  />
-                </div>
+
                 <div>
                   <h3 className="text-[14px] sm:text-[14.5px] font-semibold text-slate-900 leading-tight">
                     {testimonials.stacked.bottom.name}
@@ -125,16 +97,7 @@ export function Testimonials() {
 
             <div className="mt-8 sm:mt-10 pt-0 flex flex-col gap-5">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 bg-slate-100 relative">
-                  <Image
-                    src={testimonials.secondary.avatar}
-                    alt={testimonials.secondary.name}
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    className="w-full h-full object-cover select-none"
-                  />
-                </div>
+
                 <div>
                   <h3 className="text-[14px] sm:text-[14.5px] font-semibold text-slate-900 leading-tight">
                     {testimonials.secondary.name}

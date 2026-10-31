@@ -76,6 +76,7 @@ export function OnboardingForm({
                 key={uc.id}
                 type="button"
                 onClick={() => onSelectUseCase(uc.id)}
+                aria-pressed={isSelected}
                 className={`p-3 rounded-xl border text-left transition-all flex items-start gap-2.5 cursor-pointer ${
                   isSelected
                     ? "bg-blue-50/80 border-blue-600 text-slate-900 ring-2 ring-blue-500/20 shadow-xs"
@@ -122,6 +123,7 @@ export function OnboardingForm({
                 key={ts.id}
                 type="button"
                 onClick={() => onSelectTeamSize(ts.id)}
+                aria-pressed={isSelected}
                 className={`py-2 px-1.5 rounded-xl border text-center transition-all cursor-pointer ${
                   isSelected
                     ? "bg-blue-600 border-blue-600 text-white font-semibold shadow-xs ring-2 ring-blue-500/20"
@@ -139,7 +141,7 @@ export function OnboardingForm({
 
       {/* Error Message */}
       {submitError && (
-        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-sans">
+        <div role="alert" className="flex items-center gap-2 p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-sans">
           <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
           <span>{submitError}</span>
         </div>

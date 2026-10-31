@@ -97,6 +97,8 @@ export function useOnboardingForm() {
         const finalEmail = serverRecord?.ownerEmail || formData.ownerEmail;
         const finalTeamSize = serverRecord?.teamSize || teamSize;
 
+        setIsSuccess(true);
+
         // Trigger celebratory confetti
         try {
           const confetti = (await import("canvas-confetti")).default;
@@ -122,10 +124,6 @@ export function useOnboardingForm() {
           avatarTone: "blue",
         });
 
-        // Automatically redirect to dashboard after a brief celebration
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1200);
       } catch (err: unknown) {
         console.error("❌ [Onboarding] Submission failed:", err);
         setIsSubmitting(false);
@@ -140,27 +138,12 @@ export function useOnboardingForm() {
       getToken,
       initWorkspace,
       isSubmitting,
-      router,
       teamSize,
       useCase,
       user,
     ]
   );
 
-  // Keyboard shortcut: Enter to submit
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isSuccess || isSubmitting) return;
-      if (e.key === "Enter" && !e.shiftKey) {
-        if ((e.target as HTMLElement)?.tagName === "TEXTAREA") return;
-        e.preventDefault();
-        handleSubmit();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isSuccess, isSubmitting, handleSubmit]);
 
   return {
     user,
@@ -178,6 +161,6 @@ export function useOnboardingForm() {
     setUseCase,
     setTeamSize,
     handleSubmit,
-    redirectToDashboard: () => router.push("/dashboard"),
+    redirectToDashboard: () => router.replace("/dashboard"),
   };
 }

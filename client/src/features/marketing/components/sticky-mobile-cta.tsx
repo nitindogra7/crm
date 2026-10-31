@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/shared/components/app-link";
 import { cn } from "@/shared/lib/utils";
 
 export function StickyMobileCta() {

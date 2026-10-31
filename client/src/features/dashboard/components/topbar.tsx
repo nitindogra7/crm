@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
+import { DialogLayer } from "@/shared/components/dialog-layer";
+import React, { useState, useEffect } from "react";
+import Link from "@/shared/components/app-link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useDashboard } from "../context/dashboard-context";
@@ -11,7 +12,6 @@ import {
   Send,
   X,
   Compass,
-  Loader2,
 } from "lucide-react";
 import { EnvironmentSwitcher } from "./environment-switcher";
 
@@ -29,7 +29,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
     simulateLeadSubmissionAsync,
     addToast,
     startTour,
-  } = useDashboard();
+  } = useDashboard(["workspace","forms","simulateLeadSubmissionAsync","addToast","startTour"]);
 
   const getPageTitle = () => {
     if (title) return title;
@@ -40,6 +40,18 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
     if (pathname.startsWith("/dashboard/settings")) return "Settings";
     return "Overview";
   };
+
+  const [tourRequested, setTourRequested] = useState(false);
+  useEffect(() => {
+    if (!tourRequested || pathname !== "/dashboard") return;
+    let frame = 0;
+    const startWhenReady = () => {
+      if (document.querySelector('[data-tour="stats-overview"]')) { startTour(); setTourRequested(false); }
+      else frame = requestAnimationFrame(startWhenReady);
+    };
+    frame = requestAnimationFrame(startWhenReady);
+    return () => cancelAnimationFrame(frame);
+  }, [tourRequested, pathname, startTour]);
 
   const [isQuickSimulateOpen, setIsQuickSimulateOpen] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -77,8 +89,8 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
 
   return (
     <>
-      <header className="h-14 px-4 sm:px-6 flex items-center justify-between border-b border-slate-200/80 bg-white/80 backdrop-blur-md sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-        <div className="flex items-center gap-2.5">
+      <header className="h-16 shrink-0 gap-3 px-4 sm:px-6 lg:px-8 flex items-center justify-between border-b border-slate-200 bg-white sticky top-0 z-30">
+        <div className="flex min-w-0 items-center gap-2.5">
           <button
             type="button"
             onClick={onOpenMobileMenu}
@@ -99,10 +111,10 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
             />
           </Link>
 
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-400 hidden sm:inline font-normal">{workspace.name}</span>
-            <span className="text-slate-300 hidden sm:inline">/</span>
-            <span className="text-slate-900 font-semibold text-xs sm:text-[13px]">
+          <div className="flex min-w-0 items-center gap-2 text-[13px]">
+            <span className="max-w-40 truncate text-slate-500 hidden lg:inline font-normal">{workspace.name}</span>
+            <span className="text-slate-300 hidden lg:inline">/</span>
+            <span className="hidden min-[400px]:block truncate text-slate-900 font-medium text-[13px]">
               {getPageTitle()}
             </span>
           </div>
@@ -112,7 +124,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex shrink-0 items-center gap-2">
           <div className="sm:hidden">
             <EnvironmentSwitcher compact />
           </div>
@@ -122,12 +134,13 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
             onClick={() => {
               if (pathname !== "/dashboard") {
                 router.push("/dashboard");
-                setTimeout(() => startTour(), 250);
+                setTourRequested(true);
               } else {
                 startTour();
               }
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-slate-200/80 transition-all text-xs cursor-pointer shadow-2xs font-medium"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-slate-200/80 transition-all text-xs cursor-pointer shadow-2xs font-medium"
+            aria-label="Start dashboard tour"
             title="Walk through the dashboard features and flow"
           >
             <Compass className="w-3.5 h-3.5 text-slate-500" />
@@ -140,6 +153,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
             type="button"
             onClick={() => setIsQuickSimulateOpen(true)}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-blue-200/80 bg-blue-50/90 hover:bg-blue-100 text-blue-700 hover:text-blue-800 text-xs font-semibold transition-all shadow-2xs cursor-pointer"
+            aria-label="Send a test lead"
             title="Simulate an incoming lead locally"
           >
             <Zap className="w-3.5 h-3.5 text-blue-600" />
@@ -150,7 +164,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
 
       {/* Quick Simulate Modal */}
       {isQuickSimulateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+        <DialogLayer label="Simulate a lead" onClose={() => setIsQuickSimulateOpen(false)} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-2xl text-slate-900 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
@@ -174,10 +188,10 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
 
             <form onSubmit={handleSimulate} className="mt-4 space-y-3.5 text-xs">
               <div>
-                <label className="block text-slate-700 mb-1 text-[12px] font-semibold">
+                <label htmlFor="topbar-field-15" className="block text-slate-700 mb-1 text-[12px] font-semibold">
                   Target Form
                 </label>
-                <select
+                <select id="topbar-field-15"
                   value={selectedFormId || forms[0]?.id || ""}
                   onChange={(e) => setSelectedFormId(e.target.value)}
                   disabled={forms.length === 0}
@@ -201,10 +215,10 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
               </div>
 
               <div>
-                <label className="block text-slate-700 mb-1 text-[12px] font-semibold">
+                <label htmlFor="topbar-field-16" className="block text-slate-700 mb-1 text-[12px] font-semibold">
                   Full Name
                 </label>
-                <input
+                <input id="topbar-field-16"
                   type="text"
                   required
                   value={testName}
@@ -215,10 +229,10 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
               </div>
 
               <div>
-                <label className="block text-slate-700 mb-1 text-[12px] font-semibold">
+                <label htmlFor="topbar-field-17" className="block text-slate-700 mb-1 text-[12px] font-semibold">
                   Email Address
                 </label>
-                <input
+                <input id="topbar-field-17"
                   type="email"
                   required
                   value={testEmail}
@@ -229,10 +243,10 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
               </div>
 
               <div>
-                <label className="block text-slate-700 mb-1 text-[12px] font-semibold">
+                <label htmlFor="topbar-field-18" className="block text-slate-700 mb-1 text-[12px] font-semibold">
                   Message Content
                 </label>
-                <textarea
+                <textarea id="topbar-field-18"
                   rows={3}
                   required
                   value={testMessage}
@@ -256,7 +270,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
                 >
                   {isSimulating ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span className="sr-only">Working</span>
                   ) : (
                     <Send className="w-3.5 h-3.5" />
                   )}
@@ -265,7 +279,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
               </div>
             </form>
           </div>
-        </div>
+        </DialogLayer>
       )}
     </>
   );

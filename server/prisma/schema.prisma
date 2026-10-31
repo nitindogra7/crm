@@ -25,6 +25,7 @@ model Onboarding {
 }
 
 // Dashboard / Organization table where more than one organization can be created and managed per user
+
 model Dashboard {
   id                String    @id @default(cuid())
   userId            String    // Clerk User ID (supports multiple organizations/dashboards per user)
@@ -54,7 +55,7 @@ model Form {
   id             String    @id @default(cuid())
   dashboardId    String
   name           String
-  slug           String
+  slug           String    @unique
   endpointUrl    String
   enabled        Boolean   @default(true)
   environment    String    @default("development") // "development" | "production"

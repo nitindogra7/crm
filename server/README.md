@@ -1,108 +1,45 @@
-# ⚙️ Salenova Backend API
+# Salenova API
 
-The core REST API and data ingestion service for **Salenova**, built with Express 5, TypeScript, Prisma ORM, and PostgreSQL 16.
+Express 5, TypeScript, Prisma 6, PostgreSQL, and Clerk authentication.
 
----
+## Development
 
-## 🛠️ Tech Stack
+From `server/`, install dependencies with `pnpm install --frozen-lockfile`, copy `.env.example` to `.env`, and configure the database and Clerk keys. Use `pnpm db:migrate` for local database development, then `pnpm dev`.
 
-- **Runtime**: [Node.js 22 LTS](https://nodejs.org/)
-- **Framework**: [Express 5](https://expressjs.com/)
-- **ORM**: [Prisma 6](https://www.prisma.io/)
-- **Database**: [PostgreSQL](https://www.postgresql.org/)
-- **TypeScript Runner**: [tsx](https://github.com/privatenumber/tsx)
-- **Security & Utilities**: Helmet, CORS, Cookie-Parser, Morgan, BcryptJS, JSON Web Tokens
+Source is split into onboarding, forms/API keys, and leads modules under `src/modules/`. Each module contains routes, controllers, validation, services, and repository queries.
 
----
+## Production
 
-## 📂 Directory Structure
+Build with development dependencies installed:
 
-```
-server/
-├── prisma/
-│   ├── schema.prisma          # Database schema models (Form, Submission)
-│   ├── migrations/            # Version-controlled migration history
-│   └── config.ts              # Prisma CLI configuration
-│
-├── src/
-│   ├── index.ts               # Express entry point, health checks, server bootstrap
-│   ├── core/                  # Core domain utilities, errors, and configuration
-│   └── module/                # Feature modules (forms, submissions, auth)
-│
-├── package.json               # Backend dependencies & Prisma scripts
-└── .env.example               # Environment variables template
+```sh
+pnpm build
+pnpm db:deploy
+pnpm start
 ```
 
----
+The build generates Prisma Client and compiles TypeScript into `dist/`. Startup runs `node dist/index.js`. Apply migrations before pruning development dependencies; the migration CLI is a development dependency.
 
-## 🚀 Getting Started
+Set `NODE_ENV=production`, `DATABASE_URL`, `FRONTEND_URL`, `API_URL`, and Clerk keys in the hosting environment. The API currently trusts one reverse-proxy hop.
 
-### 1. Install Dependencies
+## QA
 
-From the `server/` directory:
-
-```bash
-pnpm install
+```sh
+pnpm typecheck
+pnpm test:isolated
+pnpm audit --prod
 ```
 
-### 2. Configure Environment
+The isolated runner applies every migration in a random temporary PostgreSQL schema, checks schema drift, runs the backend regression suites, and removes that schema. It requires schema create/drop permissions. `pnpm test` instead runs against the configured schema, which must already be migrated.
 
-Copy `.env.example` to `.env`:
+On Windows, stop the backend dev worker before generating Prisma Client if its query-engine DLL is locked.
 
-```bash
-cp .env.example .env
-```
+See [the QA report](../docs/QA_REPORT.md) for verified fixes, deployment notes, and remaining release work.
 
-Set your PostgreSQL connection string in `.env`:
-```env
-PORT=4000
-FRONTEND_URL=http://localhost:3000
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/salenova?schema=public"
-```
+## Main endpoints
 
----
-
-### 3. Setup Database & Run Migrations
-
-Ensure your PostgreSQL service is running and the database exists, then run:
-
-```bash
-# Apply migrations to PostgreSQL
-pnpm run db:migrate
-
-# Generate client types
-pnpm run db:generate
-```
-
----
-
-### 4. Start the Server
-
-```bash
-pnpm run dev
-```
-
-The API will be available at [http://localhost:4000](http://localhost:4000).
-
----
-
-## 📜 Available Scripts
-
-| Script | Command | Purpose |
-| :--- | :--- | :--- |
-| `pnpm run dev` | `tsx watch src/index.ts` | Runs the server with live TypeScript reloading |
-| `pnpm run start` | `tsx src/index.ts` | Runs the server in production mode |
-| `pnpm run db:generate` | `prisma generate` | Generates type-safe Prisma client bindings |
-| `pnpm run db:migrate` | `prisma migrate dev` | Creates and applies new migrations in dev |
-| `pnpm run db:deploy` | `prisma migrate deploy` | Executes pending migrations (used in CI/CD) |
-| `pnpm run db:studio` | `prisma studio` | Opens the web GUI for database inspection |
-
----
-
-## 📡 Endpoints
-
-- **`GET /health`**: Validates server uptime and verifies direct connection to PostgreSQL via `SELECT 1`.
-  - Returns: `{ "ok": true }`
-- **`POST /f/:formId`**: *(Under active development)* Ingests incoming form payload, validates honeypots, and records submission.
-
-For full API documentation, see [`docs/API_DOCUMENTATION.md`](../docs/API_DOCUMENTATION.md).
+- `GET /health`: database-backed readiness check.
+- `POST /api/forms-and-api/f/:slug`: public form submission.
+- `POST /api/forms-and-api/submit/:formId`: submission by form ID.
+- `POST /api/v1/leads`: API-key ingestion.
+- `/api/onboarding`, `/api/leads`, `/api/forms-and-api/dashboards`, `/api/forms-and-api/forms`, `/api/forms-and-api/keys`: authenticated management routes.

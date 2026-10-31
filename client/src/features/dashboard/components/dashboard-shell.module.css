@@ -1,0 +1,65 @@
+/* Keep application typography separate from the marketing pages. */
+.workspace {
+  --font-heading: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-p: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-p);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.workspace :is(h1, h2, h3, h4, h5, h6, :global(.font-heading)) {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  text-wrap: initial;
+}
+
+.workspace h1 {
+  font-size: clamp(1.5rem, 1.25rem + 0.5vw, 1.875rem);
+  line-height: 1.25;
+}
+
+.workspace p { line-height: 1.5; }
+
+.workspace :is(button, a, input, textarea, select):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.workspace :is(input, textarea, select) { font-size: 0.875rem; }
+.workspace :is(input:not([type="checkbox"]):not([type="radio"]), select) { min-height: 2.5rem; }
+.workspace table { font-variant-numeric: tabular-nums; }
+.workspace th { white-space: nowrap; }
+
+.workspace :global(.dashboard-page-header) { align-items: flex-start; gap: 1rem; }
+.workspace :global(.dashboard-page-header) > :first-child { min-width: 0; }
+.workspace :global(.dashboard-page-header) > :last-child:not(:first-child) { flex-shrink: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace *, .workspace *::before, .workspace *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.workspace main { scrollbar-gutter: stable; overscroll-behavior-y: contain; scroll-behavior: auto; }
+.workspace :is(button, a) { -webkit-tap-highlight-color: transparent; }
+.workspace :is(button, input, textarea, select) { transition-duration: 150ms; }
+.workspace button:disabled { opacity: .55; }
+.workspace :is(input, textarea)::placeholder { color: #64748b; }
+.workspace :global(.dashboard-page-header) { padding-bottom: .25rem; }
+.workspace table thead { font-size: .6875rem; letter-spacing: .04em; }
+.workspace :global([aria-current="page"]) { box-shadow: inset 3px 0 #2563eb; }
+.workspace :global([data-dialog-layer]) :is(h2, h3) { letter-spacing: -.02em; }
+@media (max-width: 639px) {
+ .workspace :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select) { font-size: 1rem; }
+ .workspace :global(.dashboard-page-header) > :last-child:not(:first-child) { flex-shrink: 1; flex-wrap: wrap; }
+ .workspace :global([data-dialog-layer]) > :global(.fixed.inset-y-0) { padding-left: 0; }
+}
+@media (pointer: coarse) {
+ .workspace :is(button, a:not(.skip-link)) { min-height: 2.75rem; }
+ .workspace input[type="checkbox"] { width: 1.125rem; height: 1.125rem; }
+}
+
+.workspace :global(.grid) > * { min-width: 0; }

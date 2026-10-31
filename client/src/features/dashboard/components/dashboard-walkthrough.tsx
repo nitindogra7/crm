@@ -83,13 +83,12 @@ export function DashboardWalkthrough() {
   const {
     isTourOpen,
     tourStep,
-    startTour,
     closeTour,
     setTourStep,
     nextTourStep,
     prevTourStep,
     addToast,
-  } = useDashboard();
+  } = useDashboard(["isTourOpen","tourStep","closeTour","setTourStep","nextTourStep","prevTourStep","addToast"]);
 
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [popoverPos, setPopoverPos] = useState<{
@@ -103,22 +102,6 @@ export function DashboardWalkthrough() {
   });
 
   const popoverRef = useRef<HTMLDivElement>(null);
-
-  // Auto-start walkthrough once on first visit after login
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const hasCompleted = localStorage.getItem("infraly_tour_completed");
-      if (!hasCompleted) {
-        const timer = setTimeout(() => {
-          startTour();
-        }, 800);
-        return () => clearTimeout(timer);
-      }
-    } catch {
-      // Ignore localStorage access errors
-    }
-  }, [startTour]);
 
   const currentStep = TOUR_STEPS[tourStep] || TOUR_STEPS[0];
   const StepIcon = currentStep.icon;
@@ -205,6 +188,7 @@ export function DashboardWalkthrough() {
   }, [isTourOpen, tourStep, updateTargetPosition]);
 
   const handleFinish = useCallback(async () => {
+    closeTour();
     try {
       const confetti = (await import("canvas-confetti")).default;
       confetti({
@@ -222,7 +206,6 @@ export function DashboardWalkthrough() {
       "You're all set! Explore your dashboard and start capturing leads.",
       "success"
     );
-    closeTour();
   }, [addToast, closeTour]);
 
   // Keyboard navigation support

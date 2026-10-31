@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/shared/components/app-link";
 import { ArrowRight } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { AuthFormSkeleton } from "@/shared/components/auth-skeleton";
@@ -13,7 +13,7 @@ export interface AuthShellProps {
 }
 
 export const clerkAuthAppearance = {
-  layout: {
+  options: {
     socialButtonsPlacement: "top" as const,
     socialButtonsVariant: "blockButton" as const,
     logoPlacement: "none" as const,
@@ -87,16 +87,7 @@ export function AuthShell({ mode, children }: AuthShellProps) {
 
   // Clerk Auth initialization state for smooth skeleton loading
   const { isLoaded } = useAuth();
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    if (isLoaded) {
-      const timer = setTimeout(() => setIsReady(true), 80);
-      return () => clearTimeout(timer);
-    }
-    const fallback = setTimeout(() => setIsReady(true), 2500);
-    return () => clearTimeout(fallback);
-  }, [isLoaded]);
+  const isReady = isLoaded;
 
   return (
     <div className="fixed inset-0 h-screen h-[100dvh] w-screen overflow-hidden overscroll-none bg-white text-slate-900 flex flex-col md:flex-row selection:bg-blue-500/20 selection:text-blue-900">
@@ -113,8 +104,8 @@ export function AuthShell({ mode, children }: AuthShellProps) {
         />
       </div>
 
-      {/* Right Column (50% Width, 100vh Height): Non-scrollable Centered Input / Form Box */}
-      <div className="w-full md:w-1/2 h-full flex flex-col justify-center items-center px-6 sm:px-10 lg:px-14 xl:px-16 overflow-hidden bg-white relative auth-scroll-panel selection:bg-blue-500/20">
+      {/* Right column scrolls independently when a form exceeds the available height. */}
+      <div className="w-full md:w-1/2 h-full flex flex-col items-center px-6 sm:px-10 lg:px-14 xl:px-16 overflow-y-auto bg-white relative auth-scroll-panel selection:bg-blue-500/20">
         {/* Background Top Gradient matching Hero Section */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none" aria-hidden="true">
           {/* Top Only: Left-to-Right Blue to Light Very Light Pink Gradient */}
@@ -131,7 +122,7 @@ export function AuthShell({ mode, children }: AuthShellProps) {
           />
         </div>
 
-        <div className="relative z-10 w-full max-w-[400px] sm:max-w-[420px] mx-auto py-2 flex flex-col justify-center">
+        <div className="relative z-10 w-full max-w-[400px] sm:max-w-[420px] mx-auto my-auto shrink-0 py-6 sm:py-8 flex flex-col justify-center">
           
           {/* Brand Logo & Back to Website Navigation */}
           <div className="flex items-center justify-between mb-4 sm:mb-5">

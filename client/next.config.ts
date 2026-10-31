@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Keep production builds separate from an active development server.
+  distDir: process.env.NODE_ENV === "production" ? ".next-production" : ".next",
   reactCompiler: true,
   devIndicators: false,
   compress: true,

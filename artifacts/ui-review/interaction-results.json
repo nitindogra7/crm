@@ -1,0 +1,104 @@
+{
+  "results": [
+    {
+      "name": "Create form: labels, focus trap, Escape and focus restoration",
+      "passed": true,
+      "detail": "Labels focus inputs; Tab wraps; Escape closes; focus returns to trigger"
+    },
+    {
+      "name": "Lead drawer opens from a keyboard-accessible contact and fits mobile",
+      "passed": true
+    },
+    {
+      "name": "Mobile navigation opens and closes with Escape",
+      "passed": true
+    },
+    {
+      "name": "Toast stays inside mobile screen without rerendering the leads view",
+      "passed": true,
+      "detail": {
+        "viewRendersBefore": 1,
+        "viewRendersAfter": 1
+      }
+    },
+    {
+      "name": "Failed optimistic edit restores affected record and preserves another edit",
+      "passed": true,
+      "detail": "Immediate update; failed edit restored; later unrelated edit preserved"
+    },
+    {
+      "name": "Failed optimistic deletion restores row and form count",
+      "passed": true,
+      "detail": "Row ordering and form count restored"
+    },
+    {
+      "name": "Failed optimistic edit cannot restore data into another workspace",
+      "passed": true,
+      "detail": "No records restored across workspace boundary"
+    },
+    {
+      "name": "Analytics exports exactly 7, 30 and 90 selected days",
+      "passed": true,
+      "detail": [
+        7,
+        30,
+        90
+      ]
+    },
+    {
+      "name": "Settings tabs update URL locally and browser Back restores the tab",
+      "passed": true
+    },
+    {
+      "name": "Docs guides, hub, browser Back and mobile search stay synchronized",
+      "passed": true
+    },
+    {
+      "name": "Slow non-prefetched link shows immediate navigation progress",
+      "passed": true,
+      "detail": "Progress visible before route completes"
+    },
+    {
+      "name": "Responsive layout: all six dashboard views, docs and home at 320/390/768/1440px",
+      "passed": true,
+      "detail": {
+        "combinations": 32,
+        "failures": []
+      }
+    },
+    {
+      "name": "Public sign-in, sign-up and not-found routes render",
+      "passed": true,
+      "detail": [
+        "/sign-in",
+        "/sign-up",
+        "/not-a-real-page-for-ui-review"
+      ]
+    },
+    {
+      "name": "Status menu supports pointer selection and outside dismissal",
+      "passed": true
+    },
+    {
+      "name": "/sign-in on a short mobile viewport",
+      "passed": true,
+      "detail": {
+        "overflow": "auto",
+        "top": 0,
+        "scroll": 559,
+        "client": 480
+      }
+    },
+    {
+      "name": "/sign-up on a short mobile viewport",
+      "passed": true,
+      "detail": {
+        "overflow": "auto",
+        "top": 0,
+        "scroll": 682,
+        "client": 480
+      }
+    }
+  ],
+  "pageErrors": []
+}

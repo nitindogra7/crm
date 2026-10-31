@@ -2,7 +2,6 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import authShowcase from "../../../public/auth-showcase.jpg";
 
 interface AuthFormSkeletonProps {
   mode: "sign-in" | "sign-up";
@@ -85,7 +84,7 @@ export function AuthPageSkeleton({ mode }: AuthFormSkeletonProps) {
       {/* Left Column (50% Width, 100vh Height): Full Screen Photo */}
       <div className="hidden md:block md:w-1/2 h-full relative overflow-hidden select-none shrink-0 bg-slate-100">
         <Image
-          src={authShowcase}
+          src="/auth-showcase.jpg"
           alt="Infraly Auth Showcase"
           fill
           className="object-cover object-center"

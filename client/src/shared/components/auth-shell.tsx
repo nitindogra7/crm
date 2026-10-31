@@ -6,7 +6,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { AuthFormSkeleton } from "@/shared/components/auth-skeleton";
-import authShowcase from "../../../public/auth-showcase.jpg";
 
 export interface AuthShellProps {
   mode: "sign-in" | "sign-up";
@@ -105,7 +104,7 @@ export function AuthShell({ mode, children }: AuthShellProps) {
       {/* Left Column (50% Width, 100vh Height): Full Screen Photo */}
       <div className="hidden md:block md:w-1/2 h-full relative overflow-hidden select-none shrink-0 bg-slate-100">
         <Image
-          src={authShowcase}
+          src="/auth-showcase.jpg"
           alt="Infraly Auth Showcase"
           fill
           className="object-cover object-center"

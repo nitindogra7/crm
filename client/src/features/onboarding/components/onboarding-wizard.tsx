@@ -7,7 +7,6 @@ import { UserButton } from "@clerk/nextjs";
 import { useOnboardingForm } from "../hooks/use-onboarding-form";
 import { OnboardingForm } from "./onboarding-form";
 import { OnboardingSuccess } from "./onboarding-success";
-import onboardingShowcase from "../../../../public/onboarding-showcase.jpg";
 
 export function OnboardingWizard() {
   const {
@@ -38,7 +37,7 @@ export function OnboardingWizard() {
       {/* Left Column (50% Width, 100vh Height): Full Screen Photo matching Sign-up / Sign-in */}
       <div className="hidden md:block md:w-1/2 h-full relative overflow-hidden select-none shrink-0 bg-slate-100">
         <Image
-          src={onboardingShowcase}
+          src="/onboarding-showcase.jpg"
           alt="Infraly Workspace Setup"
           fill
           className="object-cover object-center"

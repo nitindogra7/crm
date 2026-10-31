@@ -34,6 +34,7 @@ export default async function OnboardingPage() {
       {
         headers,
         cache: "no-store",
+        signal: AbortSignal.timeout(1200),
       }
     );
 

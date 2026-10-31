@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Audit Production Dependencies
+        run: pnpm audit --prod
+
       - name: Run ESLint
         run: pnpm run lint
 
@@ -42,15 +45,29 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: "http://localhost:4000"
           NEXT_PUBLIC_APP_URL: "http://localhost:3000"
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_placeholder"
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_ZXhhbXBsZS5jbGVyay5hY2NvdW50cy5kZXYk"
           CLERK_SECRET_KEY: "sk_test_placeholder"
 
   server-check:
-    name: Server Typecheck & Prisma Validation
+    name: Server Build, Migrations & Regression Tests
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./server
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: salenova
+          POSTGRES_PASSWORD: salenova_dev_pw
+          POSTGRES_DB: salenova
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U salenova -d salenova"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       DATABASE_URL: "postgresql://salenova:salenova_dev_pw@localhost:5432/salenova?schema=public"
 
@@ -71,8 +88,26 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Audit Production Dependencies
+        run: pnpm audit --prod
+
+      - name: Generate Prisma Client
+        run: pnpm run db:generate
+
       - name: Run TypeScript Check
         run: pnpm run typecheck
+
+      - name: Apply Migrations
+        run: pnpm run db:deploy
+
+      - name: Check Migration Drift
+        run: pnpm exec prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --exit-code
+
+      - name: Build Server
+        run: pnpm run build
+
+      - name: Run Regression Tests
+        run: pnpm test
 
       - name: Validate Prisma Schema
         run: pnpm exec prisma validate

@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "next/link";
+import Link from "@/shared/components/app-link";
 import { marketingData } from "../data";
 
 export function Hero() {
@@ -123,12 +123,14 @@ export function Hero() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
             <Link
               href="/dashboard"
+              prefetch={true}
               className="px-6 py-2.5 sm:px-7 sm:py-3 rounded-full bg-[#2563eb] hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-95 inline-flex items-center justify-center"
             >
               {hero.primaryCta}
             </Link>
             <Link
               href="/docs"
+              prefetch={true}
               className="px-6 py-2.5 sm:px-7 sm:py-3 rounded-full bg-white hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-medium border border-slate-200/90 shadow-sm transition-all hover:scale-[1.02] active:scale-95 inline-flex items-center justify-center"
             >
               {hero.secondaryCta}

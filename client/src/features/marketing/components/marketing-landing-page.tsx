@@ -39,7 +39,7 @@ export function MarketingLandingPage() {
       <Navbar />
 
       {/* Main Page Flow */}
-      <main>
+      <main id="main-content">
         {/* Section 1: Hero with floating badges, title, CTA, rating, and trusted logos */}
         <Hero />
 

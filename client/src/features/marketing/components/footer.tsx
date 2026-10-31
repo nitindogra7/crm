@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
+import Link from "@/shared/components/app-link";
 import Image from "next/image";
 import { marketingData } from "../data";
 

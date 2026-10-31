@@ -1,0 +1,57 @@
+{
+  "results": [
+    {
+      "name": "Desktop docs sidebar and header stay fixed while the article scrolls",
+      "passed": true,
+      "detail": {
+        "sidebarTop": 64,
+        "articleScroll": 565
+      }
+    },
+    {
+      "name": "All nine guides fit desktop and mobile screens",
+      "passed": true,
+      "detail": {
+        "combinations": 36
+      }
+    },
+    {
+      "name": "Sidebar navigation and browser Back update the guide without reloading",
+      "passed": true
+    },
+    {
+      "name": "Search supports results, empty states, and Ctrl+K",
+      "passed": true
+    },
+    {
+      "name": "Code copying confirms success and reports a denied clipboard",
+      "passed": true
+    },
+    {
+      "name": "Mobile docs navigation traps focus, closes on Escape and follows a selected guide",
+      "passed": true
+    },
+    {
+      "name": "Unknown guide and legacy framework links resolve deliberately",
+      "passed": true
+    },
+    {
+      "name": "Blue dashboard sidebar renders and remains fixed beside scrolling content",
+      "passed": true,
+      "detail": {
+        "background": "linear-gradient(165deg, rgb(21, 57, 100) 0%, rgb(16, 45, 83) 48%, rgb(12, 35, 66) 100%)",
+        "width": 240,
+        "nav": "WorkspaceOverviewLeadsForms & APIsAnalyticsSpam ShieldSettings"
+      }
+    },
+    {
+      "name": "Ordinary card links do not render a loading bar",
+      "passed": true
+    },
+    {
+      "name": "Navigation bar renders at the page level, outside transformed links",
+      "passed": true
+    }
+  ],
+  "errors": []
+}

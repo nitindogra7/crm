@@ -267,60 +267,58 @@ export const marketingData: MarketingData = {
     ],
   },
   pricing: {
-    headline: "Flexible plans that evolve",
-    headlineHighlight: "with your needs.",
-    subtitle: "Simple, transparent tiers designed to scale from side projects to full agency client workspaces.",
-    plans: [
-      {
-        name: "Basic",
-        sub: "Essential form endpoints and lead capture for side projects and landing pages.",
-        price: "$99",
-        period: "/Month",
-        isPopular: false,
-        features: [
-          "Instant form endpoints (/api/f/:slug)",
-          "Silent honeypot spam filter (_gotcha)",
-          "Real-time Lead Inbox with status tracking",
-          "Custom thank-you page redirect URL",
-          "Export leads to CSV anytime",
-        ],
-        btnVariant: "outline",
-      },
-      {
-        name: "Pro",
-        badge: "Best Deal",
-        sub: "Advanced spam quarantine, webhooks, and analytics for growing teams.",
-        price: "$139",
-        period: "/Month",
-        isPopular: true,
-        features: [
-          "Multiple forms & custom field capture",
-          "Spam Shield quarantine with one-click rescue",
-          "Disposable email domain detection",
-          "Webhook dispatch (lead.created, lead.quarantined)",
-          "Submission telemetry (IP, User-Agent, Referrer)",
-          "Submission trends & spam analytics dashboard",
-        ],
-        btnVariant: "gradient",
-      },
-      {
-        name: "Business",
-        sub: "Complete API access and multi-workspace organization for developers & agencies.",
-        price: "$199",
-        period: "/Month",
-        isPopular: false,
-        features: [
-          "Multi-workspace management & switching",
-          "Workspace API Keys (x-api-key header)",
-          "REST API ingestion (POST /api/v1/leads)",
-          "Webhook signature secret (infraly-signature)",
-          "Webhook delivery logs & event subscriptions",
-          "Unlimited form endpoints & lead archiving",
-        ],
-        btnVariant: "outline",
-      },
-    ],
-  },
+  "headline": "Plans for",
+  "headlineHighlight": "forms and leads.",
+  "subtitle": "From your first website form to a workspace for every client.",
+  "plans": [
+    {
+      "name": "Basic",
+      "sub": "Form capture and a lead inbox for your website.",
+      "price": "$99",
+      "period": "/ month",
+      "isPopular": false,
+      "features": [
+        "Public form endpoints",
+        "Lead inbox and status tracking",
+        "Honeypot and email checks",
+        "Custom thank-you redirects",
+        "Lead export to CSV"
+      ],
+      "btnVariant": "outline"
+    },
+    {
+      "name": "Pro",
+      "badge": "More visibility",
+      "sub": "Submission insights and spam review for your team.",
+      "price": "$139",
+      "period": "/ month",
+      "isPopular": true,
+      "features": [
+        "Everything in Basic",
+        "Custom fields for your forms",
+        "Spam review and lead rescue",
+        "Submission trends and source analytics",
+        "Separate test and production data"
+      ],
+      "btnVariant": "gradient"
+    },
+    {
+      "name": "Business",
+      "sub": "Client workspaces and server integrations in one place.",
+      "price": "$199",
+      "period": "/ month",
+      "isPopular": false,
+      "features": [
+        "Everything in Pro",
+        "Multiple client workspaces",
+        "Environment-specific API keys",
+        "Server-to-server lead submissions",
+        "Production website origin controls"
+      ],
+      "btnVariant": "outline"
+    }
+  ]
+},
   testimonials: {
     headline: "Hear directly from businesses that",
     headlineHighlight: "succeed with Infraly.",

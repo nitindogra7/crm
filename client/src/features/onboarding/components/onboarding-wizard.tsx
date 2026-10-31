@@ -2,7 +2,7 @@
 
 import React, { useSyncExternalStore } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/shared/components/app-link";
 import { UserButton } from "@clerk/nextjs";
 import { useOnboardingForm } from "../hooks/use-onboarding-form";
 import { OnboardingForm } from "./onboarding-form";

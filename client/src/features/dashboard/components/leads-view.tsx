@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import { DialogLayer } from "@/shared/components/dialog-layer";
+import { copyText } from "@/shared/lib/clipboard";
+import React, { useState, useMemo, useEffect, useRef, useDeferredValue } from "react";
 import { useSearchParams } from "next/navigation";
 import { useDashboard } from "../context/dashboard-context";
 import { LeadStatus, LeadItem } from "@/shared/types";
@@ -17,7 +19,6 @@ import {
   Copy,
   Check,
   AlertTriangle,
-  Loader2,
   ExternalLink,
   ChevronDown,
   Sparkles,
@@ -40,7 +41,7 @@ export function LeadsView() {
     batchDeleteLeadsAsync,
     batchUpdateLeadStatusAsync,
     addToast,
-  } = useDashboard();
+  } = useDashboard(["leads","forms","isLoading","setSelectedLeadId","updateLeadStatusAsync","deleteLeadAsync","batchDeleteLeadsAsync","batchUpdateLeadStatusAsync","addToast"]);
 
   const timeParam = searchParams.get("time");
   const statusParam = searchParams.get("status");
@@ -52,6 +53,8 @@ export function LeadsView() {
   const [selectedStatus, setSelectedStatus] = useState<"all" | LeadStatus>(() => {
     if (statusParam === "new") return "New";
     if (statusParam === "contacted") return "Contacted";
+    if (statusParam === "qualified") return "Qualified";
+    if (statusParam === "archived") return "Archived";
     return "all";
   });
   const [selectedDate, setSelectedDate] = useState<"all" | "today" | "week" | "month">(() => {
@@ -60,9 +63,22 @@ export function LeadsView() {
     return "all";
   });
 
+  const [previousQuery, setPreviousQuery] = useState(timeParam + ":" + statusParam);
+  if (previousQuery !== timeParam + ":" + statusParam) {
+    setPreviousQuery(timeParam + ":" + statusParam);
+    setSelectedDate(timeParam === "today" ? "today" : timeParam === "week" ? "week" : "all");
+    const status = statusParam?.toLowerCase();
+    setSelectedStatus(status === "new" ? "New" : status === "contacted" ? "Contacted" : status === "qualified" ? "Qualified" : status === "archived" ? "Archived" : "all");
+  }
+  const deferredSearch = useDeferredValue(searchTerm);
+
   // Pagination state
   const [pageSize, setPageSize] = useState(7);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const filterKey = [searchTerm, selectedForm, selectedSource, selectedStatus, selectedDate, pageSize].join("|");
+  const [previousFilters, setPreviousFilters] = useState(filterKey);
+  if (previousFilters !== filterKey) { setPreviousFilters(filterKey); setCurrentPage(1); }
 
   // Selection & Bulk actions state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -81,16 +97,16 @@ export function LeadsView() {
   const menuContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (
-        menuContainerRef.current &&
-        !menuContainerRef.current.contains(e.target as Node)
-      ) {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-lead-menu]')) {
         setOpenActionMenuId(null);
         setOpenStatusMenuId(null);
       }
     }
+    const handleEscape = (event: KeyboardEvent) => { if (event.key === "Escape") { setOpenActionMenuId(null); setOpenStatusMenuId(null); } };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => { document.removeEventListener("mousedown", handleClickOutside); document.removeEventListener("keydown", handleEscape); };
   }, []);
 
   // Unique sources
@@ -108,8 +124,8 @@ export function LeadsView() {
 
     return leads.filter((lead) => {
       // 1. Search term match
-      if (searchTerm.trim()) {
-        const query = searchTerm.toLowerCase();
+      if (deferredSearch.trim()) {
+        const query = deferredSearch.toLowerCase().trim();
         const matchesName = lead.name.toLowerCase().includes(query);
         const matchesEmail = lead.email.toLowerCase().includes(query);
         const matchesMessage = lead.message.toLowerCase().includes(query);
@@ -134,16 +150,18 @@ export function LeadsView() {
       // 5. Date filter
       if (selectedDate !== "all") {
         const leadDate = new Date(lead.receivedAt).getTime();
+        const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
         const diffMs = now - leadDate;
+        if (leadDate > now) return false;
 
-        if (selectedDate === "today" && diffMs > oneDayMs) return false;
-        if (selectedDate === "week" && diffMs > 7 * oneDayMs) return false;
+        if (selectedDate === "today" && leadDate < startOfToday.getTime()) return false;
+        if (selectedDate === "week" && leadDate < startOfToday.getTime() - 6 * oneDayMs) return false;
         if (selectedDate === "month" && diffMs > 30 * oneDayMs) return false;
       }
 
       return true;
     });
-  }, [leads, searchTerm, selectedForm, selectedSource, selectedStatus, selectedDate]);
+  }, [leads, deferredSearch, selectedForm, selectedSource, selectedStatus, selectedDate]);
 
   // Pagination calculation
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
@@ -265,9 +283,9 @@ export function LeadsView() {
     }
   };
 
-  const handleCopyEmail = (email: string, e: React.MouseEvent) => {
+  const handleCopyEmail = async (email: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(email);
+    if (!(await copyText(email))) return;
     addToast("Email copied", `${email} copied to clipboard.`);
     setOpenActionMenuId(null);
   };
@@ -310,20 +328,20 @@ export function LeadsView() {
   return (
     <div ref={menuContainerRef} className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="dashboard-page-header flex flex-col xl:flex-row justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-heading font-semibold tracking-tight text-slate-900">
             Leads Inbox
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Review, filter, and track inquiries received from your live form endpoints.
+          <p className="text-[13px] sm:text-sm text-slate-500 mt-1">
+            Manage the people who contact you through your forms.
           </p>
         </div>
-        <button
+        <button aria-label="Export filtered leads as a secure CSV spreadsheet"
           type="button"
           onClick={handleExportLeadsCSV}
           disabled={filteredLeads.length === 0}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-all disabled:opacity-40 cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-[13px] font-semibold shadow-2xs transition-all disabled:opacity-40 cursor-pointer self-start sm:self-auto"
           title="Export filtered leads as a secure CSV spreadsheet"
         >
           <Download className="w-3.5 h-3.5 text-slate-500" />
@@ -332,11 +350,11 @@ export function LeadsView() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 bg-white space-y-3 shadow-xs">
+      <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200/80 bg-white space-y-3 shadow-xs">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchTerm}
@@ -344,8 +362,8 @@ export function LeadsView() {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Search by name, email, or message content..."
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-sans transition-all"
+              placeholder="Search leads..."
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-[13px] text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-sans transition-all"
             />
             {searchTerm && (
               <button
@@ -354,7 +372,7 @@ export function LeadsView() {
                   setSearchTerm("");
                   setCurrentPage(1);
                 }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 cursor-pointer"
                 aria-label="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
@@ -363,7 +381,7 @@ export function LeadsView() {
           </div>
 
           {/* Filter Dropdowns Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[13px]">
             {/* Form Filter */}
             <select
               value={selectedForm}
@@ -371,7 +389,7 @@ export function LeadsView() {
                 setSelectedForm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[11.5px] cursor-pointer transition-all"
+              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[13px] cursor-pointer transition-all"
             >
               <option value="all">All Forms</option>
               {forms.map((f) => (
@@ -388,7 +406,7 @@ export function LeadsView() {
                 setSelectedSource(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[11.5px] cursor-pointer transition-all"
+              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[13px] cursor-pointer transition-all"
             >
               <option value="all">All Sources</option>
               {allSources.map((s) => (
@@ -405,7 +423,7 @@ export function LeadsView() {
                 setSelectedDate(e.target.value as "all" | "today" | "week" | "month");
                 setCurrentPage(1);
               }}
-              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[11.5px] cursor-pointer transition-all"
+              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[13px] cursor-pointer transition-all"
             >
               <option value="all">All Dates</option>
               <option value="today">Today</option>
@@ -420,7 +438,7 @@ export function LeadsView() {
                 setSelectedStatus(e.target.value as "all" | LeadStatus);
                 setCurrentPage(1);
               }}
-              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[11.5px] cursor-pointer transition-all"
+              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[13px] cursor-pointer transition-all"
             >
               <option value="all">All Statuses</option>
               <option value="New">New</option>
@@ -435,7 +453,7 @@ export function LeadsView() {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all whitespace-nowrap cursor-pointer shadow-2xs"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-[13px] font-semibold text-slate-600 hover:text-slate-900 transition-all whitespace-nowrap cursor-pointer shadow-2xs"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset</span>
@@ -445,7 +463,7 @@ export function LeadsView() {
 
         {/* Bulk Actions Floating Toolbar */}
         {selectedIds.length > 0 && (
-          <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2 text-xs animate-in fade-in duration-150">
+          <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2 text-[13px] animate-in fade-in duration-150">
             <div className="flex items-center gap-2">
               <span className="font-mono text-slate-700 font-semibold">
                 {selectedIds.length} lead{selectedIds.length > 1 ? "s" : ""} selected
@@ -453,7 +471,7 @@ export function LeadsView() {
               <button
                 type="button"
                 onClick={() => setSelectedIds([])}
-                className="text-[11px] text-slate-500 hover:text-slate-800 underline cursor-pointer"
+                className="text-[13px] text-slate-500 hover:text-slate-800 underline cursor-pointer"
               >
                 Clear selection
               </button>
@@ -463,7 +481,7 @@ export function LeadsView() {
               <button
                 type="button"
                 onClick={() => handleBulkStatusChange("Contacted")}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer text-xs font-semibold"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer text-[13px] font-semibold"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Mark Contacted</span>
@@ -472,7 +490,7 @@ export function LeadsView() {
               <button
                 type="button"
                 onClick={() => handleBulkStatusChange("New")}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer text-xs font-semibold"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer text-[13px] font-semibold"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Mark New</span>
@@ -483,7 +501,7 @@ export function LeadsView() {
                 onClick={() =>
                   setDeleteTarget({ type: "batch", ids: selectedIds })
                 }
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer text-xs font-semibold"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer text-[13px] font-semibold"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Delete ({selectedIds.length})</span>
@@ -494,11 +512,11 @@ export function LeadsView() {
       </div>
 
       {/* Leads Table Card */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-xs">
+      <div className="rounded-xl border border-slate-200/80 bg-white overflow-hidden shadow-xs">
         <div className="overflow-x-auto min-h-[360px]">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full text-left text-[13px] border-collapse">
             <thead>
-              <tr className="border-b border-slate-200/80 text-slate-500 font-semibold text-[11px] uppercase tracking-wider bg-slate-50/70">
+              <tr className="border-b border-slate-200/80 text-slate-500 font-semibold text-[13px] uppercase tracking-wider bg-slate-50/70">
                 <th className="py-3.5 pl-4 pr-2 w-8">
                   <input
                     type="checkbox"
@@ -509,12 +527,12 @@ export function LeadsView() {
                     className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
                   />
                 </th>
-                <th className="py-3.5 px-4 font-semibold">Contact (Name & Email)</th>
+                <th className="py-3.5 px-4 font-semibold">Contact</th>
                 <th className="py-3.5 px-4 font-semibold hidden sm:table-cell">Form</th>
                 <th className="py-3.5 px-4 font-semibold hidden md:table-cell">Source</th>
                 <th className="py-3.5 px-4 font-semibold">Status</th>
-                <th className="py-3.5 px-4 font-semibold text-right">Received</th>
-                <th className="py-3.5 px-4 font-semibold text-right w-12">Actions</th>
+                <th className="py-3.5 px-4 font-semibold text-right hidden sm:table-cell">Received</th>
+                <th className="py-3.5 px-4 font-semibold text-right w-12 hidden sm:table-cell">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -522,14 +540,14 @@ export function LeadsView() {
                 <tr>
                   <td colSpan={7} className="py-16 text-center text-slate-500">
                     <div className="max-w-xs mx-auto space-y-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto text-slate-500">
                         <Inbox className="w-5 h-5" />
                       </div>
                       <div className="space-y-1">
                         <p className="text-sm font-semibold text-slate-900">
                           {leads.length === 0 ? "No leads received yet" : "No leads match filters"}
                         </p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-[13px] text-slate-500">
                           {leads.length === 0
                             ? "Submissions captured by your forms will automatically show up here."
                             : "Try adjusting your search criteria, dates, or status toggles."}
@@ -539,7 +557,7 @@ export function LeadsView() {
                         <button
                           type="button"
                           onClick={handleResetFilters}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors cursor-pointer shadow-sm shadow-blue-500/20"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-[13px] font-semibold hover:bg-blue-700 transition-colors cursor-pointer shadow-sm shadow-blue-500/20"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span>Reset all filters</span>
@@ -579,10 +597,10 @@ export function LeadsView() {
 
                       {/* Contact Name & Email */}
                       <td className="py-3.5 px-4">
-                        <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate max-w-[180px] sm:max-w-[240px]">
-                          {lead.name}
+                        <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate max-w-[140px] sm:max-w-[240px]">
+                          <button type="button" className="max-w-full truncate text-left" onClick={(e) => { e.stopPropagation(); setSelectedLeadId(lead.id); }}>{lead.name}</button>
                         </div>
-                        <div className="text-[11px] text-slate-500 truncate max-w-[180px] sm:max-w-[240px]">
+                        <div className="text-[13px] text-slate-500 truncate max-w-[140px] sm:max-w-[240px]">
                           {lead.email}
                         </div>
                       </td>
@@ -609,7 +627,7 @@ export function LeadsView() {
 
                       {/* Source */}
                       <td className="py-3.5 px-4 hidden md:table-cell">
-                        <span className="font-mono text-[11px] text-slate-500">
+                        <span className="font-mono text-[13px] text-slate-500">
                           {lead.source}
                         </span>
                       </td>
@@ -619,31 +637,32 @@ export function LeadsView() {
                         className="py-3.5 px-4 relative"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="relative inline-block">
-                          <button
+                        <div data-lead-menu className="relative inline-block">
+                          <button aria-label="Click to change lead status"
                             type="button"
                             onClick={() => {
                               setOpenActionMenuId(null);
                               setOpenStatusMenuId(isStatusMenuOpen ? null : lead.id);
                             }}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${badge.bg}`}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[13px] font-semibold border transition-all cursor-pointer ${badge.bg}`}
                             title="Click to change lead status"
+                            aria-expanded={isStatusMenuOpen}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
                             <span>{lead.status}</span>
-                            <ChevronDown className="w-3 h-3 text-slate-400 opacity-60 group-hover:opacity-100" />
+                            <ChevronDown className="w-3 h-3 text-slate-500 opacity-60 group-hover:opacity-100" />
                           </button>
 
                           {/* Status Popover Dropdown */}
                           {isStatusMenuOpen && (
-                            <div className="absolute left-0 mt-1 w-32 rounded-xl bg-white border border-slate-200 shadow-xl py-1 z-30 animate-in fade-in duration-100">
+                            <div className="absolute right-0 sm:left-0 sm:right-auto mt-1 w-32 rounded-xl bg-white border border-slate-200 shadow-xl py-1 z-30 animate-in fade-in duration-100">
                               {(["New", "Contacted", "Qualified", "Archived"] as LeadStatus[]).map(
                                 (st) => (
                                   <button
                                     key={st}
                                     type="button"
                                     onClick={() => handleUpdateStatus(lead.id, st)}
-                                    className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer ${
+                                    className={`w-full text-left px-3 py-1.5 text-[13px] flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer ${
                                       lead.status === st
                                         ? "text-blue-700 font-semibold bg-blue-50/60"
                                         : "text-slate-700"
@@ -664,24 +683,25 @@ export function LeadsView() {
                       {/* Received Date */}
                       <td
                         suppressHydrationWarning
-                        className="py-3.5 px-4 text-right font-mono text-[11px] text-slate-400 whitespace-nowrap"
+                        className="py-3.5 px-4 text-right font-mono text-[13px] text-slate-500 whitespace-nowrap hidden sm:table-cell"
                       >
                         <FormattedDate date={lead.receivedAt} format="both" />
                       </td>
 
                       {/* Row Action Menu */}
                       <td
-                        className="py-3.5 px-4 text-right relative"
+                        className="py-3.5 px-4 text-right relative hidden sm:table-cell"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="relative inline-block text-left">
+                        <div data-lead-menu className="relative inline-block text-left">
                           <button
                             type="button"
+                            aria-expanded={isActionMenuOpen}
                             onClick={() => {
                               setOpenStatusMenuId(null);
                               setOpenActionMenuId(isActionMenuOpen ? null : lead.id);
                             }}
-                            className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                            className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
                             aria-label="Lead actions"
                           >
                             <MoreVertical className="w-4 h-4" />
@@ -696,18 +716,18 @@ export function LeadsView() {
                                   setSelectedLeadId(lead.id);
                                   setOpenActionMenuId(null);
                                 }}
-                                className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:text-blue-600 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
+                                className="w-full text-left px-3 py-2 text-[13px] text-slate-700 hover:text-blue-600 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
                               >
-                                <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                                <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
                                 <span>View Details</span>
                               </button>
 
                               <button
                                 type="button"
                                 onClick={(e) => handleCopyEmail(lead.email, e)}
-                                className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:text-blue-600 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
+                                className="w-full text-left px-3 py-2 text-[13px] text-slate-700 hover:text-blue-600 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
                               >
-                                <Copy className="w-3.5 h-3.5 text-slate-400" />
+                                <Copy className="w-3.5 h-3.5 text-slate-500" />
                                 <span>Copy Email</span>
                               </button>
 
@@ -717,7 +737,7 @@ export function LeadsView() {
                                 <button
                                   type="button"
                                   onClick={() => handleUpdateStatus(lead.id, "Contacted")}
-                                  className="w-full text-left px-3 py-2 text-xs text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
+                                  className="w-full text-left px-3 py-2 text-[13px] text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" />
                                   <span>Mark Contacted</span>
@@ -728,7 +748,7 @@ export function LeadsView() {
                                 <button
                                   type="button"
                                   onClick={() => handleUpdateStatus(lead.id, "New")}
-                                  className="w-full text-left px-3 py-2 text-xs text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
+                                  className="w-full text-left px-3 py-2 text-[13px] text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
                                 >
                                   <Sparkles className="w-3.5 h-3.5" />
                                   <span>Mark New</span>
@@ -743,7 +763,7 @@ export function LeadsView() {
                                   setOpenActionMenuId(null);
                                   setDeleteTarget({ type: "single", lead });
                                 }}
-                                className="w-full text-left px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
+                                className="w-full text-left px-3 py-2 text-[13px] text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                                 <span>Delete Lead</span>
@@ -761,10 +781,10 @@ export function LeadsView() {
         </div>
 
         {/* Pagination & Count Bar */}
-        <div className="p-3.5 sm:p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 flex-wrap gap-2">
+        <div className="p-3.5 sm:p-4 border-t border-slate-100 flex items-center justify-between text-[13px] text-slate-500 flex-wrap gap-2">
           {/* Showing Count & Per Page Selector */}
           <div className="flex items-center gap-3">
-            <div className="font-mono text-[11px]">
+            <div className="font-mono text-[13px]">
               Showing{" "}
               <span className="text-slate-900 font-semibold">
                 {filteredLeads.length > 0
@@ -779,7 +799,7 @@ export function LeadsView() {
               leads
             </div>
 
-            <div className="hidden sm:flex items-center gap-1.5 font-mono text-[11px]">
+            <div className="hidden sm:flex items-center gap-1.5 font-mono text-[13px]">
               <span>Per page:</span>
               <select
                 value={pageSize}
@@ -787,7 +807,7 @@ export function LeadsView() {
                   setPageSize(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-[11px] focus:outline-none cursor-pointer"
+                className="px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-[13px] focus:outline-none cursor-pointer"
               >
                 {PAGE_SIZE_OPTIONS.map((size) => (
                   <option key={size} value={size}>
@@ -810,7 +830,7 @@ export function LeadsView() {
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <span className="px-2 font-mono text-[11px] text-slate-600 font-medium">
+            <span className="px-2 font-mono text-[13px] text-slate-600 font-medium">
               Page {safePage} of {totalPages}
             </span>
 
@@ -829,8 +849,8 @@ export function LeadsView() {
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-2xl text-slate-900 animate-in zoom-in-95 duration-150">
+        <DialogLayer label="Delete leads" onClose={() => { if (!isDeleting) setDeleteTarget(null); }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-2xl text-slate-900 animate-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3 mb-3">
               <span className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-600 flex items-center justify-center flex-none">
                 <AlertTriangle className="w-5 h-5" />
@@ -841,7 +861,7 @@ export function LeadsView() {
                     ? "Delete Lead"
                     : "Delete Selected Leads"}
                 </h3>
-                <p className="text-[11.5px] text-slate-500">
+                <p className="text-[13px] text-slate-500">
                   {deleteTarget.type === "single"
                     ? `Are you sure you want to remove "${deleteTarget.lead.name}"?`
                     : `Are you sure you want to delete ${deleteTarget.ids.length} selected lead(s)?`}
@@ -849,11 +869,11 @@ export function LeadsView() {
               </div>
             </div>
 
-            <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+            <p className="text-[13px] text-slate-500 mb-4 leading-relaxed">
               This action permanently deletes the submission record and cannot be undone.
             </p>
 
-            <div className="flex items-center justify-end gap-2 text-xs">
+            <div className="flex items-center justify-end gap-2 text-[13px]">
               <button
                 type="button"
                 disabled={isDeleting}
@@ -869,7 +889,7 @@ export function LeadsView() {
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors cursor-pointer disabled:opacity-60 shadow-sm shadow-rose-500/20"
               >
                 {isDeleting ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span className="sr-only">Working</span>
                 ) : (
                   <Trash2 className="w-3.5 h-3.5" />
                 )}
@@ -877,7 +897,7 @@ export function LeadsView() {
               </button>
             </div>
           </div>
-        </div>
+        </DialogLayer>
       )}
     </div>
   );

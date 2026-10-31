@@ -1,26 +1,23 @@
 "use client";
 
+import { DialogLayer } from "@/shared/components/dialog-layer";
+import styles from "./form-modal.module.css";
 import React, { useState } from "react";
 import { useDashboard } from "../context/dashboard-context";
-import { X, Building2, Sparkles, Loader2 } from "lucide-react";
+import { X } from "lucide-react";
 
 interface CreateOrganizationModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const TONES = [
-  { id: "zinc", label: "Zinc", bg: "bg-slate-700", text: "text-slate-200" },
-  { id: "blue", label: "Blue", bg: "bg-blue-600", text: "text-blue-300" },
-  { id: "emerald", label: "Emerald", bg: "bg-emerald-600", text: "text-emerald-300" },
-  { id: "indigo", label: "Indigo", bg: "bg-indigo-600", text: "text-indigo-300" },
-];
+const TONES = [{ id: "zinc", label: "Neutral", bg: "bg-slate-700" }, { id: "slate", label: "Slate", bg: "bg-slate-500" }, { id: "emerald", label: "Green", bg: "bg-emerald-600" }, { id: "white", label: "White", bg: "bg-white" }];
 
 export function CreateOrganizationModal({
   isOpen,
   onClose,
 }: CreateOrganizationModalProps) {
-  const { createOrganizationAsync, addToast } = useDashboard();
+  const { createOrganizationAsync, addToast } = useDashboard(["createOrganizationAsync","addToast"]);
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -81,156 +78,5 @@ export function CreateOrganizationModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
-        onClick={onClose}
-      />
-
-      <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl text-slate-900 z-10 animate-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-          <div className="flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200/80 grid place-items-center text-blue-600">
-              <Building2 className="w-4 h-4" />
-            </span>
-            <div>
-              <h3 className="text-base font-heading font-bold text-slate-900">
-                New Organization
-              </h3>
-              <p className="text-xs text-slate-500">
-                Create a dedicated workspace with its own forms and API keys.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 p-1 rounded-lg transition-colors cursor-pointer"
-            aria-label="Close dialog"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Organization / Brand Name
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="e.g. Acme Studio, Beta Ventures"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 transition-all font-sans"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Workspace Slug
-            </label>
-            <div className="flex items-center rounded-xl bg-slate-50/80 border border-slate-200/90 px-3 py-2.5 focus-within:bg-white focus-within:border-blue-600 focus-within:ring-3 focus-within:ring-blue-500/10 transition-all">
-              <span className="text-xs text-slate-400 font-mono select-none">
-                infraly.com/w/
-              </span>
-              <input
-                type="text"
-                required
-                value={slug}
-                onChange={(e) => {
-                  setHasEditedSlug(true);
-                  setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
-                }}
-                placeholder="acme-studio"
-                className="w-full bg-transparent text-xs text-slate-900 placeholder-slate-400 font-mono focus:outline-none pl-0.5"
-              />
-            </div>
-          </div>
-
-          {/* Tone picker */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Avatar Accent Tone
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {TONES.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setAvatarTone(t.id)}
-                  className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs transition-all cursor-pointer ${
-                    avatarTone === t.id
-                      ? "border-blue-600 bg-blue-50 text-blue-900 font-semibold shadow-2xs"
-                      : "border-slate-200 bg-slate-50/80 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                  }`}
-                >
-                  <span className={`w-2.5 h-2.5 rounded-full ${t.bg}`} />
-                  <span>{t.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Plan Tier */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Workspace Tier
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {["Free Tier", "Team Workspace"].map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPlan(p)}
-                  className={`p-2.5 rounded-xl border text-left text-xs transition-all cursor-pointer ${
-                    plan === p
-                      ? "border-blue-600 bg-blue-50/80 text-blue-950 font-semibold ring-2 ring-blue-500/10 shadow-2xs"
-                      : "border-slate-200 bg-slate-50/60 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                  }`}
-                >
-                  <div className="font-semibold text-slate-900">{p}</div>
-                  <div className="text-[10.5px] text-slate-500 mt-0.5">
-                    {p === "Free Tier" ? "Unlimited test forms" : "Collaborative pipeline"}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-3.5 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || !name.trim()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-sm shadow-blue-500/20 active:scale-[0.99] cursor-pointer disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Creating Workspace...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Create Workspace</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+  return <DialogLayer label="Create workspace" onClose={()=>{if(!isSubmitting)onClose();}} className={styles.overlay}><div className={styles.backdrop} aria-hidden="true" onClick={()=>{if(!isSubmitting)onClose();}}/><div className={styles.createDialog}><header className={styles.header}><div><h2>Create a workspace</h2><p>A separate space for a client or project.</p></div><button type="button" aria-label="Close dialog" disabled={isSubmitting} onClick={onClose}><X size={19}/></button></header><form className={styles.form} onSubmit={handleSubmit}><div className={styles.body}><div className={styles.field}><label htmlFor="new-workspace-name">Workspace name</label><input id="new-workspace-name" value={name} onChange={event=>handleNameChange(event.target.value)} maxLength={100} required placeholder="Acme Studio"/></div><div className={styles.field}><label htmlFor="new-workspace-slug">Identifier</label><input id="new-workspace-slug" required maxLength={60} value={slug} onChange={event=>{setHasEditedSlug(true);setSlug(event.target.value.toLowerCase().replace(/[^a-z0-9-]/g,""));}} placeholder="acme-studio"/><p>A short name to identify this workspace.</p></div><details className={styles.details}><summary>Workspace options</summary><div className={styles.detailContent}><fieldset className={styles.fieldset}><legend>Accent color</legend><div className={styles.tonePicker}>{TONES.map(tone=><button key={tone.id} type="button" aria-pressed={avatarTone===tone.id} onClick={()=>setAvatarTone(tone.id)}><span className={tone.bg}/>{tone.label}</button>)}</div></fieldset><fieldset className={styles.fieldset}><legend>Workspace type</legend><div className={styles.environmentGrid}>{["Free Tier","Team Workspace"].map(value=><button key={value} type="button" aria-pressed={plan===value} onClick={()=>setPlan(value)} className={plan===value?styles.selectedEnvironment:styles.environment}><span>{value==="Free Tier"?"Personal project":"Client or team"}</span></button>)}</div></fieldset></div></details></div><footer className={styles.footer}><button type="button" className={styles.secondaryButton} onClick={onClose} disabled={isSubmitting}>Cancel</button><button type="submit" className={styles.primaryButton} disabled={isSubmitting||!name.trim()}>{isSubmitting?"Creating...":"Create workspace"}</button></footer></form></div></DialogLayer>;
 }

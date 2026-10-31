@@ -1,6 +1,6 @@
 import http from "http";
 import { app } from "../src/app";
-import { prisma } from "../src/prisma";
+import { prisma, sqlTable } from "../src/prisma";
 import { formsAndApiService } from "../src/modules/forms & api/formsAndApi.services";
 import { leadsService } from "../src/modules/leads/leads.services";
 
@@ -179,7 +179,7 @@ async function runRegressionTests() {
     // Concurrently decrement leadCount by 1 ten times
     const decrementPromises = Array.from({ length: 10 }, () =>
       prisma.$executeRaw`
-        UPDATE "forms"
+        UPDATE ${sqlTable("forms")}
         SET "leadCount" = GREATEST(0, "leadCount" - 1)
         WHERE "id" = ${formA.id}
       `
@@ -191,7 +191,7 @@ async function runRegressionTests() {
 
     // Decrement once more to verify GREATEST(0, ...) never underflows below 0
     await prisma.$executeRaw`
-      UPDATE "forms"
+      UPDATE ${sqlTable("forms")}
       SET "leadCount" = GREATEST(0, "leadCount" - 1)
       WHERE "id" = ${formA.id}
     `;

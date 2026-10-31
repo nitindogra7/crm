@@ -277,10 +277,10 @@ export function TryIt({
               <form onSubmit={handleSubmitForm} className="p-4 sm:p-5 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                    <label htmlFor="try-it-field-19" className="block text-[11px] font-medium text-zinc-400 mb-1">
                       Full Name
                     </label>
-                    <input
+                    <input id="try-it-field-19"
                       type="text"
                       value={formName}
                       onChange={(e) => setFormName(e.target.value)}
@@ -290,10 +290,10 @@ export function TryIt({
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                    <label htmlFor="try-it-field-20" className="block text-[11px] font-medium text-zinc-400 mb-1">
                       Email Address
                     </label>
-                    <input
+                    <input id="try-it-field-20"
                       type="email"
                       value={formEmail}
                       onChange={(e) => setFormEmail(e.target.value)}
@@ -306,10 +306,10 @@ export function TryIt({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                    <label htmlFor="try-it-field-21" className="block text-[11px] font-medium text-zinc-400 mb-1">
                       Company
                     </label>
-                    <input
+                    <input id="try-it-field-21"
                       type="text"
                       value={formCompany}
                       onChange={(e) => setFormCompany(e.target.value)}
@@ -318,10 +318,10 @@ export function TryIt({
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                    <label htmlFor="try-it-field-22" className="block text-[11px] font-medium text-zinc-400 mb-1">
                       Budget / Timeline
                     </label>
-                    <input
+                    <input id="try-it-field-22"
                       type="text"
                       value={formBudget}
                       onChange={(e) => setFormBudget(e.target.value)}
@@ -332,10 +332,10 @@ export function TryIt({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                  <label htmlFor="try-it-field-23" className="block text-[11px] font-medium text-zinc-400 mb-1">
                     Message / Project Details
                   </label>
-                  <textarea
+                  <textarea id="try-it-field-23"
                     rows={2}
                     value={formMessage}
                     onChange={(e) => setFormMessage(e.target.value)}
@@ -457,7 +457,7 @@ export function TryIt({
                         {item.reason}
                       </span>
                       {item.status === "quarantined" && (
-                        <button
+                        <button aria-label="Restore lead to verified list"
                           type="button"
                           onClick={() => handleRescueItem(item.id)}
                           className="text-[10px] px-2 py-0.5 rounded bg-zinc-800 hover:bg-emerald-500/20 text-zinc-300 hover:text-emerald-300 border border-zinc-700 transition-colors cursor-pointer font-medium"

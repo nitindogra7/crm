@@ -5,14 +5,14 @@ import { useDashboard } from "../context/dashboard-context";
 import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
 
 export function ToastNotificationContainer() {
-  const { toasts, removeToast } = useDashboard();
+  const { toasts, removeToast } = useDashboard(["toasts","removeToast"]);
 
   if (toasts.length === 0) return null;
 
   return (
     <div
       aria-live="polite"
-      className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none"
+      className="fixed bottom-4 right-4 left-4 sm:left-auto z-[100] flex flex-col gap-2.5 sm:max-w-sm pointer-events-none"
     >
       {toasts.map((toast) => {
         const isSuccess = toast.variant === "success" || !toast.variant;
@@ -21,6 +21,7 @@ export function ToastNotificationContainer() {
         return (
           <div
             key={toast.id}
+            role={isError ? "alert" : "status"}
             className="pointer-events-auto flex items-start gap-3 p-3.5 rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-xl shadow-[0_12px_36px_rgba(0,0,0,0.1)] text-slate-900 text-xs transition-all animate-in fade-in slide-in-from-bottom-2 duration-200"
           >
             <div className="flex-none pt-0.5">

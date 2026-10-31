@@ -1,13 +1,16 @@
 "use client";
 
+import { DialogLayer } from "@/shared/components/dialog-layer";
+import styles from "./form-modal.module.css";
+import Link from "@/shared/components/app-link";
 import React, { useState, useEffect } from "react";
 import { useDashboard } from "../context/dashboard-context";
 import { FormField } from "../types";
 import { WorkspaceEnvironment } from "@/shared/types";
-import { X, Plus, Trash2, Loader2, FlaskConical, Globe, AlertCircle } from "lucide-react";
+import { X, Plus, Trash2, FlaskConical, ShieldCheck } from "lucide-react";
 
 export function CreateFormModal() {
-  const { isCreateFormOpen, setIsCreateFormOpen, createFormAsync, currentEnvironment, workspace, addToast } = useDashboard();
+  const { isCreateFormOpen, setIsCreateFormOpen, createFormAsync, currentEnvironment, workspace, addToast } = useDashboard(["isCreateFormOpen","setIsCreateFormOpen","createFormAsync","currentEnvironment","workspace","addToast"]);
 
   const [name, setName] = useState("");
   const [redirectUrl, setRedirectUrl] = useState("");
@@ -58,6 +61,7 @@ export function CreateFormModal() {
   const handleAddField = () => {
     const clean = newFieldName.trim().toLowerCase().replace(/[^a-z0-9_]+/g, "_");
     if (!clean) return;
+    if (fields.some(field => field.name === clean)) { addToast("Field already exists", "Choose a different field name.", "error"); return; }
 
     const newField: FormField = {
       id: `f_${Date.now()}`,
@@ -102,262 +106,21 @@ export function CreateFormModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
-        onClick={() => setIsCreateFormOpen(false)}
-      />
-
-      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl text-slate-900 z-10 max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-150">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100 flex-none">
-          <div>
-            <h3 className="text-lg font-heading font-bold tracking-tight text-slate-900">
-              Create Endpoint Form
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Generate a unique endpoint URL for your website or app.
-            </p>
+    <DialogLayer label="Create form" onClose={() => { if (!isSubmitting) setIsCreateFormOpen(false); }} className={styles.overlay}>
+      <div className={styles.backdrop} aria-hidden="true" onClick={() => { if (!isSubmitting) setIsCreateFormOpen(false); }} />
+      <div className={styles.createDialog}>
+        <header className={styles.header}><div><h2>Create a form</h2><p>Give your website a place to send submissions.</p></div><button type="button" aria-label="Close dialog" disabled={isSubmitting} onClick={() => setIsCreateFormOpen(false)}><X size={19} /></button></header>
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className={styles.body}>
+            <div className={styles.field}><label htmlFor="new-form-name">Form name</label><input id="new-form-name" required maxLength={100} value={name} onChange={event => setName(event.target.value)} placeholder="Contact form" /></div>
+            <fieldset className={styles.fieldset}><legend>Environment</legend><div className={styles.environmentGrid}>{([{id:"development",label:"Development",description:"For testing and previews.",icon:FlaskConical},{id:"production",label:"Production",description:"For your live website.",icon:ShieldCheck}] as const).map(option => {const Icon=option.icon;return <button type="button" key={option.id} aria-pressed={environment===option.id} className={environment===option.id?styles.selectedEnvironment:styles.environment} onClick={()=>setEnvironment(option.id)}><span><Icon size={16}/>{option.label}</span><p>{option.description}</p></button>})}</div></fieldset>
+            {environment === "production" && !workspace.productionOrigin && <p className={styles.notice}>Add your website origin before accepting live submissions. <Link href="/dashboard/settings?tab=origins" onClick={()=>setIsCreateFormOpen(false)}>Open settings</Link></p>}
+            <details className={styles.details}><summary>Form fields <span>{fields.length} configured</span></summary><div className={styles.detailContent}><ul className={styles.fieldList}>{fields.map(field=><li key={field.id}><div><strong>{field.label}</strong><span>{field.name} &middot; {field.type}</span></div><button type="button" aria-label={"Required: "+field.label} aria-pressed={field.required} className={field.required?styles.required:styles.optional} onClick={()=>handleToggleRequired(field.id)}>{field.required?"Required":"Optional"}</button><button type="button" className={styles.iconButton} aria-label={"Remove "+field.label} onClick={()=>handleRemoveField(field.id)}><Trash2 size={14}/></button></li>)}</ul><div className={styles.addField}><input aria-label="Custom field name" value={newFieldName} onChange={event=>setNewFieldName(event.target.value)} onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();handleAddField();}}} placeholder="Field name"/><select aria-label="Custom field type" value={newFieldType} onChange={event=>setNewFieldType(event.target.value as FormField["type"])}><option value="text">Text</option><option value="email">Email</option><option value="textarea">Text area</option><option value="tel">Phone</option><option value="number">Number</option></select><button type="button" className={styles.secondaryButton} aria-label="Add custom field" disabled={!newFieldName.trim()} onClick={handleAddField}><Plus size={16}/></button></div></div></details>
+            <details className={styles.details}><summary>Advanced options</summary><div className={styles.detailContent}><div className={styles.field}><label htmlFor="new-form-redirect">Thank-you page URL</label><input id="new-form-redirect" value={redirectUrl} onChange={event=>setRedirectUrl(event.target.value)} placeholder="https://example.com/thank-you"/><p>Optional. Redirect visitors after a native HTML form submission.</p></div><div className={styles.field}><label htmlFor="new-form-domains">Allowed domains</label><input id="new-form-domains" value={allowedDomains} onChange={event=>setAllowedDomains(event.target.value)} placeholder="example.com, app.example.com"/><p>Separate domains with commas. Leave empty to use workspace rules.</p></div></div></details>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsCreateFormOpen(false)}
-            className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
-            aria-label="Close dialog"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto py-4 space-y-4 text-xs">
-          {/* Form Name */}
-          <div>
-            <label className="block text-slate-700 font-semibold mb-1.5">
-              Form Name <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Agency Contact Form, Pricing Inquiry..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-sans transition-all"
-            />
-            <p className="text-[11px] text-slate-400 mt-1">
-              Used to identify submissions in your inbox.
-            </p>
-          </div>
-
-          {/* Target Environment */}
-          <div>
-            <label className="block text-slate-700 font-semibold mb-1.5">
-              Target Environment
-            </label>
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => setEnvironment("development")}
-                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  environment === "development"
-                    ? "bg-amber-50/70 border-amber-300 ring-2 ring-amber-500/20 shadow-xs"
-                    : "bg-slate-50/70 border-slate-200/90 hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-semibold text-xs text-amber-900">
-                    <FlaskConical className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Development</span>
-                  </div>
-                  {environment === "development" && (
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                  )}
-                </div>
-                <p className="text-[11px] text-slate-500 leading-snug">
-                  Permissive CORS for localhost and test previews.
-                </p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setEnvironment("production")}
-                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  environment === "production"
-                    ? "bg-purple-50/70 border-purple-300 ring-2 ring-purple-500/20 shadow-xs"
-                    : "bg-slate-50/70 border-slate-200/90 hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-semibold text-xs text-purple-900">
-                    <Globe className="w-3.5 h-3.5 text-purple-600" />
-                    <span>Production</span>
-                  </div>
-                  {environment === "production" && (
-                    <span className="w-2 h-2 rounded-full bg-purple-600" />
-                  )}
-                </div>
-                <p className="text-[11px] text-slate-500 leading-snug">
-                  Origin-verified endpoint. Strict CORS protection.
-                </p>
-              </button>
-            </div>
-
-            {environment === "production" && !workspace?.productionOrigin && (
-              <div className="mt-2 p-2.5 rounded-xl border border-amber-200/80 bg-amber-50/60 flex items-start gap-2 text-[11px] text-amber-800 leading-relaxed">
-                <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Origin not configured:</strong> Your workspace has no production origin set yet. Submissions to this form from client browsers will be blocked until configured in Workspace Settings.
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Optional Redirect URL */}
-          <div>
-            <label className="block text-slate-700 font-semibold mb-1.5">
-              Redirect URL <span className="text-slate-400 font-normal">(optional)</span>
-            </label>
-            <input
-              type="url"
-              value={redirectUrl}
-              onChange={(e) => setRedirectUrl(e.target.value)}
-              placeholder="https://yoursite.com/thank-you"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-sans transition-all"
-            />
-            <p className="text-[11px] text-slate-400 mt-1">
-              Visitors will be redirected here after standard browser form submissions.
-            </p>
-          </div>
-
-          {/* Allowed Domains (Spam & Origin Shield) */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-slate-700 font-semibold">
-                Allowed Domains (Origin Shield) <span className="text-slate-400 font-normal">(optional)</span>
-              </label>
-              <span className="text-[10.5px] font-mono text-slate-400">Comma-separated</span>
-            </div>
-            <input
-              type="text"
-              value={allowedDomains}
-              onChange={(e) => setAllowedDomains(e.target.value)}
-              placeholder="e.g. mycompany.com, app.mycompany.com"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-sans transition-all"
-            />
-            <p className="text-[11px] text-slate-400 mt-1">
-              Restrict browser form submissions to specific domains. Leave empty to allow from any domain.
-            </p>
-          </div>
-
-          {/* Field Configuration */}
-          <div className="pt-2">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-slate-700 font-semibold">Field Schema & Validation</label>
-              <span className="text-[11px] font-mono text-slate-400">
-                {fields.length} configured fields
-              </span>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-slate-50/50 divide-y divide-slate-100 overflow-hidden shadow-2xs">
-              {fields.map((field) => (
-                <div
-                  key={field.id}
-                  className="p-3 flex items-center justify-between gap-3 text-xs"
-                >
-                  <div className="min-w-0">
-                    <span className="font-mono text-slate-900 font-semibold block truncate">
-                      {field.name}
-                    </span>
-                    <span className="text-[11px] text-slate-500">
-                      {field.label} · {field.type}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-none">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleRequired(field.id)}
-                      className={`px-2.5 py-0.5 rounded text-[10.5px] font-mono border font-semibold transition-colors cursor-pointer ${
-                        field.required
-                          ? "bg-blue-50 text-blue-700 border-blue-200/80"
-                          : "bg-white text-slate-500 border-slate-200 hover:text-slate-800"
-                      }`}
-                    >
-                      {field.required ? "Required" : "Optional"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveField(field.id)}
-                      className="text-slate-400 hover:text-rose-600 p-1 transition-colors cursor-pointer"
-                      title="Remove field"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Add Custom Field */}
-            <div className="mt-2.5 flex items-center gap-2">
-              <input
-                type="text"
-                value={newFieldName}
-                onChange={(e) => setNewFieldName(e.target.value)}
-                placeholder="Add custom field (e.g. phone, budget)..."
-                className="flex-1 px-3 py-1.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 transition-all"
-              />
-              <select
-                value={newFieldType}
-                onChange={(e) => setNewFieldType(e.target.value as FormField["type"])}
-                className="px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 focus:outline-none cursor-pointer"
-              >
-                <option value="text">text</option>
-                <option value="email">email</option>
-                <option value="textarea">textarea</option>
-                <option value="tel">tel</option>
-                <option value="number">number</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleAddField}
-                disabled={!newFieldName.trim()}
-                className="px-2.5 py-1.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-xs text-blue-700 disabled:opacity-40 transition-colors cursor-pointer font-semibold"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Footer Submit */}
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
-            <button
-              type="button"
-              onClick={() => setIsCreateFormOpen(false)}
-              disabled={isSubmitting}
-              className="px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50 font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!name.trim() || isSubmitting}
-              className="min-h-[38px] px-5 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold text-white whitespace-nowrap bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all disabled:opacity-40 cursor-pointer"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Creating Form...</span>
-                </>
-              ) : (
-                <span>Create Form</span>
-              )}
-            </button>
-          </div>
+          <footer className={styles.footer}><button type="button" className={styles.secondaryButton} disabled={isSubmitting} onClick={()=>setIsCreateFormOpen(false)}>Cancel</button><button type="submit" className={styles.primaryButton} disabled={!name.trim()||isSubmitting}>{isSubmitting?"Creating...":"Create form"}</button></footer>
         </form>
       </div>
-    </div>
+    </DialogLayer>
   );
 }

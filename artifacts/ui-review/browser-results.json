@@ -1,0 +1,16 @@
+{
+  "stage": "final",
+  "responsive": {
+    "name": "Responsive layout: all six dashboard views, docs and home at 320/390/768/1440px",
+    "passed": true,
+    "detail": {
+      "combinations": 32,
+      "failures": []
+    }
+  },
+  "interactionChecks": {
+    "passed": 16,
+    "total": 16
+  },
+  "pageErrors": []
+}

@@ -45,33 +45,29 @@ export function matchesAllowedOrigin(
 ): boolean {
   if (!requestOriginOrReferer || !allowedOriginPattern) return false;
 
-  const normalizedRequest = normalizeOrigin(requestOriginOrReferer);
-  const normalizedAllowed = normalizeOrigin(allowedOriginPattern);
-
-  // Exact protocol + domain + port match
-  if (normalizedRequest === normalizedAllowed) {
-    return true;
+  let request: URL;
+  try {
+    request = new URL(requestOriginOrReferer);
+    if (!["http:", "https:"].includes(request.protocol) || request.username || request.password) {
+      return false;
+    }
+  } catch {
+    return false;
   }
 
-  const reqHost = extractHostname(requestOriginOrReferer);
-  const allowedHost = extractHostname(allowedOriginPattern);
+  const allowed = allowedOriginPattern.trim().toLowerCase();
+  if (allowed === "*") return true;
 
-  if (allowedHost === "*" || allowedOriginPattern === "*") {
-    return true;
+  // A configured URL includes its scheme and port in the allowlist.
+  if (/^https?:\/\//.test(allowed)) {
+    return request.origin.toLowerCase() === normalizeOrigin(allowed);
   }
 
-  // Exact hostname match
-  if (reqHost === allowedHost) {
-    return true;
-  }
-
-  // Subdomain wildcard match (e.g. *.example.com matches sub.example.com)
-  if (allowedHost.startsWith("*.")) {
-    const rootDomain = allowedHost.slice(2);
-    return reqHost.endsWith(`.${rootDomain}`) || reqHost === rootDomain;
-  }
-
-  return false;
+  const hostname = request.hostname.toLowerCase();
+  const allowedHost = extractHostname(allowed);
+  const rootDomain = allowedHost.startsWith("*.") ? allowedHost.slice(2) : allowedHost;
+  if (!rootDomain) return false;
+  return hostname === rootDomain || hostname.endsWith(`.${rootDomain}`);
 }
 
 /**
@@ -85,6 +81,8 @@ export async function dynamicFormCorsMiddleware(
   const originHeader = (Array.isArray(req.headers.origin) ? req.headers.origin[0] : req.headers.origin) || "";
   const refererHeader = (Array.isArray(req.headers.referer) ? req.headers.referer[0] : req.headers.referer) || "";
   const incomingOrigin = originHeader || refererHeader;
+  res.vary("Origin");
+  res.setHeader("Cache-Control", "no-store");
 
   // Extract form identifier from params or URL path
   // Routes: /api/forms-and-api/f/:slug, /api/forms/f/:slug, /api/v1/f/:slug, /api/f/:slug,
@@ -107,6 +105,9 @@ export async function dynamicFormCorsMiddleware(
   const apiKey =
     (req.headers["x-api-key"] as string) ||
     (req.body?.apiKey as string) ||
+    (req.body?._api_key as string) ||
+    (req.query.api_key as string) ||
+    (req.query.apiKey as string) ||
     (req.headers.authorization?.replace(/^Bearer\s+/i, ""));
 
   try {
@@ -243,7 +244,6 @@ export async function dynamicFormCorsMiddleware(
     return next();
   } catch (error) {
     console.error("Error in dynamicFormCorsMiddleware:", error);
-    // On unexpected error in middleware, allow fallback to express errorHandler
-    return next();
+    return next(error);
   }
 }

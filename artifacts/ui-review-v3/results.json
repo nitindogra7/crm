@@ -1,0 +1,63 @@
+{
+  "results": [
+    {
+      "name": "All settings sections and forms tabs fit mobile and desktop",
+      "passed": true,
+      "detail": "32 viewport/tab combinations"
+    },
+    {
+      "name": "Settings is an icon beside the profile, with no main-nav Settings or Website link",
+      "passed": true,
+      "detail": {
+        "text": "",
+        "footer": true,
+        "website": false
+      }
+    },
+    {
+      "name": "Settings section navigation and browser Back stay synchronized",
+      "passed": true
+    },
+    {
+      "name": "Website-origin check is collapsed by default and gives a concise result",
+      "passed": true
+    },
+    {
+      "name": "Notification switches remain usable on a touch-sized screen",
+      "passed": true
+    },
+    {
+      "name": "Forms sections support direct links and local tab navigation",
+      "passed": true
+    },
+    {
+      "name": "Form details: Overview, Fields, Code and Test tabs align inside mobile dialog",
+      "passed": true
+    },
+    {
+      "name": "Create-form dialog uses collapsed options, keyboard field creation, and a visible footer",
+      "passed": true
+    },
+    {
+      "name": "New workspace dialog follows the same field and footer alignment",
+      "passed": true
+    },
+    {
+      "name": "Forms and API-key empty states stay readable",
+      "passed": true
+    },
+    {
+      "name": "Landing Login targets dashboard on desktop and mobile; testimonial photos are gone",
+      "passed": true
+    },
+    {
+      "name": "Pricing cards show supported features with aligned actions",
+      "passed": true
+    },
+    {
+      "name": "Mobile settings selector keeps all sections accessible, and environment choices align",
+      "passed": true
+    }
+  ],
+  "errors": []
+}

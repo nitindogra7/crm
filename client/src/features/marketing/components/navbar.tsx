@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import Link from "@/shared/components/app-link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { marketingData } from "../data";
@@ -27,6 +27,7 @@ export function Navbar() {
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    if (!id.startsWith("#")) return;
     e.preventDefault();
     setMobileMenuOpen(false);
     const element = document.querySelector(id);
@@ -48,7 +49,7 @@ export function Navbar() {
       <div className="max-w-[1240px] mx-auto px-6 sm:px-8 flex items-center justify-between">
         {/* Left: Brand Logo & Navigation Links */}
         <div className="flex items-center gap-8 lg:gap-11">
-          <Link
+          <Link navigation
             href="/"
             className="flex items-center gap-2.5 text-slate-900 group transition-transform active:scale-95"
             aria-label={brand.ariaLabel}
@@ -73,28 +74,30 @@ export function Navbar() {
           {/* Desktop Navigation Links directly beside brand */}
           <nav className="hidden md:flex items-center gap-7 lg:gap-8 text-sm font-medium text-slate-700">
             {navbar.links.map((link) => (
-              <a
+              <Link navigation
                 key={link.label}
                 href={link.href}
                 onClick={(e) => handleNavClick(e, link.href)}
                 className="hover:text-slate-950 transition-colors py-1"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
         </div>
 
         {/* Right: Actions */}
         <div className="hidden md:flex items-center gap-4">
-          <Link
-            href="/sign-in"
+          <Link navigation
+            href="/dashboard"
+            prefetch={true}
             className="text-sm font-medium text-slate-700 hover:text-slate-950 transition-colors px-3 py-1.5"
           >
             {navbar.loginText}
           </Link>
-          <Link
+          <Link navigation
             href="/dashboard"
+            prefetch={true}
             className="px-5 py-2.5 rounded-full bg-[#2563eb] hover:bg-blue-700 text-white text-sm font-medium shadow-[0_4px_14px_rgba(37,99,235,0.35)] transition-all hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] active:scale-95 inline-flex items-center justify-center"
           >
             {navbar.ctaText}
@@ -107,6 +110,8 @@ export function Navbar() {
           onClick={() => setMobileMenuOpen((prev) => !prev)}
           className="md:hidden p-2 text-slate-700 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
           aria-label="Toggle menu"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="marketing-mobile-navigation"
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -114,27 +119,27 @@ export function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white/95 backdrop-blur-xl px-6 py-6 space-y-4 shadow-xl">
+        <div id="marketing-mobile-navigation" className="md:hidden max-h-[calc(100dvh-5rem)] overflow-y-auto bg-white/95 backdrop-blur-xl px-6 py-6 space-y-4 shadow-xl">
           <nav className="flex flex-col space-y-3 text-sm font-medium text-slate-700">
             {navbar.links.map((link) => (
-              <a
+              <Link navigation
                 key={link.label}
                 href={link.href}
                 onClick={(e) => handleNavClick(e, link.href)}
                 className="py-1 hover:text-blue-600"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
           <div className="pt-4 border-t border-slate-100 flex flex-col gap-3">
-            <Link
-              href="/sign-in"
+            <Link navigation
+              href="/dashboard"
               className="text-center py-2 text-sm font-medium text-slate-700 hover:text-slate-900"
             >
               {navbar.loginText}
             </Link>
-            <Link
+            <Link navigation
               href="/dashboard"
               onClick={() => setMobileMenuOpen(false)}
               className="w-full py-2.5 rounded-full bg-[#2563eb] hover:bg-blue-700 text-white text-sm font-semibold shadow-md shadow-blue-600/30 transition-all text-center block"

@@ -9,13 +9,12 @@ import {
   XCircle,
   RotateCcw,
   Search,
-  Loader2,
   ShieldCheck,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
 
 export function SpamShieldView() {
-  const { spam, forms, isLoading, setSelectedSpamId, rescueSpamLeadAsync, addToast } = useDashboard();
+  const { spam, forms, isLoading, setSelectedSpamId, rescueSpamLeadAsync, addToast } = useDashboard(["spam","forms","isLoading","setSelectedSpamId","rescueSpamLeadAsync","addToast"]);
 
   const [selectedDisposition, setSelectedDisposition] = useState<"all" | SpamDisposition>("all");
   const [selectedReason, setSelectedReason] = useState<string>("all");
@@ -92,32 +91,28 @@ export function SpamShieldView() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="dashboard-page-header flex flex-col xl:flex-row justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-[11px] font-mono font-semibold text-emerald-700 mb-2">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Automated Quarantine & Bot Defenses</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-slate-900">
-            Spam Shield Quarantine
+          <h1 className="text-2xl sm:text-3xl font-heading font-semibold tracking-tight text-slate-900">
+            Spam Shield
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-sans">
-            Review quarantined and rejected submissions caught by honeypots, disposable email filters, and rate limiters.
+          <p className="text-[13px] sm:text-sm text-slate-500 mt-1 font-sans">
+            Review flagged submissions and restore legitimate leads.
           </p>
         </div>
 
         {/* Quick Tally Cards */}
         <div className="flex items-center gap-2.5">
-          <div className="px-4 py-2.5 rounded-2xl border border-amber-200/80 bg-amber-50/60 text-xs shadow-xs">
-            <span className="text-amber-800 font-mono text-[10.5px] uppercase tracking-wider font-semibold block">
+          <div className="px-4 py-2.5 rounded-xl border border-amber-200/80 bg-amber-50/60 text-[13px] shadow-xs">
+            <span className="text-amber-800 text-xs font-semibold block">
               Quarantined
             </span>
             <span className="font-bold text-amber-700 text-sm tabular-nums font-heading">
               {quarantinedCount} items
             </span>
           </div>
-          <div className="px-4 py-2.5 rounded-2xl border border-rose-200/80 bg-rose-50/60 text-xs shadow-xs">
-            <span className="text-rose-800 font-mono text-[10.5px] uppercase tracking-wider font-semibold block">
+          <div className="px-4 py-2.5 rounded-xl border border-rose-200/80 bg-rose-50/60 text-[13px] shadow-xs">
+            <span className="text-rose-800 text-xs font-semibold block">
               Rejected
             </span>
             <span className="font-bold text-rose-700 text-sm tabular-nums font-heading">
@@ -128,29 +123,29 @@ export function SpamShieldView() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 bg-white space-y-3.5 shadow-xs">
+      <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200/80 bg-white space-y-3.5 shadow-xs">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search sender name, email, or message body..."
-              className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-sans transition-all"
+              placeholder="Search flagged submissions..."
+              className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-[13px] text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-sans transition-all"
             />
           </div>
 
           {/* Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[13px]">
             {/* Disposition Filter */}
             <select
               value={selectedDisposition}
               onChange={(e) =>
                 setSelectedDisposition(e.target.value as "all" | SpamDisposition)
               }
-              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[11.5px] cursor-pointer transition-all"
+              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[13px] cursor-pointer transition-all"
             >
               <option value="all">All Dispositions</option>
               <option value="Quarantined">Quarantined</option>
@@ -161,7 +156,7 @@ export function SpamShieldView() {
             <select
               value={selectedReason}
               onChange={(e) => setSelectedReason(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[11.5px] cursor-pointer transition-all"
+              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[13px] cursor-pointer transition-all"
             >
               <option value="all">All Detection Reasons</option>
               {allReasons.map((r) => (
@@ -175,7 +170,7 @@ export function SpamShieldView() {
             <select
               value={selectedForm}
               onChange={(e) => setSelectedForm(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[11.5px] cursor-pointer transition-all"
+              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[13px] cursor-pointer transition-all"
             >
               <option value="all">All Forms</option>
               {forms.map((f) => (
@@ -190,7 +185,7 @@ export function SpamShieldView() {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all whitespace-nowrap cursor-pointer shadow-2xs"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-[13px] font-semibold text-slate-600 hover:text-slate-900 transition-all whitespace-nowrap cursor-pointer shadow-2xs"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset</span>
@@ -200,15 +195,15 @@ export function SpamShieldView() {
       </div>
 
       {/* Spam Submissions Table */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-xs">
+      <div className="rounded-xl border border-slate-200/80 bg-white overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full text-left text-[13px] border-collapse">
             <thead>
-              <tr className="border-b border-slate-200/80 text-slate-500 font-semibold text-[11px] uppercase tracking-wider bg-slate-50/70">
-                <th className="py-3.5 px-4 font-semibold">Sender (Name & Email)</th>
+              <tr className="border-b border-slate-200/80 text-slate-500 font-semibold text-[13px] uppercase tracking-wider bg-slate-50/70">
+                <th className="py-3.5 px-4 font-semibold">Sender</th>
                 <th className="py-3.5 px-4 font-semibold hidden sm:table-cell">Form</th>
-                <th className="py-3.5 px-4 font-semibold">Detection Reason</th>
-                <th className="py-3.5 px-4 font-semibold">Disposition</th>
+                <th className="py-3.5 px-4 font-semibold hidden sm:table-cell">Detection Reason</th>
+                <th className="py-3.5 px-4 font-semibold hidden sm:table-cell">Disposition</th>
                 <th className="py-3.5 px-4 font-semibold text-right hidden md:table-cell">Received</th>
                 <th className="py-3.5 px-4 font-semibold text-right">Action</th>
               </tr>
@@ -223,7 +218,7 @@ export function SpamShieldView() {
                       </div>
                       <div className="space-y-1">
                         <p className="text-sm font-semibold text-slate-900">No spam records found</p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-[13px] text-slate-500">
                           Your forms are clean and protected. No quarantine backlog.
                         </p>
                       </div>
@@ -231,7 +226,7 @@ export function SpamShieldView() {
                         <button
                           type="button"
                           onClick={handleResetFilters}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-[13px] font-semibold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span>Reset filters</span>
@@ -249,9 +244,9 @@ export function SpamShieldView() {
                   >
                     <td className="py-3.5 px-4">
                       <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate max-w-[160px] sm:max-w-[200px]">
-                        {item.senderName}
-                      </div>
-                      <div className="text-[11px] text-slate-500 truncate max-w-[160px] sm:max-w-[200px] font-mono">
+                          <button type="button" className="max-w-full truncate text-left" onClick={(e) => { e.stopPropagation(); setSelectedSpamId(item.id); }}>{item.senderName}</button>
+                        </div>
+                      <div className="text-[13px] text-slate-500 truncate max-w-[160px] sm:max-w-[200px] font-mono">
                         {item.senderEmail}
                       </div>
                     </td>
@@ -275,13 +270,13 @@ export function SpamShieldView() {
                       </div>
                     </td>
 
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 hidden sm:table-cell">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-mono bg-slate-100 text-slate-700 border border-slate-200 font-medium">
                         {item.reason}
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 hidden sm:table-cell">
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold border ${
                           item.disposition === "Quarantined"
@@ -300,21 +295,21 @@ export function SpamShieldView() {
 
                     <td
                       suppressHydrationWarning
-                      className="py-3.5 px-4 text-right font-mono text-[11px] text-slate-400 whitespace-nowrap hidden md:table-cell"
+                      className="py-3.5 px-4 text-right font-mono text-[13px] text-slate-500 whitespace-nowrap hidden md:table-cell"
                     >
                       <FormattedDate date={item.receivedAt} format="both" />
                     </td>
 
                     <td className="py-3.5 px-4 text-right">
-                      <button
+                      <button aria-label="Move to inbox as New lead"
                         type="button"
                         onClick={(e) => handleRescueItem(e, item.id)}
                         disabled={rescuingId === item.id}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-[11px] transition-all cursor-pointer whitespace-nowrap shadow-2xs disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-[13px] transition-all cursor-pointer whitespace-nowrap shadow-2xs disabled:opacity-50"
                         title="Move to inbox as New lead"
                       >
                         {rescuingId === item.id ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span className="sr-only">Working</span>
                         ) : (
                           <RotateCcw className="w-3 h-3" />
                         )}

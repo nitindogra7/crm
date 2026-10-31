@@ -5,21 +5,36 @@ export async function apiFetch<T>(
   endpoint: string,
   options: RequestInit & { token?: string | null } = {}
 ): Promise<T> {
-  const { token, headers = {}, ...rest } = options;
-  const mergedHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(headers as Record<string, string>),
-  };
-
-  if (token) {
-    mergedHeaders["Authorization"] = `Bearer ${token}`;
+  const { token, headers = {}, signal, ...rest } = options;
+  const mergedHeaders = new Headers(headers);
+  if (!mergedHeaders.has("Content-Type")) {
+    mergedHeaders.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    ...rest,
-    headers: mergedHeaders,
-    credentials: "include",
-  });
+  if (token) {
+    mergedHeaders.set("Authorization", `Bearer ${token}`);
+  }
+
+  // Keep the timeout active when callers provide their own cancellation signal.
+  const timeoutSignal = AbortSignal.timeout(15000);
+  const activeSignal = signal
+    ? AbortSignal.any([signal, timeoutSignal])
+    : timeoutSignal;
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${endpoint}`, {
+      ...rest,
+      headers: mergedHeaders,
+      credentials: "include",
+      signal: activeSignal,
+    });
+  } catch (err: unknown) {
+    if (signal?.aborted) throw err;
+    throw new Error(
+      `Cannot connect to backend API at ${API_URL}. Ensure the server is running and NEXT_PUBLIC_API_URL is configured properly (${err instanceof Error ? err.message : String(err)}).`
+    );
+  }
 
   const data = await res.json().catch(() => null);
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { ClerkAuthProvider } from "@/shared/components/clerk-auth-provider";
-import { DashboardProvider, DashboardShell } from "@/features/dashboard";
+import { DashboardProvider } from "@/features/dashboard/context/dashboard-context";
+import { DashboardShell } from "@/features/dashboard/components/dashboard-shell";
 
 export const metadata: Metadata = {
   title: "Dashboard | Infraly",
@@ -26,7 +26,7 @@ export default async function DashboardLayout({
     process.env.API_URL ||
     "http://localhost:4000";
 
-  let isOnboarded = false;
+  let isOnboarded = true;
   let onboardingData = null;
 
   try {
@@ -40,7 +40,8 @@ export default async function DashboardLayout({
       `${apiUrl}/api/onboarding/status?userId=${encodeURIComponent(userId)}`,
       {
         headers,
-        cache: "no-store",
+        next: { revalidate: 120 },
+        signal: AbortSignal.timeout(1200),
       }
     );
 
@@ -49,22 +50,19 @@ export default async function DashboardLayout({
       isOnboarded = data.isOnboarded === true;
       onboardingData = data.onboarding || null;
     }
-  } catch (error) {
-    console.error("Failed to check onboarding status in DashboardLayout:", error);
-    // If backend is unreachable, don't crash, grant safe continuation
+  } catch {
+    // If backend is unreachable or timed out, gracefully continue to dashboard
     isOnboarded = true;
   }
 
-  // If user is not yet onboarded, redirect to onboarding
+  // If user is explicitly confirmed not yet onboarded, redirect to onboarding
   if (!isOnboarded) {
     redirect("/onboarding");
   }
 
   return (
-    <ClerkAuthProvider>
-      <DashboardProvider initialWorkspace={onboardingData}>
+    <DashboardProvider initialWorkspace={onboardingData}>
       <DashboardShell>{children}</DashboardShell>
     </DashboardProvider>
-    </ClerkAuthProvider>
   );
 }

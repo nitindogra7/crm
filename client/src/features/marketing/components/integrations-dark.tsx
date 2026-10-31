@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "next/link";
+import Link from "@/shared/components/app-link";
 import { marketingData } from "../data";
 
 export function IntegrationsDark() {

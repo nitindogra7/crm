@@ -1,11 +1,14 @@
 "use client";
 
+import styles from "./sidebar.module.css";
 import React, { useState, useRef, useEffect, useSyncExternalStore } from "react";
-import Link from "next/link";
+import Link from "@/shared/components/app-link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { SETTINGS_SECTIONS, getSettingsSection } from "./settings-navigation";
 import { useDashboard } from "../context/dashboard-context";
 import {
+  ArrowLeft,
   LayoutDashboard,
   Inbox,
   FileCode2,
@@ -20,7 +23,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
-import { EnvironmentSwitcher } from "./environment-switcher";
 
 interface SidebarProps {
   onClose?: () => void;
@@ -28,6 +30,9 @@ interface SidebarProps {
 
 export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
+  const params = useSearchParams();
+  const isSettings = pathname.startsWith("/dashboard/settings");
+  const activeSection = getSettingsSection(params.get("tab"));
   const {
     workspace,
     organizations,
@@ -38,7 +43,7 @@ export function Sidebar({ onClose }: SidebarProps) {
     leads,
     forms,
     spam,
-  } = useDashboard();
+  } = useDashboard(["workspace","organizations","activeDashboardId","switchOrganization","setIsCreateOrgOpen","isLoading","leads","forms","spam"]);
 
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [switchingOrgId, setSwitchingOrgId] = useState<string | null>(null);
@@ -50,6 +55,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    function handleEscape(e: KeyboardEvent) { if (e.key === "Escape") setIsOrgDropdownOpen(false); }
     function handleClickOutside(e: MouseEvent) {
       if (
         dropdownRef.current &&
@@ -60,14 +66,15 @@ export function Sidebar({ onClose }: SidebarProps) {
     }
     if (isOrgDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
+      return () => { document.removeEventListener("mousedown", handleClickOutside); document.removeEventListener("keydown", handleEscape); };
     }
   }, [isOrgDropdownOpen]);
 
   const newLeadsCount = leads.filter((l) => l.status === "New").length;
   const spamCount = spam.length;
 
-  const NAV_ITEMS = [
+  const workspaceItems = [
     {
       label: "Overview",
       href: "/dashboard",
@@ -101,26 +108,52 @@ export function Sidebar({ onClose }: SidebarProps) {
       active: pathname.startsWith("/dashboard/spam"),
       badge: spamCount > 0 ? `${spamCount}` : undefined,
     },
-    {
-      label: "Settings",
-      href: "/dashboard/settings",
-      icon: Settings,
-      active: pathname.startsWith("/dashboard/settings"),
-    },
   ];
 
   const initial = (workspace.name.charAt(0) || "W").toUpperCase();
 
+  if (isSettings) {
+    return (
+      <aside className={styles.sidebar}>
+        <nav aria-label="Settings navigation" className={styles.nav}>
+          <Link navigation href="/dashboard" onClick={onClose} className={styles.backLink}>
+            <ArrowLeft className={styles.navIcon} />
+            <span>Back to workspace</span>
+          </Link>
+          {SETTINGS_SECTIONS.map(section => {
+            const Icon = section.icon;
+            const href = "/dashboard/settings?tab=" + section.id;
+            return (
+              <Link key={section.id} href={href} prefetch={false}
+                aria-current={activeSection === section.id ? "page" : undefined}
+                onClick={event => {
+                  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                  event.preventDefault();
+                  window.history.pushState(null, "", href);
+                  onClose?.();
+                }} className={styles.navLink}>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Icon className={styles.navIcon} />
+                  <span>{section.label}</span>
+                </div>
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+    );
+  }
+
   return (
-    <aside className="w-60 flex-none flex flex-col h-full bg-white/90 backdrop-blur-md border-r border-slate-200/80 select-none shadow-[1px_0_4px_rgba(0,0,0,0.02)]">
+    <aside className={styles.sidebar}>
       {/* Top Brand Header */}
-      <div className="h-14 px-4 flex items-center justify-between border-b border-slate-200/70">
-        <Link
+      <div className={styles.brandRow}>
+        <Link navigation
           href="/"
-          className="flex items-center gap-2.5 group transition-transform active:scale-95"
+          className={styles.brand}
         >
           {/* Infraly Brand Logo */}
-          <div className="w-7 h-7 flex items-center justify-center shrink-0">
+          <div className={styles.brandMark}>
             <Image
               src="/favicon.ico"
               alt="Infraly"
@@ -131,7 +164,7 @@ export function Sidebar({ onClose }: SidebarProps) {
               priority
             />
           </div>
-          <span className="font-heading font-bold tracking-tight text-[17px] text-slate-900">
+          <span className="font-heading font-semibold tracking-tight text-[17px] text-white">
             infraly
           </span>
         </Link>
@@ -140,7 +173,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           <button
             type="button"
             onClick={onClose}
-            className="md:hidden text-slate-400 hover:text-slate-700 p-1 rounded-lg transition-colors"
+            className="md:hidden text-blue-100 hover:text-white p-2 rounded-lg transition-colors"
             aria-label="Close sidebar"
           >
             <X className="w-4 h-4" />
@@ -153,18 +186,20 @@ export function Sidebar({ onClose }: SidebarProps) {
         <button
           type="button"
           onClick={() => setIsOrgDropdownOpen((prev) => !prev)}
-          className="w-full px-2.5 py-2 rounded-xl bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/90 hover:border-slate-300 transition-all flex items-center justify-between gap-2 cursor-pointer text-left shadow-2xs"
+          className={styles.workspace}
           title="Switch Organization Workspace"
+          aria-expanded={isOrgDropdownOpen}
+          aria-label="Switch organization"
         >
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-6 h-6 rounded-lg bg-blue-50 border border-blue-200/80 flex items-center justify-center font-bold text-blue-700 text-[11px] flex-none">
+            <div className={styles.workspaceAvatar}>
               {initial}
             </div>
             <div className="flex-1 min-w-0">
-              <span className="font-semibold text-xs text-slate-900 truncate block">
+              <span className={styles.workspaceName}>
                 {workspace.name}
               </span>
-              <span className="text-[10px] text-slate-400 font-mono block truncate">
+              <span className={styles.workspaceSlug}>
                 /{workspace.slug || "workspace"}
               </span>
             </div>
@@ -194,7 +229,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                     <button
                       key={org.id}
                       type="button"
-                      disabled={switchingOrgId === org.id}
+                      disabled={isLoading || switchingOrgId !== null}
                       onClick={async () => {
                         if (isActive || switchingOrgId) {
                           setIsOrgDropdownOpen(false);
@@ -264,47 +299,31 @@ export function Sidebar({ onClose }: SidebarProps) {
         )}
       </div>
 
-      {/* Clerk-Style Environment Switcher (Development vs Production) */}
-      <div className="px-3 pb-2">
-        <div className="flex items-center justify-between p-1.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
-          <span className="text-[11px] font-semibold text-slate-500 pl-1">
-            Environment
-          </span>
-          <EnvironmentSwitcher compact />
-        </div>
-      </div>
 
       {/* Main Navigation - Clean Infraly Style */}
-      <nav data-tour="sidebar-nav" className="flex-1 px-2.5 py-2 space-y-1 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
+      <nav aria-label="Main navigation" data-tour="sidebar-nav" className={styles.nav}>
+        <p className={styles.navLabel}>Workspace</p>
+        {workspaceItems.map((item) => {
           const Icon = item.icon;
           return (
-            <Link
+            <Link navigation
               key={item.href}
               href={item.href}
+              prefetch={true}
+              aria-current={item.active ? "page" : undefined}
               onClick={onClose}
-              className={`group flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all ${
-                item.active
-                  ? "bg-blue-50 text-blue-700 font-semibold shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium"
-              }`}
+              className={styles.navLink}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <Icon
-                  className={`w-4 h-4 flex-none transition-colors ${
-                    item.active ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"
-                  }`}
+                  className={styles.navIcon}
                 />
                 <span className="truncate">{item.label}</span>
               </div>
 
               {item.badge && (
                 <span
-                  className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded-md ${
-                    item.active
-                      ? "bg-blue-100 text-blue-700 font-semibold"
-                      : "bg-slate-100 text-slate-500 font-medium"
-                  }`}
+                  className={styles.badge}
                 >
                   {item.badge}
                 </span>
@@ -315,29 +334,26 @@ export function Sidebar({ onClose }: SidebarProps) {
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="p-3 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
+      <div className={styles.footer}>
         <div className="flex items-center gap-3">
-          <Link
+          <Link navigation
             href="/docs"
             className="hover:text-slate-800 text-[11px] font-medium transition-colors flex items-center gap-1"
           >
             <span>Docs</span>
             <ExternalLink className="w-2.5 h-2.5" />
           </Link>
-          <span className="text-slate-300">•</span>
-          <Link
-            href="/"
-            className="hover:text-slate-800 text-[11px] font-medium transition-colors"
-          >
-            Website
-          </Link>
+
         </div>
         <div className="flex items-center gap-2 min-h-[20px] min-w-[20px]">
+          <Link navigation href="/dashboard/settings" onClick={onClose} aria-label="Settings" title="Settings" aria-current={pathname.startsWith("/dashboard/settings") ? "page" : undefined} className={styles.settingsLink}><Settings size={17} /></Link>
           {mounted ? (
             <UserButton
               appearance={{
                 elements: {
-                  userButtonAvatarBox: "w-6 h-6 rounded-full border border-slate-200 shadow-2xs",
+                  rootBox: "shrink-0",
+                  userButtonTrigger: "min-h-9 min-w-9",
+                  userButtonAvatarBox: "w-8 h-8 rounded-full border border-blue-200/30 shadow-2xs",
                 },
               }}
             />

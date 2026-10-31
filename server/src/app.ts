@@ -16,19 +16,12 @@ const app: Application = express();
 // Trust reverse proxy (Cloudflare, AWS ALB, Nginx) so client IP is accurately extracted for rate limiting
 app.set("trust proxy", 1);
 
-// Open CORS for public form ingestion & submission endpoints
-const publicSubmissionCors = cors({
-  origin: "*",
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "x-api-key", "Accept"],
-});
-
 // Allowed origins for dashboard management & authenticated user operations
 const allowedOrigins = [
   process.env.FRONTEND_URL?.replace(/\/+$/, ""),
-  "https://onecompiler.com",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
+  ...(process.env.NODE_ENV !== "production"
+    ? ["http://localhost:3000", "http://127.0.0.1:3000"]
+    : []),
 ].filter(Boolean) as string[];
 
 const dashboardCors = cors({
@@ -68,6 +61,11 @@ function isPublicRoute(path: string): boolean {
   return false;
 }
 
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(cookieParser());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
 // Smart CORS routing: Public forms & lead endpoints undergo dynamic environment CORS & origin verification;
 // Authenticated dashboard management routes are restricted to the verified frontend origin.
 app.use((req, res, next) => {
@@ -78,7 +76,7 @@ app.use((req, res, next) => {
   }
 });
 
-// Fast-path Health Check: Execute before cookie parsing, body allocation, and auth validation
+// Readiness includes a database round trip and does not require authentication.
 app.get("/health", async (_req, res) => {
   try {
     await prisma.$queryRaw`select 1`;
@@ -89,10 +87,6 @@ app.get("/health", async (_req, res) => {
   }
 });
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-app.use(cookieParser());
-app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // Scoped Clerk Authentication: Run JWT verification only for authenticated dashboard routes
 const clerkAuth = clerkMiddleware();
@@ -120,11 +114,16 @@ app.use("/api/f", (req, res, next) => {
   req.url = `/f${req.url}`;
   formsAndApiRouter(req, res, next);
 });
-app.all("/api/v1/leads", publicFormBurstLimiter, publicFormRateLimiter, (req, res) => {
+app.post("/api/v1/leads", publicFormBurstLimiter, publicFormRateLimiter, (req, res) => {
   formsAndApiController.submitForm(req, res);
 });
-app.all("/v1/leads", publicFormBurstLimiter, publicFormRateLimiter, (req, res) => {
+app.post("/v1/leads", publicFormBurstLimiter, publicFormRateLimiter, (req, res) => {
   formsAndApiController.submitForm(req, res);
+});
+
+app.all(["/api/v1/leads", "/v1/leads"], (_req, res) => {
+  res.setHeader("Allow", "POST, OPTIONS");
+  res.status(405).json({ success: false, error: "Use POST to submit leads" });
 });
 
 // Global Error Handler
@@ -135,7 +134,20 @@ app.use(
     res: express.Response,
     _next: express.NextFunction
   ) => {
-    console.error("Unhandled error caught by server:", err);
+    if (res.headersSent) return _next(err);
+    const status = typeof err === "object" && err !== null && "status" in err
+      ? Number(err.status)
+      : 500;
+    if ([400, 413, 415].includes(status)) {
+      const messages: Record<number, string> = {
+        400: "Invalid request body",
+        413: "Request body is too large",
+        415: "Unsupported request encoding",
+      };
+      res.status(status).json({ success: false, error: messages[status] });
+      return;
+    }
+    console.error("Unhandled server error:", err instanceof Error ? err.message : "Unknown error");
     res.status(500).json({
       success: false,
       error: "Internal server error",

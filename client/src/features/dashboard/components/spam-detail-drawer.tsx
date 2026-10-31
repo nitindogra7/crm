@@ -1,5 +1,6 @@
 "use client";
 
+import { DialogLayer } from "@/shared/components/dialog-layer";
 import React, { useEffect, useState } from "react";
 import { useDashboard } from "../context/dashboard-context";
 import {
@@ -8,12 +9,11 @@ import {
   AlertTriangle,
   RotateCcw,
   FileCode,
-  Loader2,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
 
 export function SpamDetailDrawer() {
-  const { spam, selectedSpamId, setSelectedSpamId, rescueSpamLeadAsync, addToast } = useDashboard();
+  const { spam, selectedSpamId, setSelectedSpamId, rescueSpamLeadAsync, addToast } = useDashboard(["spam","selectedSpamId","setSelectedSpamId","rescueSpamLeadAsync","addToast"]);
   const [isRescuing, setIsRescuing] = useState(false);
 
   const item = spam.find((s) => s.id === selectedSpamId);
@@ -47,7 +47,7 @@ export function SpamDetailDrawer() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <DialogLayer label="Spam submission details" onClose={() => setSelectedSpamId(null)} className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
@@ -113,7 +113,7 @@ export function SpamDetailDrawer() {
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs transition-colors shadow-2xs cursor-pointer whitespace-nowrap flex-none disabled:opacity-70"
             >
               {isRescuing ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span className="sr-only">Working</span>
               ) : (
                 <RotateCcw className="w-3.5 h-3.5" />
               )}
@@ -187,6 +187,6 @@ export function SpamDetailDrawer() {
           </div>
         </aside>
       </div>
-    </div>
+    </DialogLayer>
   );
 }

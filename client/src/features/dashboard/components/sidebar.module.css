@@ -38,3 +38,5 @@
 .backLink { display: flex; align-items: center; gap: .625rem; margin-bottom: 1rem; padding: .6875rem .75rem 1.125rem; border-bottom: 1px solid rgb(255 255 255 / 12%); color: #c8d9ef; font-size: .8125rem; font-weight: 500; }
 .backLink:hover { color: #fff; }
 @media (max-width: 767px) { .footer { padding-bottom: max(1rem, env(safe-area-inset-bottom)); } }
+
+button.navLink:disabled { width: 100%; text-align: left; color: #9fb8d8; background: transparent; cursor: not-allowed; opacity: .65; }

@@ -122,6 +122,12 @@ export function Sidebar({ onClose }: SidebarProps) {
           </Link>
           {SETTINGS_SECTIONS.map(section => {
             const Icon = section.icon;
+            if (!section.available) {
+              return <button key={section.id} type="button" disabled className={styles.navLink} title={`${section.label} is coming soon`}>
+                <div className="flex items-center gap-2.5 min-w-0"><Icon className={styles.navIcon} /><span>{section.label}</span></div>
+                <span className={styles.badge}>Soon</span>
+              </button>;
+            }
             const href = "/dashboard/settings?tab=" + section.id;
             return (
               <Link key={section.id} href={href} prefetch={false}

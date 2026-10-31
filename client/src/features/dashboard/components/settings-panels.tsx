@@ -7,7 +7,6 @@ import Link from "@/shared/components/app-link";
 import { useDashboard } from "../context/dashboard-context";
 import { useAppStore } from "@/shared/store/use-app-store";
 import { apiFetch } from "@/shared/lib/api-client";
-import { FormattedDate } from "./formatted-date";
 import type { WorkspaceEnvironment } from "@/shared/types";
 import styles from "./settings.module.css";
 
@@ -21,10 +20,6 @@ function Field({ id, label, hint, children }: { id: string; label: string; hint?
 
 function Actions({ children, description }: { children: ReactNode; description?: string }) {
   return <footer className={styles.actions}>{description && <p>{description}</p>}<div>{children}</div></footer>;
-}
-
-function Toggle({ title, description, checked, onChange }: { title: string; description: string; checked: boolean; onChange: (value: boolean) => void }) {
-  return <label className={styles.toggleRow}><span><strong>{title}</strong><span>{description}</span></span><input type="checkbox" role="switch" checked={checked} onChange={event => onChange(event.target.checked)} aria-label={title} /></label>;
 }
 
 export function GeneralSettings() {
@@ -146,43 +141,20 @@ export function EnvironmentSettings() {
   </>;
 }
 
-export function NotificationSettingsPanel() {
-  const { notifications, updateNotifications, addToast } = useDashboard(["notifications", "updateNotifications", "addToast"]);
-  const [email, setEmail] = useState(notifications.alertEmail);
-  return <Panel title="Email notifications" description="Choose your preferred alerts and recipient.">
-    <p className={styles.availability}>Email delivery is not available yet. You can save your preferences below.</p>
-    <form onSubmit={event => { event.preventDefault(); updateNotifications({ alertEmail: email.trim() }); addToast("Preferences saved", "Your notification preferences have been updated."); }}>
-      <div className={styles.fields}><Field id="notification-email" label="Notification email"><input id="notification-email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={event => setEmail(event.target.value)} /></Field></div>
-      <div className={styles.toggleList}>
-        <Toggle title="New leads" description="An alert when a new lead is received." checked={notifications.emailAlertsEnabled} onChange={emailAlertsEnabled => updateNotifications({ emailAlertsEnabled })} />
-        <Toggle title="Daily summary" description="A summary of your recent lead activity." checked={notifications.dailyDigest} onChange={dailyDigest => updateNotifications({ dailyDigest })} />
-        <Toggle title="Flagged submissions" description="An alert when a submission needs spam review." checked={notifications.spamAlerts} onChange={spamAlerts => updateNotifications({ spamAlerts })} />
-      </div>
-      <Actions><button type="submit" className={styles.primaryButton}>Save preferences</button></Actions>
-    </form>
+function ComingSoonPanel({ title, description }: { title: string; description: string }) {
+  return <Panel title={title} action={<span className={styles.mutedBadge}>Coming soon</span>}>
+    <div className={styles.emptyState}><Activity size={25} /><h3>Not available yet</h3><p>{description}</p></div>
   </Panel>;
+}
+
+export function NotificationSettingsPanel() {
+  return <ComingSoonPanel title="Email notifications" description="Email alerts and daily summaries will be available when email delivery is connected." />;
 }
 
 export function WebhookSettingsPanel() {
-  const { webhook, updateWebhook, addToast } = useDashboard(["webhook", "updateWebhook", "addToast"]);
-  const [url, setUrl] = useState(webhook.url);
-  return <Panel title="Webhook endpoint" description="Prepare a destination for your submission events." action={<span className={styles.mutedBadge}>Not connected</span>}>
-    <p className={styles.availability}>Webhook delivery is not available yet. Your endpoint and event preferences can be saved in advance.</p>
-    <form onSubmit={event => { event.preventDefault(); updateWebhook({ url: url.trim() }); addToast("Webhook preferences saved", "Your destination URL has been updated."); }}>
-      <div className={styles.fields}><Field id="webhook-url" label="Destination URL" hint="Use an HTTPS endpoint that you control."><input id="webhook-url" type="url" placeholder="https://example.com/webhooks/infraly" value={url} onChange={event => setUrl(event.target.value)} aria-describedby="webhook-url-hint" /></Field></div>
-      <div className={styles.toggleList}>
-        <Toggle title="Enable webhook preference" description="Keep this endpoint enabled for future delivery." checked={webhook.enabled} onChange={enabled => updateWebhook({ enabled })} />
-        <Toggle title="Lead received" description="A new submission is added to your lead inbox." checked={webhook.events.leadCreated} onChange={leadCreated => updateWebhook({ events: { ...webhook.events, leadCreated } })} />
-        <Toggle title="Submission flagged" description="A submission is moved to Spam Shield." checked={webhook.events.spamQuarantined} onChange={spamQuarantined => updateWebhook({ events: { ...webhook.events, spamQuarantined } })} />
-      </div>
-      <Actions><button type="submit" className={styles.primaryButton}>Save webhook</button></Actions>
-    </form>
-  </Panel>;
+  return <ComingSoonPanel title="Webhook endpoint" description="Webhook configuration will be available when event delivery is connected." />;
 }
 
 export function DeliveryLogsPanel() {
-  const { deliveryLogs } = useDashboard(["deliveryLogs"]);
-  return <Panel title="Delivery history" description="Review email and webhook delivery activity.">
-    {deliveryLogs.length === 0 ? <div className={styles.emptyState}><Activity size={25} /><h3>No deliveries yet</h3><p>Delivery history will appear when email or webhook delivery is connected.</p></div> : <><p className={styles.availability}>These are preview delivery records.</p><ul className={styles.logList}>{deliveryLogs.map(log => <li key={log.id}><div className={styles.logContent}><strong>{log.event}</strong><span title={log.destination}>{log.destination}</span><small><FormattedDate date={log.timestamp} format="both" /> &middot; {log.latencyMs} ms</small>{log.errorDetail && <p>{log.errorDetail}</p>}</div><span className={log.status === "success" ? styles.current : styles.errorBadge}>{log.status === "success" ? "Delivered" : "Failed"}</span></li>)}</ul></>}
-  </Panel>;
+  return <ComingSoonPanel title="Delivery history" description="Delivery logs will be available when email and webhook delivery are connected." />;
 }

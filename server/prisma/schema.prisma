@@ -56,8 +56,9 @@ model Form {
   enabled     Boolean   @default(true)
   leadCount   Int       @default(0)
   spamCount   Int       @default(0)
-  redirectUrl String?
-  fields      Json      @default("[]") // Array of FormField: { id, name, label, type, required }
+  redirectUrl    String?
+  allowedDomains String[]  @default([])
+  fields         Json      @default("[]") // Array of FormField: { id, name, label, type, required }
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

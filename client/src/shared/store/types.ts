@@ -34,6 +34,7 @@ export interface FormsSlice {
   addForm: (form: {
     name: string;
     redirectUrl?: string;
+    allowedDomains?: string[];
     fields?: FormItem["fields"];
   }) => FormItem;
   updateForm: (id: string, updates: Partial<FormItem>) => void;

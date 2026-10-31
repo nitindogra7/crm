@@ -5,14 +5,12 @@ import { useDashboard } from "../context/dashboard-context";
 import { SpamSkeleton } from "./dashboard-skeleton";
 import { SpamDisposition } from "../types";
 import {
-  ShieldAlert,
   AlertTriangle,
   XCircle,
   RotateCcw,
   Search,
   Loader2,
   ShieldCheck,
-  CheckCircle2,
 } from "lucide-react";
 import { FormattedDate } from "./formatted-date";
 

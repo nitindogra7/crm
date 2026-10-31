@@ -8,8 +8,12 @@ import { onboardingRouter } from "./modules/onboarding/onboarding.routes";
 import { formsAndApiRouter } from "./modules/forms & api/formsAndApi.routes";
 import { formsAndApiController } from "./modules/forms & api/formsAndApi.controller";
 import { leadsRouter } from "./modules/leads/leads.routes";
+import { publicFormRateLimiter, publicFormBurstLimiter } from "./middleware/rateLimiter";
 
 const app: Application = express();
+
+// Trust reverse proxy (Cloudflare, AWS ALB, Nginx) so client IP is accurately extracted for rate limiting
+app.set("trust proxy", 1);
 
 // Open CORS for public form ingestion & submission endpoints
 const publicSubmissionCors = cors({
@@ -116,10 +120,10 @@ app.use("/api/f", (req, res, next) => {
   req.url = `/f${req.url}`;
   formsAndApiRouter(req, res, next);
 });
-app.all("/api/v1/leads", (req, res) => {
+app.all("/api/v1/leads", publicFormBurstLimiter, publicFormRateLimiter, (req, res) => {
   formsAndApiController.submitForm(req, res);
 });
-app.all("/v1/leads", (req, res) => {
+app.all("/v1/leads", publicFormBurstLimiter, publicFormRateLimiter, (req, res) => {
   formsAndApiController.submitForm(req, res);
 });
 

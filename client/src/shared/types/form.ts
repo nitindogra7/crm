@@ -16,5 +16,6 @@ export interface FormItem {
   spamCount: number;
   createdAt: string;
   redirectUrl?: string;
+  allowedDomains?: string[];
   fields: FormField[];
 }

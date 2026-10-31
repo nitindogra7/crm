@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { formsAndApiController } from "./formsAndApi.controller";
+import { publicFormRateLimiter, publicFormBurstLimiter } from "../../middleware/rateLimiter";
 
 const router: Router = Router();
 
@@ -38,8 +39,8 @@ router.get("/f/:slug", (req, res) => {
     slug: req.params.slug,
   });
 });
-router.post("/f/:slug", formsAndApiController.submitForm);
-router.post("/submit/:formId", formsAndApiController.submitForm);
+router.post("/f/:slug", publicFormBurstLimiter, publicFormRateLimiter, formsAndApiController.submitForm);
+router.post("/submit/:formId", publicFormBurstLimiter, publicFormRateLimiter, formsAndApiController.submitForm);
 router.post("/simulate", formsAndApiController.simulateSubmission);
 
 // ==========================================

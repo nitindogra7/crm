@@ -6,7 +6,7 @@ import Image from "next/image";
 import {
   FRAMEWORK_ITEMS,
   CORE_PLATFORM_CARDS,
-  SPAM_SECURITY_CARDS,
+
   EXPLORE_MORE_CARDS,
   DOCS_CONFIG,
   FrameworkItem,
@@ -23,7 +23,7 @@ import {
   ExternalLink,
   Sparkles,
   ChevronDown,
-  Layers,
+
   Search,
   CheckCircle2,
   Code2,

@@ -10,6 +10,7 @@ export function CreateFormModal() {
 
   const [name, setName] = useState("");
   const [redirectUrl, setRedirectUrl] = useState("");
+  const [allowedDomains, setAllowedDomains] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fields, setFields] = useState<FormField[]>([
     { id: "f_name", name: "name", label: "Full Name", type: "text", required: true },
@@ -65,14 +66,21 @@ export function CreateFormModal() {
 
     setIsSubmitting(true);
     try {
+      const parsedDomains = allowedDomains
+        .split(",")
+        .map((d) => d.trim().toLowerCase())
+        .filter(Boolean);
+
       await createFormAsync({
         name: name.trim(),
         redirectUrl: redirectUrl.trim() || undefined,
+        allowedDomains: parsedDomains,
         fields,
       });
 
       setName("");
       setRedirectUrl("");
+      setAllowedDomains("");
       setIsCreateFormOpen(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to create form";
@@ -145,6 +153,26 @@ export function CreateFormModal() {
             />
             <p className="text-[11px] text-slate-400 mt-1">
               Visitors will be redirected here after standard browser form submissions.
+            </p>
+          </div>
+
+          {/* Allowed Domains (Spam & Origin Shield) */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-slate-700 font-semibold">
+                Allowed Domains (Origin Shield) <span className="text-slate-400 font-normal">(optional)</span>
+              </label>
+              <span className="text-[10.5px] font-mono text-slate-400">Comma-separated</span>
+            </div>
+            <input
+              type="text"
+              value={allowedDomains}
+              onChange={(e) => setAllowedDomains(e.target.value)}
+              placeholder="e.g. mycompany.com, app.mycompany.com"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-sans transition-all"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Restrict browser form submissions to specific domains. Leave empty to allow from any domain.
             </p>
           </div>
 

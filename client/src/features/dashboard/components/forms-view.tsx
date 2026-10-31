@@ -80,15 +80,7 @@ export function FormsView() {
     e.stopPropagation();
     navigator.clipboard.writeText(endpoint);
     setCopiedEndpointId(formId);
-    if (!hasApiKey) {
-      addToast(
-        "Endpoint copied",
-        "Generate your workspace API key to authenticate submissions.",
-        "info"
-      );
-    } else {
-      addToast("Endpoint copied", "Paste into your form action or fetch request.");
-    }
+    addToast("Endpoint copied", "Paste into your form action attribute or server proxy.");
     setTimeout(() => setCopiedEndpointId(null), 2000);
   };
 
@@ -163,7 +155,7 @@ export function FormsView() {
 
   const currentFormForCode = forms.find((f) => f.id === selectedFormIdForCode) || forms[0];
   const currentEndpoint = currentFormForCode?.endpointUrl || "https://api.infraly.com/api/v1/inbound/your-slug";
-  const currentKeyMock = apiKey?.fullKeyMock || "inf_live_••••••••••••••••••••";
+  const currentKeyMock = apiKey?.fullKeyMock || "sln_live_••••••••••••••••••••";
 
   const getCodeSnippet = (lang: CodeLang): string => {
     switch (lang) {
@@ -178,57 +170,54 @@ export function FormsView() {
   }'`;
 
       case "fetch":
-        return `// Standard JavaScript Fetch
-async function submitLead(payload) {
+        return `// Server-Side Route Proxy (Node.js / Next.js / Express)
+// Browser DevTools only sees your local "/api/contact" — Infraly & API key remain 100% hidden!
+export async function POST(req) {
+  const body = await req.json();
+
   const response = await fetch("${currentEndpoint}", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": "${currentKeyMock}",
+      "x-api-key": process.env.INFRALY_API_KEY, // Loaded from server environment
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
 
-  return await response.json();
+  return Response.json(await response.json());
 }`;
 
       case "html":
-        return `<!-- Direct HTML5 form submission -->
+        return `<!-- Direct HTML5 Form Submission (Protected by IP Rate Limiter & Honeypot) -->
+<!-- Uses public form slug: No secret API key leaked in browser DevTools! -->
 <form action="${currentEndpoint}" method="POST">
-  <input type="hidden" name="_api_key" value="${currentKeyMock}" />
   <input type="text" name="name" required placeholder="Full Name" />
   <input type="email" name="email" required placeholder="Work Email" />
   <textarea name="message" required placeholder="Your message..."></textarea>
+
+  <!-- Silent Honeypot (Catches spam bots, real humans ignore it) -->
+  <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="display:none !important;" />
+
   <button type="submit">Send</button>
 </form>`;
 
       case "react":
-        return `"use client";
+        return `// Next.js Server Action (100% Invisible in Browser DevTools)
+// app/actions/submit-lead.ts
+"use server";
 
-export function ContactForm() {
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
+export async function submitLead(formData: FormData) {
+  // Runs securely on the server — never exposed in browser Network tab
+  const response = await fetch("${currentEndpoint}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.INFRALY_API_KEY!,
+    },
+    body: JSON.stringify(Object.fromEntries(formData)),
+  });
 
-    await fetch("${currentEndpoint}", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": "${currentKeyMock}",
-      },
-      body: JSON.stringify(data),
-    });
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <input name="name" required placeholder="Name" />
-      <input name="email" type="email" required placeholder="Email" />
-      <textarea name="message" required placeholder="Message" />
-      <button type="submit">Submit</button>
-    </form>
-  );
+  return response.ok;
 }`;
 
       case "python":
@@ -354,12 +343,12 @@ print(response.json())`;
       {/* ========================================================================= */}
       {activeTab === "forms" && (
         <div className="space-y-4">
-          {/* Key Requirement Notice */}
+          {/* Optional Server Key Notice */}
           {!hasApiKey && (
-            <div className="p-3.5 rounded-xl border border-amber-200/80 bg-amber-50/70 flex items-center justify-between gap-3 text-xs text-amber-900">
+            <div className="p-3.5 rounded-xl border border-blue-200/80 bg-blue-50/70 flex items-center justify-between gap-3 text-xs text-blue-900">
               <div className="flex items-center gap-2.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-none" />
-                <span>Workspace API key required to authenticate live external submissions.</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-none" />
+                <span>Workspace API key available for server-to-server integrations & backend proxies.</span>
               </div>
               <button
                 type="button"
@@ -368,7 +357,7 @@ print(response.json())`;
                   setActiveTab("key");
                 }}
                 disabled={isGeneratingKey}
-                className="text-xs text-amber-800 hover:text-amber-950 font-semibold underline cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5"
+                className="text-xs text-blue-700 hover:text-blue-900 font-semibold underline cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5"
               >
                 {isGeneratingKey && <Loader2 className="w-3 h-3 animate-spin" />}
                 <span>Generate Key →</span>
@@ -418,12 +407,20 @@ print(response.json())`;
                       </span>
                     </div>
 
-                    {/* Redirect Info */}
-                    <p className="text-xs text-slate-500 truncate font-sans">
-                      {form.redirectUrl
-                        ? `Redirects to ${form.redirectUrl.replace(/^https?:\/\//, "")}`
-                        : "Direct JSON response"}
-                    </p>
+                    {/* Redirect & Origin Shield Info */}
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 truncate font-sans">
+                      {form.allowedDomains && form.allowedDomains.length > 0 ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 truncate">
+                          Shield: {form.allowedDomains.join(", ")}
+                        </span>
+                      ) : (
+                        <span className="truncate">
+                          {form.redirectUrl
+                            ? `Redirects to ${form.redirectUrl.replace(/^https?:\/\//, "")}`
+                            : "Direct form endpoint"}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Metrics */}
                     <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2.5 text-xs text-slate-500 font-sans">

@@ -176,6 +176,7 @@ export class FormsAndApiService {
       slug: finalSlug,
       endpointUrl,
       redirectUrl: input.redirectUrl || null,
+      allowedDomains: input.allowedDomains || [],
       fields: input.fields || [],
     });
   }
@@ -222,6 +223,7 @@ export class FormsAndApiService {
       ...(updates.slug !== undefined && { slug: finalSlug, endpointUrl: newEndpointUrl }),
       ...(updates.enabled !== undefined && { enabled: updates.enabled }),
       ...(updates.redirectUrl !== undefined && { redirectUrl: updates.redirectUrl ? updates.redirectUrl : null }),
+      ...(updates.allowedDomains !== undefined && { allowedDomains: updates.allowedDomains }),
       ...(updates.fields !== undefined && { fields: updates.fields }),
     });
   }
@@ -346,6 +348,57 @@ export class FormsAndApiService {
       targetDashboardId = form.dashboardId;
     }
 
+    // Verify Domain Whitelist / Allowed Origins for public form submissions
+    if (form && form.allowedDomains && form.allowedDomains.length > 0) {
+      // Authenticated server-to-server requests with a valid API key bypass origin domain checks
+      if (!verifiedApiKey) {
+        const originHeader = (Array.isArray(headers.origin) ? headers.origin[0] : headers.origin) || "";
+        const refHeader =
+          (Array.isArray(headers.referer) ? headers.referer[0] : headers.referer) ||
+          (Array.isArray(headers.referrer) ? headers.referrer[0] : headers.referrer) ||
+          "";
+
+        let requestDomain = "";
+        try {
+          if (originHeader) {
+            requestDomain = new URL(originHeader).hostname.toLowerCase();
+          } else if (refHeader && refHeader !== "Direct") {
+            requestDomain = new URL(refHeader).hostname.toLowerCase();
+          }
+        } catch {
+          requestDomain = "";
+        }
+
+        const isOriginAllowed = form.allowedDomains.some((allowed) => {
+          let cleanAllowed = allowed
+            .trim()
+            .toLowerCase()
+            .replace(/^https?:\/\//, "")
+            .replace(/\/.*$/, "")
+            .replace(/:\d+$/, "");
+
+          if (cleanAllowed.startsWith("*.")) {
+            cleanAllowed = cleanAllowed.slice(2);
+          }
+
+          if (!cleanAllowed) return false;
+          return (
+            requestDomain === cleanAllowed ||
+            requestDomain.endsWith("." + cleanAllowed) ||
+            cleanAllowed === "*"
+          );
+        });
+
+        if (!isOriginAllowed) {
+          return {
+            status: "rejected",
+            statusCode: 403,
+            message: `Submissions from domain '${requestDomain || "unspecified"}' are not permitted. Please add this domain to the form's Allowed Domains in your settings.`,
+          };
+        }
+      }
+    }
+
     // If neither form nor valid API key is present, reject as endpoint not found
     if (!form && !targetDashboardId) {
       return {
@@ -356,7 +409,7 @@ export class FormsAndApiService {
     }
 
     // 2. Extract core fields & honeypots
-    const honeypotTriggers = ["_gotcha", "_hp", "honeypot", "website_url_check"];
+    const honeypotTriggers = ["_gotcha", "_hp", "honeypot", "website_url_check", "bot_field"];
     let isHoneypotTriggered = false;
     let triggerReason = "";
 
@@ -365,6 +418,19 @@ export class FormsAndApiService {
         isHoneypotTriggered = true;
         triggerReason = `Honeypot filled (${hp})`;
         break;
+      }
+    }
+
+    // Time-trap bot check: real humans take more than 1.2s to fill a form
+    const formTimeRaw = body._form_time ?? body._timestamp ?? body._render_time;
+    if (formTimeRaw) {
+      const renderTimestamp = Number(formTimeRaw);
+      if (!isNaN(renderTimestamp) && renderTimestamp > 0) {
+        const elapsedMs = Date.now() - renderTimestamp;
+        if (elapsedMs < 1200 && elapsedMs > 0) {
+          isHoneypotTriggered = true;
+          triggerReason = triggerReason || `Rapid submission speed (${elapsedMs}ms, bot suspected)`;
+        }
       }
     }
 

@@ -377,6 +377,38 @@ export class FormsAndApiController {
         return;
       }
 
+      // If submitted via browser HTML form without custom redirect, present a polished confirmation card
+      if (isHtmlForm && result.status === "success" && req.headers.accept?.includes("text/html")) {
+        res.status(200).send(`
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>Submission Received</title>
+              <style>
+                body { font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f8fafc; color: #1e293b; padding: 1.5rem; box-sizing: border-box; }
+                .card { background: white; padding: 2.5rem; border-radius: 1.25rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); max-width: 440px; width: 100%; text-align: center; border: 1px solid #e2e8f0; }
+                .icon { width: 48px; height: 48px; background: #ecfdf5; color: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 22px; font-weight: bold; }
+                h1 { font-size: 1.25rem; color: #0f172a; margin: 0 0 0.5rem; font-weight: 700; }
+                p { color: #64748b; font-size: 0.95rem; line-height: 1.5; margin: 0 0 1.5rem; }
+                .btn { display: inline-block; padding: 0.65rem 1.25rem; background: #2563eb; color: white; border-radius: 0.75rem; text-decoration: none; font-weight: 600; font-size: 0.875rem; }
+                .btn:hover { background: #1d4ed8; }
+              </style>
+            </head>
+            <body>
+              <div class="card">
+                <div class="icon">✓</div>
+                <h1>Submission Received</h1>
+                <p>Thank you! Your information has been securely received.</p>
+                <a href="javascript:history.back()" class="btn">Return to previous page</a>
+              </div>
+            </body>
+          </html>
+        `);
+        return;
+      }
+
       const statusCode =
         result.statusCode ||
         (result.status === "success"

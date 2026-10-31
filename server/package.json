@@ -12,7 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "test": "tsx test/leads-qa.test.ts && tsx test/leads-http.test.ts && tsx test/performance-regression.test.ts"
+    "test": "tsx test/leads-qa.test.ts && tsx test/leads-http.test.ts && tsx test/performance-regression.test.ts && tsx test/security-and-spam.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +25,7 @@
     "cors": "^2.8.6",
     "dotenv": "^18.0.5",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.2",
     "helmet": "^8.3.0",
     "prisma": "^6.19.3",
     "tsx": "^4.23.15",

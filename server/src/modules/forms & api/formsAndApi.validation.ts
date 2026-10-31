@@ -73,6 +73,7 @@ export const createFormSchema = z.object({
       (val) => !val || val === "" || /^https?:\/\//.test(val) || val.startsWith("/"),
       { message: "Redirect URL must be a valid URL or relative path" }
     ),
+  allowedDomains: z.array(z.string().trim()).optional().default([]),
   fields: z.array(formFieldSchema).optional().default([
     { id: "f1", name: "name", label: "Full Name", type: "text", required: true },
     { id: "f2", name: "email", label: "Email Address", type: "email", required: true },
@@ -100,6 +101,7 @@ export const updateFormSchema = z.object({
       { message: "Redirect URL must be a valid URL or relative path" }
     ),
   enabled: z.boolean().optional(),
+  allowedDomains: z.array(z.string().trim()).optional(),
   fields: z.array(formFieldSchema).optional(),
 });
 

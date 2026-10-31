@@ -14,7 +14,7 @@ export const createFormsSlice: StateCreator<
 > = (set) => ({
   forms: INITIAL_FORMS,
   setForms: (forms) => set({ forms }),
-  addForm: ({ name, redirectUrl, fields }) => {
+  addForm: ({ name, redirectUrl, allowedDomains, fields }) => {
     const slug =
       name
         .toLowerCase()
@@ -32,6 +32,7 @@ export const createFormsSlice: StateCreator<
       spamCount: 0,
       createdAt: new Date().toISOString(),
       redirectUrl: redirectUrl || undefined,
+      allowedDomains: allowedDomains || [],
       fields:
         fields && fields.length > 0
           ? fields

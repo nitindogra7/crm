@@ -42,6 +42,7 @@ interface DashboardContextType {
   createFormAsync: (input: {
     name: string;
     redirectUrl?: string;
+    allowedDomains?: string[];
     fields?: FormItem["fields"];
   }) => Promise<FormItem>;
   updateFormAsync: (id: string, updates: Partial<FormItem>) => Promise<void>;
@@ -281,6 +282,7 @@ export function DashboardProvider({
     async (input: {
       name: string;
       redirectUrl?: string;
+    allowedDomains?: string[];
       fields?: FormItem["fields"];
     }) => {
       const token = await getToken();
@@ -690,6 +692,7 @@ export function useDashboard() {
     addForm: (input: {
       name: string;
       redirectUrl?: string;
+    allowedDomains?: string[];
       fields?: FormItem["fields"];
     }) => {
       const localForm = store.addForm(input);

@@ -80,6 +80,7 @@ export class FormsAndApiRepository {
     slug: string;
     endpointUrl: string;
     redirectUrl?: string | null;
+    allowedDomains?: string[];
     fields: Prisma.InputJsonValue;
   }): Promise<FormRecord> {
     return prisma.form.create({
@@ -89,6 +90,7 @@ export class FormsAndApiRepository {
         slug: data.slug,
         endpointUrl: data.endpointUrl,
         redirectUrl: data.redirectUrl ?? null,
+        allowedDomains: data.allowedDomains ?? [],
         fields: data.fields,
         enabled: true,
         leadCount: 0,
@@ -139,6 +141,7 @@ export class FormsAndApiRepository {
       endpointUrl: string;
       enabled: boolean;
       redirectUrl: string | null;
+      allowedDomains: string[];
       fields: Prisma.InputJsonValue;
     }>
   ): Promise<FormRecord> {

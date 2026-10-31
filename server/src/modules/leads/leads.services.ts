@@ -109,15 +109,12 @@ export class LeadsService {
     userId: string,
     leadId: string
   ): Promise<LeadRecord | null> {
-    const lead = await this.repository.findLeadById(leadId);
-    if (!lead) return null;
-
-    const dashboard = await prisma.dashboard.findUnique({
-      where: { id: lead.dashboardId },
+    return prisma.lead.findFirst({
+      where: {
+        id: leadId,
+        dashboard: { userId },
+      },
     });
-    if (!dashboard || dashboard.userId !== userId) return null;
-
-    return lead;
   }
 
   /**
@@ -138,7 +135,10 @@ export class LeadsService {
    * Deletes a lead and updates associated form metrics
    */
   async deleteLead(userId: string, leadId: string): Promise<boolean> {
-    const lead = await this.getLeadById(userId, leadId);
+    const lead = await prisma.lead.findFirst({
+      where: { id: leadId, dashboard: { userId } },
+      select: { id: true },
+    });
     if (!lead) return false;
 
     await this.repository.deleteLead(leadId);

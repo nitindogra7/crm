@@ -461,28 +461,51 @@ export class FormsAndApiService {
 
     // 3. If flagged as spam -> quarantine in Spam table
     if (isHoneypotTriggered) {
-      const spam = await this.repository.createSpam({
-        dashboardId: targetDashboardId!,
-        formId: form ? form.id : null,
-        formName: form ? form.name : "API Ingestion",
-        senderName,
-        senderEmail: senderEmail || "unknown@unverified.net",
-        disposition: "Quarantined",
-        reason: triggerReason || "Suspicious submission payload",
-        messageSnippet: message.slice(0, 200),
-        rawPayload: body as Prisma.InputJsonValue,
-        triggerRule: triggerReason || "heuristics",
-        metadata,
-      });
-
+      let spamId: string | undefined;
       if (form) {
-        await this.repository.incrementSpamCount(form.id);
+        const [spam] = await prisma.$transaction([
+          prisma.spam.create({
+            data: {
+              dashboardId: targetDashboardId!,
+              formId: form.id,
+              formName: form.name,
+              senderName,
+              senderEmail: senderEmail || "unknown@unverified.net",
+              disposition: "Quarantined",
+              reason: triggerReason || "Suspicious submission payload",
+              messageSnippet: message.slice(0, 200),
+              rawPayload: body as Prisma.InputJsonValue,
+              triggerRule: triggerReason || "heuristics",
+              metadata,
+            },
+          }),
+          prisma.form.update({
+            where: { id: form.id },
+            data: { spamCount: { increment: 1 } },
+          }),
+        ]);
+        spamId = spam.id;
+      } else {
+        const spam = await this.repository.createSpam({
+          dashboardId: targetDashboardId!,
+          formId: null,
+          formName: "API Ingestion",
+          senderName,
+          senderEmail: senderEmail || "unknown@unverified.net",
+          disposition: "Quarantined",
+          reason: triggerReason || "Suspicious submission payload",
+          messageSnippet: message.slice(0, 200),
+          rawPayload: body as Prisma.InputJsonValue,
+          triggerRule: triggerReason || "heuristics",
+          metadata,
+        });
+        spamId = spam.id;
       }
 
       return {
         status: "quarantined",
         statusCode: 202,
-        spamId: verifiedApiKey ? spam.id : undefined, // do not leak internal database IDs to anonymous visitors
+        spamId: verifiedApiKey ? spamId : undefined, // do not leak internal database IDs to anonymous visitors
         redirectUrl: form?.redirectUrl || undefined,
         message: "Submission received and quarantined for security inspection",
       };
@@ -498,27 +521,49 @@ export class FormsAndApiService {
             ? "API Integration"
             : "Website embed";
 
-    const lead = await this.repository.createLead({
-      dashboardId: targetDashboardId!,
-      formId: form ? form.id : null,
-      formName: form ? form.name : "API Ingestion",
-      name: senderName,
-      email: senderEmail,
-      message,
-      source,
-      status: "New",
-      extraFields: Object.keys(extraFields).length > 0 ? extraFields : undefined,
-      metadata,
-    });
-
+    let createdLeadId: string | undefined;
     if (form) {
-      await this.repository.incrementLeadCount(form.id);
+      const [lead] = await prisma.$transaction([
+        prisma.lead.create({
+          data: {
+            dashboardId: targetDashboardId!,
+            formId: form.id,
+            formName: form.name,
+            name: senderName,
+            email: senderEmail,
+            message,
+            source,
+            status: "New",
+            extraFields: Object.keys(extraFields).length > 0 ? extraFields : undefined,
+            metadata,
+          },
+        }),
+        prisma.form.update({
+          where: { id: form.id },
+          data: { leadCount: { increment: 1 } },
+        }),
+      ]);
+      createdLeadId = lead.id;
+    } else {
+      const lead = await this.repository.createLead({
+        dashboardId: targetDashboardId!,
+        formId: null,
+        formName: "API Ingestion",
+        name: senderName,
+        email: senderEmail,
+        message,
+        source,
+        status: "New",
+        extraFields: Object.keys(extraFields).length > 0 ? extraFields : undefined,
+        metadata,
+      });
+      createdLeadId = lead.id;
     }
 
     return {
       status: "success",
       statusCode: 200,
-      leadId: verifiedApiKey ? lead.id : undefined, // do not leak internal database IDs to anonymous visitors
+      leadId: verifiedApiKey ? createdLeadId : undefined, // do not leak internal database IDs to anonymous visitors
       redirectUrl: form?.redirectUrl || undefined,
       message: "Lead captured successfully",
     };
@@ -613,19 +658,21 @@ export class FormsAndApiService {
     leadId: string,
     status: LeadStatus
   ): Promise<LeadRecord | null> {
-    const lead = await this.repository.findLeadById(leadId);
+    const lead = await prisma.lead.findFirst({
+      where: { id: leadId, dashboard: { userId } },
+      select: { id: true },
+    });
     if (!lead) return null;
-    const dashboard = await this.repository.findDashboardById(lead.dashboardId);
-    if (!dashboard || dashboard.userId !== userId) return null;
 
     return this.repository.updateLeadStatus(leadId, status);
   }
 
   async deleteLead(userId: string, leadId: string): Promise<boolean> {
-    const lead = await this.repository.findLeadById(leadId);
+    const lead = await prisma.lead.findFirst({
+      where: { id: leadId, dashboard: { userId } },
+      select: { id: true },
+    });
     if (!lead) return false;
-    const dashboard = await this.repository.findDashboardById(lead.dashboardId);
-    if (!dashboard || dashboard.userId !== userId) return false;
 
     await this.repository.deleteLead(leadId);
     return true;
@@ -662,10 +709,10 @@ export class FormsAndApiService {
   }
 
   async rescueSpamLead(userId: string, spamId: string): Promise<LeadRecord | null> {
-    const spam = await this.repository.findSpamById(spamId);
+    const spam = await prisma.spam.findFirst({
+      where: { id: spamId, dashboard: { userId } },
+    });
     if (!spam) return null;
-    const dashboard = await this.repository.findDashboardById(spam.dashboardId);
-    if (!dashboard || dashboard.userId !== userId) return null;
 
     // Extract full message and extra fields from rawPayload if available
     let fullMessage = spam.messageSnippet;
@@ -717,28 +764,38 @@ export class FormsAndApiService {
       }
     }
 
-    // Create lead from rescued spam data
-    const lead = await this.repository.createLead({
-      dashboardId: spam.dashboardId,
-      formId: spam.formId,
-      formName: spam.formName,
-      name: spam.senderName,
-      email: spam.senderEmail,
-      message: fullMessage,
-      source: "Rescued from Quarantine",
-      status: "New",
-      extraFields,
-      metadata: spam.metadata || undefined,
+    // Atomically create lead, adjust form counts, and delete quarantined spam
+    return prisma.$transaction(async (tx) => {
+      const lead = await tx.lead.create({
+        data: {
+          dashboardId: spam.dashboardId,
+          formId: spam.formId,
+          formName: spam.formName,
+          name: spam.senderName,
+          email: spam.senderEmail,
+          message: fullMessage,
+          source: "Rescued from Quarantine",
+          status: "New",
+          extraFields,
+          metadata: spam.metadata || undefined,
+        },
+      });
+
+      if (spam.formId) {
+        await tx.form.update({
+          where: { id: spam.formId },
+          data: { leadCount: { increment: 1 } },
+        });
+        await tx.$executeRaw`
+          UPDATE "forms"
+          SET "spamCount" = GREATEST(0, "spamCount" - 1)
+          WHERE "id" = ${spam.formId}
+        `;
+      }
+      await tx.spam.delete({ where: { id: spam.id } });
+
+      return lead;
     });
-
-    // Increment leadCount, decrement spamCount, and remove from spam
-    if (spam.formId) {
-      await this.repository.incrementLeadCount(spam.formId);
-      await this.repository.decrementSpamCount(spam.formId);
-    }
-    await this.repository.deleteSpam(spam.id);
-
-    return lead;
   }
 
   async getStats(

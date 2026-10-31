@@ -4,8 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import { OnboardingWizard } from "@/features/onboarding";
 
 export const metadata: Metadata = {
-  title: "Setup Your Workspace | Salenova",
-  description: "Configure your new Salenova workspace, team roles, and form inbound destinations.",
+  title: "Setup Your Workspace | infraly",
+  description: "Configure your new infraly workspace, team roles, and form inbound destinations.",
 };
 
 export default async function OnboardingPage() {

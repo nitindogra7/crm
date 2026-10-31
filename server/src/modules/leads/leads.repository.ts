@@ -127,42 +127,54 @@ export class LeadsRepository {
   }
 
   async deleteLead(id: string): Promise<LeadRecord | null> {
-    const lead = await prisma.lead.findUnique({ where: { id } });
-    if (!lead) return null;
+    return prisma.$transaction(async (tx) => {
+      const lead = await tx.lead.findUnique({ where: { id } });
+      if (!lead) return null;
 
-    await prisma.lead.delete({ where: { id } });
+      await tx.lead.delete({ where: { id } });
 
-    if (lead.formId) {
-      await this.decrementLeadCount(lead.formId);
-    }
+      if (lead.formId) {
+        await tx.$executeRaw`
+          UPDATE "forms"
+          SET "leadCount" = GREATEST(0, "leadCount" - 1)
+          WHERE "id" = ${lead.formId}
+        `;
+      }
 
-    return lead;
+      return lead;
+    });
   }
 
   async deleteLeads(dashboardId: string, ids: string[]): Promise<number> {
-    const leads = await prisma.lead.findMany({
-      where: { id: { in: ids }, dashboardId },
-      select: { id: true, formId: true },
-    });
+    return prisma.$transaction(async (tx) => {
+      const leads = await tx.lead.findMany({
+        where: { id: { in: ids }, dashboardId },
+        select: { formId: true },
+      });
 
-    if (leads.length === 0) return 0;
+      if (leads.length === 0) return 0;
 
-    const formCounts: Record<string, number> = {};
-    for (const lead of leads) {
-      if (lead.formId) {
-        formCounts[lead.formId] = (formCounts[lead.formId] || 0) + 1;
+      const formCounts: Record<string, number> = {};
+      for (const lead of leads) {
+        if (lead.formId) {
+          formCounts[lead.formId] = (formCounts[lead.formId] || 0) + 1;
+        }
       }
-    }
 
-    const deleteResult = await prisma.lead.deleteMany({
-      where: { id: { in: ids }, dashboardId },
+      const deleteResult = await tx.lead.deleteMany({
+        where: { id: { in: ids }, dashboardId },
+      });
+
+      for (const [formId, count] of Object.entries(formCounts)) {
+        await tx.$executeRaw`
+          UPDATE "forms"
+          SET "leadCount" = GREATEST(0, "leadCount" - ${count})
+          WHERE "id" = ${formId}
+        `;
+      }
+
+      return deleteResult.count;
     });
-
-    for (const [formId, count] of Object.entries(formCounts)) {
-      await this.decrementLeadCount(formId, count);
-    }
-
-    return deleteResult.count;
   }
 
   async batchUpdateLeadStatus(
@@ -185,17 +197,11 @@ export class LeadsRepository {
   }
 
   async decrementLeadCount(formId: string, count: number = 1): Promise<void> {
-    const form = await prisma.form.findUnique({
-      where: { id: formId },
-      select: { leadCount: true },
-    });
-    if (form && form.leadCount > 0) {
-      const newCount = Math.max(0, form.leadCount - count);
-      await prisma.form.update({
-        where: { id: formId },
-        data: { leadCount: newCount },
-      });
-    }
+    await prisma.$executeRaw`
+      UPDATE "forms"
+      SET "leadCount" = GREATEST(0, "leadCount" - ${count})
+      WHERE "id" = ${formId}
+    `;
   }
 }
 

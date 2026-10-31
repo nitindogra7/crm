@@ -1,13 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #f2f2f2;
-  --mute: #8c8c8c;
-  --dim: #565656;
-  --line: rgba(255, 255, 255, 0.08);
-  --line2: rgba(255, 255, 255, 0.17);
-  --background: #121212;
-  --foreground: #f2f2f2;
+  --ink: #203332;
+  --mute: #5d6967;
+  --dim: #6c7674;
+  --line: rgba(30, 52, 51, 0.08);
+  --line2: rgba(182, 107, 23, 0.2);
+  --background: #f7f8f7;
+  --foreground: #203332;
+  --accent: #b66b17;
+  --accent-dim: #fff0dc;
+  --ink-on-accent: #30220e;
+  --font-heading: var(--font-figtree), "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-p: "Inter Display", "InterDisplay", var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-geist: var(--font-figtree), "Figtree", ui-sans-serif, sans-serif;
+  --font-manrope: "Inter Display", "InterDisplay", var(--font-inter), "Inter", ui-sans-serif, sans-serif;
 }
 
 @theme inline {
@@ -16,10 +23,10 @@
   --color-dim: var(--dim);
   --color-line: var(--line);
   --color-line2: var(--line2);
-  --font-sans: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif;
-  --font-heading: var(--font-figtree), "Figtree", sans-serif;
-  --font-p: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif;
-  --font-mono: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif;
+  --font-sans: "Inter Display", "InterDisplay", var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-figtree), "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-p: "Inter Display", "InterDisplay", var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
 /* Inter Display local/web alias */
@@ -45,11 +52,16 @@ div,
 span,
 a,
 label {
-  font-family: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif;
+  font-family: "Inter Display", "InterDisplay", var(--font-inter), "Inter", ui-sans-serif, sans-serif;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   scroll-behavior: smooth;
   scroll-padding-top: 80px;
 }
@@ -59,9 +71,9 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #141414 inset !important;
-  -webkit-text-fill-color: #f2f2f2 !important;
-  caret-color: #ffffff;
+  -webkit-box-shadow: 0 0 0 1000px #f7f8f7 inset !important;
+  -webkit-text-fill-color: #203332 !important;
+  caret-color: #203332;
   transition: background-color 5000s ease-in-out 0s;
 }
 
@@ -73,7 +85,7 @@ h4,
 h5,
 h6,
 .font-heading {
-  font-family: var(--font-figtree), "Figtree", sans-serif !important;
+  font-family: var(--font-figtree), "Figtree", ui-sans-serif, sans-serif !important;
   font-weight: 500;
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -94,7 +106,7 @@ h3 {
 /* Paragraphs & body: Inter Display strictly */
 p,
 .font-p {
-  font-family: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif !important;
+  font-family: "Inter Display", "InterDisplay", var(--font-inter), "Inter", ui-sans-serif, sans-serif !important;
   font-weight: 400;
   line-height: 1.65;
   letter-spacing: -0.006em;
@@ -106,8 +118,8 @@ code,
 pre,
 kbd,
 samp {
-  font-family: "Inter Display", "InterDisplay", var(--font-inter), "Inter", sans-serif !important;
-  font-feature-settings: "tnum" 1, "cv05" 1, "cv11" 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+  font-feature-settings: "tnum" 1;
 }
 
 /* Keyframe Animations for Hero Section & SaaS Aesthetics */
@@ -296,31 +308,19 @@ body:has(.auth-scroll-panel) {
 }
 
 .auth-scroll-panel {
-  overscroll-behavior-y: contain !important;
-  -webkit-overflow-scrolling: touch !important;
-  scrollbar-width: thin !important;
-  scrollbar-color: rgba(255, 255, 255, 0.16) transparent !important;
+  overscroll-behavior: none !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
 .auth-scroll-panel::-webkit-scrollbar {
-  width: 5px !important;
-}
-
-.auth-scroll-panel::-webkit-scrollbar-track {
-  background: transparent !important;
-}
-
-.auth-scroll-panel::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.14) !important;
-  border-radius: 9999px !important;
-}
-
-.auth-scroll-panel::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.28) !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* =========================================================================
-   Clerk Authentication Theme Overrides to Match Salenova Reference Design
+   Clerk Authentication Theme Overrides to Match Infraly Landing Page
    ========================================================================= */
 .cl-rootBox {
   width: 100% !important;
@@ -346,7 +346,7 @@ body:has(.auth-scroll-panel) {
 
 /* Step-aware Clerk header: displays title, subtitle, back link & identity preview */
 .cl-header {
-  margin-bottom: 1rem !important;
+  margin-bottom: 1.25rem !important;
   padding: 0 !important;
   text-align: left !important;
   width: 100% !important;
@@ -354,20 +354,20 @@ body:has(.auth-scroll-panel) {
 }
 
 .cl-headerTitle {
-  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-family: var(--font-heading) !important;
   font-size: 1.5rem !important;
-  font-weight: 600 !important;
-  color: #ffffff !important;
-  letter-spacing: -0.02em !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.025em !important;
   margin-bottom: 0.25rem !important;
   display: block !important;
-  line-height: 1.25 !important;
+  line-height: 1.2 !important;
 }
 
 .cl-headerSubtitle {
-  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-family: var(--font-sans) !important;
   font-size: 0.8125rem !important;
-  color: #a1a1aa !important;
+  color: #64748b !important;
   margin-top: 0 !important;
   display: block !important;
   line-height: 1.4 !important;
@@ -377,7 +377,7 @@ body:has(.auth-scroll-panel) {
   display: inline-flex !important;
   align-items: center !important;
   gap: 0.375rem !important;
-  color: #a1a1aa !important;
+  color: #64748b !important;
   font-size: 0.75rem !important;
   font-weight: 500 !important;
   margin-bottom: 0.625rem !important;
@@ -386,13 +386,13 @@ body:has(.auth-scroll-panel) {
 }
 
 .cl-headerBackLink:hover {
-  color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 .cl-headerBackIcon {
   width: 0.875rem !important;
   height: 0.875rem !important;
-  color: #a1a1aa !important;
+  color: #64748b !important;
 }
 
 .cl-socialButtons {
@@ -405,47 +405,49 @@ body:has(.auth-scroll-panel) {
 }
 
 .cl-socialButtonsBlockButton {
-  background-color: #141414 !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  border-radius: 0.6875rem !important;
-  color: #f4f4f5 !important;
-  font-family: var(--font-inter), "Inter", sans-serif !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
+  color: #1e293b !important;
+  font-family: var(--font-sans) !important;
   font-size: 0.8125rem !important;
   font-weight: 500 !important;
   height: 2.625rem !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
   justify-content: center !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
 
 .cl-socialButtonsBlockButton:hover {
-  background-color: #222222 !important;
-  border-color: rgba(255, 255, 255, 0.18) !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35) !important;
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
 }
 
 .cl-socialButtonsBlockButtonText {
-  color: #f4f4f5 !important;
+  color: #1e293b !important;
   font-weight: 500 !important;
   font-size: 0.8125rem !important;
 }
 
 .cl-dividerRow {
-  margin: 0.625rem 0 !important;
+  margin: 0.75rem 0 !important;
 }
 
 .cl-dividerLine {
-  background-color: rgba(255, 255, 255, 0.08) !important;
+  background-color: #e2e8f0 !important;
 }
 
 .cl-dividerText {
-  color: #71717a !important;
-  font-family: var(--font-inter), "Inter", sans-serif !important;
+  color: #94a3b8 !important;
+  font-family: var(--font-sans) !important;
   font-size: 0.6875rem !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
-  background-color: #181818 !important;
+  background-color: #ffffff !important;
   padding: 0 0.5rem !important;
+  font-weight: 600 !important;
 }
 
 .cl-form {
@@ -473,10 +475,10 @@ body:has(.auth-scroll-panel) {
 }
 
 .cl-formFieldLabel {
-  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-family: var(--font-sans) !important;
   font-size: 0.75rem !important;
-  font-weight: 500 !important;
-  color: #d4d4d8 !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
   margin: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -485,9 +487,9 @@ body:has(.auth-scroll-panel) {
 }
 
 .cl-formFieldAction {
-  color: #a1a1aa !important;
+  color: #2563eb !important;
   font-size: 0.71875rem !important;
-  font-weight: 400 !important;
+  font-weight: 500 !important;
   text-decoration: none !important;
   transition: color 0.15s ease !important;
   margin: 0 !important;
@@ -496,15 +498,15 @@ body:has(.auth-scroll-panel) {
 }
 
 .cl-formFieldAction:hover {
-  color: #34d399 !important;
+  color: #1d4ed8 !important;
   text-decoration: underline !important;
 }
 
 /* Outer input container (handles password eye icon properly without clipping) */
 .cl-formFieldInputGroup {
-  background-color: #141414 !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  border-radius: 0.6875rem !important;
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
   transition: all 0.2s ease !important;
   overflow: hidden !important;
   height: 2.625rem !important;
@@ -513,17 +515,17 @@ body:has(.auth-scroll-panel) {
 }
 
 .cl-formFieldInputGroup:focus-within {
-  border-color: rgba(52, 211, 153, 0.75) !important;
-  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.3), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
-  background-color: #1c1c1c !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+  background-color: #ffffff !important;
 }
 
 .cl-formFieldInput {
-  background-color: #141414 !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 0.6875rem !important;
-  color: #ffffff !important;
-  font-family: var(--font-inter), "Inter", sans-serif !important;
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
+  color: #0f172a !important;
+  font-family: var(--font-sans) !important;
   font-size: 0.8125rem !important;
   height: 2.625rem !important;
   padding: 0 0.8125rem !important;
@@ -540,19 +542,20 @@ body:has(.auth-scroll-panel) {
 }
 
 .cl-formFieldInput:focus {
-  border-color: rgba(52, 211, 153, 0.75) !important;
-  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.3), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
   outline: none !important;
+  background-color: #ffffff !important;
 }
 
 .cl-formFieldInputShowPasswordButton {
-  color: #71717a !important;
+  color: #94a3b8 !important;
   padding: 0 0.75rem !important;
   transition: color 0.15s ease !important;
 }
 
 .cl-formFieldInputShowPasswordButton:hover {
-  color: #ffffff !important;
+  color: #334155 !important;
 }
 
 /* Error states for input and group */
@@ -561,14 +564,14 @@ body:has(.auth-scroll-panel) {
 .cl-formFieldInputGroup:has(.cl-formFieldErrorText),
 .cl-formFieldInput[aria-invalid="true"],
 .cl-formFieldInput[data-invalid="true"] {
-  border-color: rgba(248, 113, 113, 0.75) !important;
-  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.25) !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
 }
 
 .cl-formFieldErrorText {
-  color: #f87171 !important;
+  color: #ef4444 !important;
   font-size: 0.71875rem !important;
-  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-family: var(--font-sans) !important;
   line-height: 1.25 !important;
   margin-top: 0.25rem !important;
   display: flex !important;
@@ -579,47 +582,47 @@ body:has(.auth-scroll-panel) {
 }
 
 .cl-formFieldSuccessText {
-  color: #34d399 !important;
+  color: #10b981 !important;
   font-size: 0.71875rem !important;
-  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-family: var(--font-sans) !important;
   margin-top: 0.25rem !important;
 }
 
 /* Alert / Warning callouts */
 .cl-alert,
 .cl-alertDanger {
-  background-color: rgba(244, 63, 94, 0.1) !important;
-  border: 1px solid rgba(244, 63, 94, 0.3) !important;
-  border-radius: 0.6875rem !important;
+  background-color: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  border-radius: 0.75rem !important;
   padding: 0.5rem 0.75rem !important;
   margin-bottom: 0.5rem !important;
-  color: #fca5a5 !important;
+  color: #b91c1c !important;
   font-size: 0.75rem !important;
 }
 
 .cl-alertText {
-  color: #fca5a5 !important;
+  color: #b91c1c !important;
   font-size: 0.75rem !important;
-  font-family: var(--font-inter), "Inter", sans-serif !important;
+  font-family: var(--font-sans) !important;
 }
 
 .cl-formButtonPrimary {
-  background-color: #ffffff !important;
-  color: #0b0b0e !important;
-  border-radius: 0.6875rem !important;
-  font-family: var(--font-inter), "Inter", sans-serif !important;
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  border-radius: 0.75rem !important;
+  font-family: var(--font-sans) !important;
   font-size: 0.8125rem !important;
-  font-weight: 550 !important;
+  font-weight: 600 !important;
   height: 2.625rem !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), 0 0 20px rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.25) !important;
   margin-top: 0.5rem !important;
   cursor: pointer !important;
 }
 
 .cl-formButtonPrimary:hover {
-  background-color: #f4f4f5 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 24px rgba(255, 255, 255, 0.14) !important;
+  background-color: #1d4ed8 !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
 }
 
 .cl-formButtonPrimary:active {
@@ -628,34 +631,34 @@ body:has(.auth-scroll-panel) {
 
 /* Identity Preview on multi-step sign in (e.g. user email display + Edit button) */
 .cl-identityPreview {
-  background-color: #141414 !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 0.6875rem !important;
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem !important;
   padding: 0.625rem 0.875rem !important;
   margin: 0.5rem 0 0.875rem 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
 
 .cl-identityPreviewText {
-  color: #f4f4f5 !important;
+  color: #0f172a !important;
   font-size: 0.8125rem !important;
-  font-family: var(--font-inter), "Inter", sans-serif !important;
-  font-weight: 500 !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 600 !important;
 }
 
 .cl-identityPreviewEditButton {
-  color: #34d399 !important;
+  color: #2563eb !important;
   font-size: 0.75rem !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   transition: color 0.15s ease !important;
   cursor: pointer !important;
 }
 
 .cl-identityPreviewEditButton:hover {
-  color: #6ee7b7 !important;
+  color: #1d4ed8 !important;
   text-decoration: underline !important;
 }
 
@@ -677,28 +680,29 @@ body:has(.auth-scroll-panel) {
   width: 3rem !important;
   height: 3.25rem !important;
   border-radius: 0.75rem !important;
-  background-color: #141414 !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
-  color: #ffffff !important;
+  background-color: #f8fafc !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #0f172a !important;
   font-family: var(--font-mono), monospace !important;
   font-size: 1.25rem !important;
   font-weight: 600 !important;
   text-align: center !important;
   transition: all 0.2s ease !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
   outline: none !important;
   box-sizing: border-box !important;
 }
 
 .cl-otpCodeFieldInput:focus,
 .cl-otpCodeFieldInput[data-status="focused"] {
-  border-color: rgba(52, 211, 153, 0.85) !important;
-  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.35) !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+  background-color: #ffffff !important;
   outline: none !important;
 }
 
 .cl-formResendCodeLink {
-  color: #a1a1aa !important;
+  color: #64748b !important;
   font-size: 0.75rem !important;
   transition: color 0.15s ease !important;
   margin-top: 0.5rem !important;
@@ -707,7 +711,7 @@ body:has(.auth-scroll-panel) {
 }
 
 .cl-formResendCodeLink:hover {
-  color: #ffffff !important;
+  color: #2563eb !important;
 }
 
 /* =========================================================================
@@ -772,10 +776,26 @@ svg[aria-label*="Clerk"] {
 .animate-skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    rgba(255, 255, 255, 0.04) 100%
+    rgba(226, 232, 240, 0.5) 0%,
+    rgba(241, 245, 249, 0.95) 50%,
+    rgba(226, 232, 240, 0.5) 100%
   ) !important;
   background-size: 200% 100% !important;
   animation: skeletonShimmer 1.8s ease-in-out infinite !important;
+}
+
+/* Custom Infraly Dark Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
 }

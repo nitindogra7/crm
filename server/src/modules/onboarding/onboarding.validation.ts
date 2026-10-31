@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-export const TEAM_SIZES = ["team", "solo"] as const;
-export const USE_CASES = ["saas", "agency", "leads", "personal"] as const;
-export const AVATAR_TONES = ["zinc", "emerald", "slate", "white"] as const;
+export const TEAM_SIZES = ["team", "solo", "2-10", "11-50", "50+"] as const;
+export const USE_CASES = ["saas", "agency", "leads", "personal", "company"] as const;
+export const AVATAR_TONES = ["zinc", "emerald", "slate", "white", "blue"] as const;
 
 /**
  * Zod schema matching the payload submitted by the frontend onboarding wizard
@@ -26,7 +26,8 @@ export const createOnboardingSchema = z.object({
     .regex(
       /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
       "Slug must contain only lowercase alphanumeric characters and single hyphens"
-    ),
+    )
+    .optional(),
   ownerEmail: z
     .union([
       z.string().email("Owner email must be a valid email address"),
@@ -35,17 +36,19 @@ export const createOnboardingSchema = z.object({
     ])
     .optional(),
   teamSize: z
-    .enum(["team", "solo"])
-    .default("team"),
+    .string()
+    .default("team")
+    .optional(),
   useCase: z
-    .enum(["saas", "agency", "leads", "personal"])
-    .default("saas"),
+    .string()
+    .default("leads")
+    .optional(),
   avatarTone: z
-    .enum(["zinc", "emerald", "slate", "white"])
-    .default("zinc"),
+    .string()
+    .default("blue")
+    .optional(),
   endpointUrl: z
     .string()
-    .url("Endpoint URL must be a valid URL")
     .optional()
     .nullable(),
   isOnboarded: z.boolean().default(true).optional(),

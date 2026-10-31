@@ -7,50 +7,51 @@ interface MarqueeItem {
 }
 
 const ITEMS: MarqueeItem[] = [
-  { name: "Next.js", icon: "db" },
-  { name: "Webflow", icon: "hook" },
-  { name: "Astro", icon: "astro" },
-  { name: "HTML5 Forms", icon: "code" },
-  { name: "Tailwind CSS", icon: "tailwind" },
-  { name: "Vercel", icon: "vercel" },
-  { name: "React", icon: "cpu" },
-  { name: "GitHub Pages", icon: "github" },
-  { name: "Framer Sites", icon: "layers" },
-  { name: "Remix", icon: "bolt" },
-  { name: "Nuxt.js", icon: "cpu" },
   { name: "WordPress", icon: "db" },
-  { name: "Vite Apps", icon: "bolt" },
-  { name: "Custom Landing Pages", icon: "cur" },
-  { name: "Linear Inbound", icon: "linear" },
+  { name: "Webflow", icon: "hook" },
+  { name: "Shopify Stores", icon: "brief" },
+  { name: "Squarespace", icon: "layers" },
+  { name: "Wix Websites", icon: "cpu" },
+  { name: "Framer", icon: "layers" },
+  { name: "Custom Websites", icon: "code" },
+  { name: "Landing Pages", icon: "bolt" },
+  { name: "Contact Forms", icon: "chk" },
+  { name: "React & Next.js", icon: "db" },
+  { name: "Portfolio Sites", icon: "brief" },
+  { name: "HTML Forms", icon: "code" },
+  { name: "Email Alerts", icon: "bell" },
+  { name: "CSV Export", icon: "layers" },
 ];
 
 export function Marquee() {
   return (
-    <div className="relative py-[20px] my-[10px]">
-      {/* Subtle Micro-Header */}
+    <div className="relative py-6 my-2">
       <div className="text-center mb-3">
-        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-400 font-medium">
-          Connects natively to your entire frontend stack
+        <span className="text-[11px] font-sans tracking-wide uppercase text-zinc-400 font-medium">
+          Works seamlessly with every website builder and platform
         </span>
       </div>
 
       <div
-        className="group overflow-hidden py-[14px] border-y border-white/[0.06] relative select-none flex bg-white/[0.01]"
+        className="group overflow-hidden py-3 border-y border-emerald-950/60 bg-[#0A0F0D]/60 relative select-none flex"
         style={{
           maskImage:
-            "linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent)",
+            "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
           WebkitMaskImage:
-            "linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent)",
+            "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
         }}
       >
         {/* Track 1 */}
-        <div className="flex shrink-0 items-center gap-[14px] sm:gap-[18px] pr-[14px] sm:pr-[18px] animate-[marquee_36s_linear_infinite] group-hover:[animation-play-state:paused]">
+        <div className="flex shrink-0 items-center gap-3 pr-3 animate-[marquee_38s_linear_infinite] group-hover:[animation-play-state:paused]">
           {ITEMS.map((item, index) => (
             <span
               key={`track1-${index}`}
-              className="inline-flex items-center gap-[8px] px-3.5 py-1.5 rounded-full border border-white/[0.07] bg-white/[0.02] text-zinc-400 hover:text-white hover:border-white/20 hover:bg-white/[0.05] transition-all duration-200 text-[12px] font-sans whitespace-nowrap cursor-default group/item"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md border border-zinc-800/80 bg-[#0E1411] text-zinc-300 hover:text-white hover:border-emerald-500/30 transition-all text-xs font-sans whitespace-nowrap cursor-default group/item"
             >
-              <Icon name={item.icon} className="w-[13px] h-[13px] text-zinc-500 group-hover/item:text-zinc-200 transition-colors flex-none" />
+              <Icon
+                name={item.icon}
+                className="w-3.5 h-3.5 text-zinc-400 group-hover/item:text-emerald-400 transition-colors flex-none"
+              />
               <span>{item.name}</span>
             </span>
           ))}
@@ -59,14 +60,17 @@ export function Marquee() {
         {/* Track 2 */}
         <div
           aria-hidden="true"
-          className="flex shrink-0 items-center gap-[14px] sm:gap-[18px] pr-[14px] sm:pr-[18px] animate-[marquee_36s_linear_infinite] group-hover:[animation-play-state:paused]"
+          className="flex shrink-0 items-center gap-3 pr-3 animate-[marquee_38s_linear_infinite] group-hover:[animation-play-state:paused]"
         >
           {ITEMS.map((item, index) => (
             <span
               key={`track2-${index}`}
-              className="inline-flex items-center gap-[8px] px-3.5 py-1.5 rounded-full border border-white/[0.07] bg-white/[0.02] text-zinc-400 hover:text-white hover:border-white/20 hover:bg-white/[0.05] transition-all duration-200 text-[12px] font-sans whitespace-nowrap cursor-default group/item"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md border border-zinc-800/80 bg-[#0E1411] text-zinc-300 hover:text-white hover:border-emerald-500/30 transition-all text-xs font-sans whitespace-nowrap cursor-default group/item"
             >
-              <Icon name={item.icon} className="w-[13px] h-[13px] text-zinc-500 group-hover/item:text-zinc-200 transition-colors flex-none" />
+              <Icon
+                name={item.icon}
+                className="w-3.5 h-3.5 text-zinc-400 group-hover/item:text-emerald-400 transition-colors flex-none"
+              />
               <span>{item.name}</span>
             </span>
           ))}

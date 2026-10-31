@@ -11,27 +11,37 @@ export class OnboardingService {
   async completeOnboarding(
     input: CreateOnboardingInput
   ): Promise<OnboardingRecord> {
-    let candidateSlug = input.slug;
+    let candidateSlug =
+      input.slug ||
+      input.name
+        .toLowerCase()
+        .trim()
+        .replace(/['']/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 48) ||
+      `workspace-${Date.now().toString(36)}`;
+
     let existingSlug = await this.repository.findBySlug(candidateSlug);
     let attempts = 0;
 
     // If slug is taken by another user, generate random suffix until unique
-    while (existingSlug && existingSlug.userId !== input.userId && attempts < 5) {
+    while (existingSlug && existingSlug.userId !== input.userId && attempts < 10) {
       const suffix = Math.random().toString(36).substring(2, 6);
-      candidateSlug = `${input.slug.slice(0, 42)}-${suffix}`;
+      candidateSlug = `${candidateSlug.slice(0, 42)}-${suffix}`;
       existingSlug = await this.repository.findBySlug(candidateSlug);
       attempts++;
     }
 
     // Ensure isOnboarded is true when completing onboarding flow
-    const payload: CreateOnboardingInput = {
+    const payload = {
       ...input,
       slug: candidateSlug,
       isOnboarded: input.isOnboarded ?? true,
     };
 
     // Use upsert so re-submitting for the same userId updates cleanly without unique constraint crash
-    return this.repository.upsert(payload);
+    return this.repository.upsert(payload as CreateOnboardingInput & { slug: string });
   }
 
   async getOnboardingStatus(

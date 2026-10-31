@@ -10,13 +10,26 @@ const server = app.listen(port, () => {
 
 async function gracefulShutdown(signal: string) {
   console.log(`Received ${signal}. Shutting down gracefully...`);
-  server.close(async () => {
+
+  // Hard timeout to force exit if active Keep-Alive connections do not terminate
+  const forceExitTimeout = setTimeout(() => {
+    console.error("Graceful shutdown timed out after 5000ms. Forcing exit.");
+    process.exit(1);
+  }, 5000);
+  forceExitTimeout.unref();
+
+  server.close(async (err) => {
+    if (err) {
+      console.error("Error closing HTTP server:", err);
+    }
     try {
       await prisma.$disconnect();
       console.log("Prisma client disconnected successfully.");
+      clearTimeout(forceExitTimeout);
       process.exit(0);
-    } catch (err) {
-      console.error("Error disconnecting Prisma on shutdown:", err);
+    } catch (dbErr) {
+      console.error("Error disconnecting Prisma on shutdown:", dbErr);
+      clearTimeout(forceExitTimeout);
       process.exit(1);
     }
   });

@@ -1,5 +1,5 @@
-import { Zap, Building, Sparkles, User } from "lucide-react";
-import { UseCaseOption, AvatarToneOption } from "../types";
+import { Building2, Briefcase, Rocket, Globe } from "lucide-react";
+import { UseCaseOption, TeamSizeOption } from "../types";
 
 export function slugify(text: string): string {
   return text
@@ -12,15 +12,35 @@ export function slugify(text: string): string {
 }
 
 export const USE_CASES: UseCaseOption[] = [
-  { id: "saas", label: "SaaS & Web App", icon: Zap },
-  { id: "agency", label: "Agency & Client Sites", icon: Building },
-  { id: "leads", label: "Landing Pages & Leads", icon: Sparkles },
-  { id: "personal", label: "Personal Projects", icon: User },
+  {
+    id: "company",
+    label: "Company / Team",
+    description: "Capture inbound sales leads, inquiries & customer requests",
+    icon: Building2,
+  },
+  {
+    id: "agency",
+    label: "Agency / Freelancer",
+    description: "Manage client projects, quote forms & consultation bookings",
+    icon: Briefcase,
+  },
+  {
+    id: "saas",
+    label: "Startup / SaaS",
+    description: "Collect product waitlists, demo requests & user feedback",
+    icon: Rocket,
+  },
+  {
+    id: "personal",
+    label: "Personal / Creator",
+    description: "Portfolio contact forms, newsletters & personal side projects",
+    icon: Globe,
+  },
 ];
 
-export const AVATAR_TONES: AvatarToneOption[] = [
-  { id: "zinc", bg: "bg-zinc-800", border: "border-zinc-700", text: "text-white" },
-  { id: "emerald", bg: "bg-emerald-950/60", border: "border-emerald-700/60", text: "text-emerald-300" },
-  { id: "slate", bg: "bg-slate-800", border: "border-slate-700", text: "text-slate-200" },
-  { id: "white", bg: "bg-white", border: "border-white", text: "text-black" },
+export const TEAM_SIZES: TeamSizeOption[] = [
+  { id: "solo", label: "Just me", sublabel: "Solo creator" },
+  { id: "2-10", label: "2 – 10", sublabel: "Small team" },
+  { id: "11-50", label: "11 – 50", sublabel: "Growing team" },
+  { id: "50+", label: "50+", sublabel: "Enterprise" },
 ];

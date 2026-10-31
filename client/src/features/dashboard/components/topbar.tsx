@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useDashboard } from "../context/dashboard-context";
 import {
@@ -74,27 +76,38 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
 
   return (
     <>
-      <header className="h-13 px-4 sm:px-6 flex items-center justify-between border-b border-white/[0.06] bg-[#0c0c0e]/80 backdrop-blur-xl sticky top-0 z-30">
-        <div className="flex items-center gap-3">
+      <header className="h-14 px-4 sm:px-6 flex items-center justify-between border-b border-slate-200/80 bg-white/80 backdrop-blur-md sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={onOpenMobileMenu}
-            className="md:hidden text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-white/[0.04] transition-colors"
+            className="md:hidden text-slate-500 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
             aria-label="Open navigation menu"
           >
             <Menu className="w-4 h-4" />
           </button>
 
+          <Link href="/" className="md:hidden flex items-center shrink-0">
+            <Image
+              src="/favicon.ico"
+              alt="Infraly"
+              width={24}
+              height={24}
+              unoptimized
+              className="w-5 h-5 object-contain"
+            />
+          </Link>
+
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-zinc-500 hidden sm:inline">{workspace.name}</span>
-            <span className="text-zinc-700 hidden sm:inline">/</span>
-            <span className="text-zinc-200 font-medium">
+            <span className="text-slate-400 hidden sm:inline font-normal">{workspace.name}</span>
+            <span className="text-slate-300 hidden sm:inline">/</span>
+            <span className="text-slate-900 font-semibold text-xs sm:text-[13px]">
               {getPageTitle()}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {/* Subtle Product Tour Button */}
           <button
             type="button"
@@ -106,10 +119,10 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
                 startTour();
               }
             }}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors text-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-slate-200/80 transition-all text-xs cursor-pointer shadow-2xs font-medium"
             title="Walk through the dashboard features and flow"
           >
-            <Compass className="w-3.5 h-3.5 text-zinc-400" />
+            <Compass className="w-3.5 h-3.5 text-slate-500" />
             <span className="hidden sm:inline">Tour</span>
           </button>
 
@@ -118,10 +131,10 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
             data-tour="simulate-lead-btn"
             type="button"
             onClick={() => setIsQuickSimulateOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] text-zinc-300 hover:text-white text-xs font-medium transition-colors shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-blue-200/80 bg-blue-50/90 hover:bg-blue-100 text-blue-700 hover:text-blue-800 text-xs font-semibold transition-all shadow-2xs cursor-pointer"
             title="Simulate an incoming lead locally"
           >
-            <Zap className="w-3.5 h-3.5 text-emerald-400" />
+            <Zap className="w-3.5 h-3.5 text-blue-600" />
             <span className="hidden sm:inline">Simulate Lead</span>
           </button>
         </div>
@@ -129,22 +142,23 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
 
       {/* Quick Simulate Modal */}
       {isQuickSimulateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="relative w-full max-w-md bg-[#181818] border border-white/[0.12] rounded-2xl p-5 shadow-2xl text-white">
-            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-2xl text-slate-900 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <span className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200/80 text-blue-600 flex items-center justify-center">
                   <Zap className="w-4 h-4" />
                 </span>
                 <div>
-                  <h3 className="text-sm font-medium font-heading">Simulate Inbound Lead</h3>
-                  <p className="text-[11px] text-zinc-400">Local test; no email or webhook is actually sent.</p>
+                  <h3 className="text-sm font-heading font-bold text-slate-900">Simulate Inbound Lead</h3>
+                  <p className="text-[11.5px] text-slate-500">Local test; verify pipeline processing without sending real emails.</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsQuickSimulateOpen(false)}
-                className="text-zinc-400 hover:text-white p-1 rounded transition-colors"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+                aria-label="Close dialog"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -152,14 +166,14 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
 
             <form onSubmit={handleSimulate} className="mt-4 space-y-3.5 text-xs">
               <div>
-                <label className="block text-zinc-400 mb-1 text-[11px] font-mono uppercase">
+                <label className="block text-slate-700 mb-1 text-[12px] font-semibold">
                   Target Form
                 </label>
                 <select
                   value={selectedFormId || forms[0]?.id || ""}
                   onChange={(e) => setSelectedFormId(e.target.value)}
                   disabled={forms.length === 0}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-white focus:outline-none focus:border-white/40 disabled:opacity-60"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 disabled:opacity-60 text-xs transition-all"
                 >
                   {forms.length === 0 ? (
                     <option value="">No forms available (Create a form first)</option>
@@ -172,14 +186,14 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
                   )}
                 </select>
                 {forms.length === 0 && (
-                  <p className="text-[11px] text-amber-400 mt-1">
+                  <p className="text-[11px] text-amber-600 mt-1">
                     You need at least one form before simulating inbound leads.
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-zinc-400 mb-1 text-[11px] font-mono uppercase">
+                <label className="block text-slate-700 mb-1 text-[12px] font-semibold">
                   Full Name
                 </label>
                 <input
@@ -187,13 +201,13 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
                   required
                   value={testName}
                   onChange={(e) => setTestName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-white placeholder-zinc-600 focus:outline-none focus:border-white/40"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-xs transition-all"
                   placeholder="e.g. Jane Doe"
                 />
               </div>
 
               <div>
-                <label className="block text-zinc-400 mb-1 text-[11px] font-mono uppercase">
+                <label className="block text-slate-700 mb-1 text-[12px] font-semibold">
                   Email Address
                 </label>
                 <input
@@ -201,13 +215,13 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
                   required
                   value={testEmail}
                   onChange={(e) => setTestEmail(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-white placeholder-zinc-600 focus:outline-none focus:border-white/40"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-xs transition-all"
                   placeholder="jane@company.com"
                 />
               </div>
 
               <div>
-                <label className="block text-zinc-400 mb-1 text-[11px] font-mono uppercase">
+                <label className="block text-slate-700 mb-1 text-[12px] font-semibold">
                   Message Content
                 </label>
                 <textarea
@@ -215,7 +229,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
                   required
                   value={testMessage}
                   onChange={(e) => setTestMessage(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-white placeholder-zinc-600 focus:outline-none focus:border-white/40 resize-none"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-xs transition-all resize-none"
                   placeholder="Inquiry or feedback payload..."
                 />
               </div>
@@ -224,14 +238,14 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
                 <button
                   type="button"
                   onClick={() => setIsQuickSimulateOpen(false)}
-                  className="px-3 py-2 rounded-xl border border-white/[0.1] text-zinc-400 hover:text-white transition-colors"
+                  className="px-3.5 py-2 rounded-xl border border-slate-200/90 text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium text-xs transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={forms.length === 0 || isSimulating}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black font-medium hover:bg-zinc-200 transition-colors shadow-sm disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
                 >
                   {isSimulating ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />

@@ -103,12 +103,12 @@ export const createLeadsSlice: StateCreator<
       status: "New",
       receivedAt: new Date().toISOString(),
       message:
-        payload.message || "Simulated test submission from Salenova dashboard.",
+        payload.message || "Simulated test submission from infraly dashboard.",
       extraFields: payload.extraFields,
       metadata: {
         ip: "127.0.0.1",
-        userAgent: "Salenova-Simulator/1.0",
-        referrer: "https://salenova.app/dashboard",
+        userAgent: "infraly-Simulator/1.0",
+        referrer: "https://infraly.app/dashboard",
       },
     };
 

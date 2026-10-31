@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { AuthShell, clerkAuthAppearance } from "@/shared/components/auth-shell";
 
 export const metadata: Metadata = {
-  title: "Sign in | Salenova",
-  description: "Sign in to access your Salenova form endpoints and workspace.",
+  title: "Sign in | Infraly",
+  description: "Sign in to access your Infraly form endpoints and workspace.",
 };
 
 export default function SignInPage() {

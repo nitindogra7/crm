@@ -106,8 +106,32 @@ export class OnboardingController {
         }
       }
 
+      const workspaceName =
+        req.body.name && typeof req.body.name === "string" && req.body.name.trim()
+          ? req.body.name.trim()
+          : "My Workspace";
+
+      let candidateSlug = req.body.slug;
+      if (!candidateSlug || typeof candidateSlug !== "string" || !candidateSlug.trim()) {
+        candidateSlug =
+          workspaceName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 48) || `workspace-${Date.now().toString(36)}`;
+      } else {
+        candidateSlug = candidateSlug
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 48);
+      }
+
       const payload = {
         ...req.body,
+        name: workspaceName,
+        slug: candidateSlug,
         userId,
         ...(ownerEmail && { ownerEmail }),
       };

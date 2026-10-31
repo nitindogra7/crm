@@ -1,7 +1,4 @@
-import { ClerkProvider } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
-import { ui } from "@clerk/ui";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Figtree, Inter } from "next/font/google";
 import "./globals.css";
 
@@ -9,18 +6,34 @@ const figtree = Figtree({
   variable: "--font-figtree",
   subsets: ["latin"],
   display: "swap",
+  preload: true,
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
+  preload: true,
 });
 
+export const viewport: Viewport = {
+  themeColor: "#2563eb",
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
-  title: "Salenova | Effortless form backend without the setup",
+  title: "Infraly — Developer-First Form Backend & Modern CRM",
   description:
-    "Skip the backend setup, server maintenance, and spam headaches. Collect, protect, and manage website form submissions with a single endpoint.",
+    "Capture every web lead without building a backend. Point your forms to Infraly for instant spam protection, real-time lead inbox, and pipeline tracking.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -33,16 +46,8 @@ export default function RootLayout({
       lang="en"
       className={`${figtree.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#121212] text-[#f2f2f2] font-sans selection:bg-white selection:text-black">
-        <ClerkProvider
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ui={ui as any}
-          appearance={{
-            theme: dark,
-          }}
-        >
-          {children}
-        </ClerkProvider>
+      <body className="min-h-full bg-white text-slate-900 font-sans selection:bg-blue-500/20 selection:text-blue-900">
+        {children}
       </body>
     </html>
   );

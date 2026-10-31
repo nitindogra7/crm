@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
+import { ClerkAuthProvider } from "@/shared/components/clerk-auth-provider";
 import { DashboardProvider, DashboardShell } from "@/features/dashboard";
 
 export const metadata: Metadata = {
-  title: "Dashboard | Salenova",
+  title: "Dashboard | Infraly",
   description:
     "Manage your incoming leads, protect form endpoints from spam, and inspect submission webhooks.",
 };
@@ -60,8 +61,10 @@ export default async function DashboardLayout({
   }
 
   return (
-    <DashboardProvider initialWorkspace={onboardingData}>
+    <ClerkAuthProvider>
+      <DashboardProvider initialWorkspace={onboardingData}>
       <DashboardShell>{children}</DashboardShell>
     </DashboardProvider>
+    </ClerkAuthProvider>
   );
 }

@@ -21,7 +21,6 @@ model Onboarding {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@index([userId])
   @@map("onboarding")
 }
 
@@ -68,6 +67,7 @@ model Form {
 
   @@unique([dashboardId, slug])
   @@index([dashboardId])
+  @@index([dashboardId, createdAt(sort: Desc)])
   @@index([slug])
   @@map("forms")
 }
@@ -87,7 +87,6 @@ model ApiKey {
   dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
 
   @@index([dashboardId])
-  @@index([key])
   @@map("api_keys")
 }
 
@@ -111,6 +110,8 @@ model Lead {
   form        Form?     @relation(fields: [formId], references: [id], onDelete: SetNull)
 
   @@index([dashboardId])
+  @@index([dashboardId, receivedAt(sort: Desc)])
+  @@index([dashboardId, status, receivedAt(sort: Desc)])
   @@index([formId])
   @@map("leads")
 }
@@ -136,6 +137,7 @@ model Spam {
   form           Form?     @relation(fields: [formId], references: [id], onDelete: SetNull)
 
   @@index([dashboardId])
+  @@index([dashboardId, receivedAt(sort: Desc)])
   @@index([formId])
   @@map("spam")
 }

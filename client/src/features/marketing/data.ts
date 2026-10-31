@@ -27,6 +27,7 @@ export interface PricingPlan {
   price: string;
   period: string;
   isPopular: boolean;
+  available: boolean;
   features: string[];
   btnVariant: "outline" | "gradient";
 }
@@ -261,7 +262,7 @@ export const marketingData: MarketingData = {
       },
       {
         q: "Can I forward leads to webhooks or submit via REST API?",
-        a: "Yes. You can configure a Webhook URL with signature verification (infraly-signature) to receive real-time events (lead.created, lead.quarantined, lead.status_updated), or capture leads directly using your workspace API key (x-api-key).",
+        a: "You can capture leads directly using your workspace API key (x-api-key). Webhook forwarding is coming soon and is currently disabled.",
         colSpan: "md:col-span-7",
       },
     ],
@@ -272,10 +273,11 @@ export const marketingData: MarketingData = {
   "subtitle": "From your first website form to a workspace for every client.",
   "plans": [
     {
-      "name": "Basic",
+      "name": "Starter",
       "sub": "Form capture and a lead inbox for your website.",
-      "price": "$99",
-      "period": "/ month",
+      "price": "Free",
+      "period": "forever",
+      "available": true,
       "isPopular": false,
       "features": [
         "Public form endpoints",
@@ -290,11 +292,12 @@ export const marketingData: MarketingData = {
       "name": "Pro",
       "badge": "More visibility",
       "sub": "Submission insights and spam review for your team.",
-      "price": "$139",
+      "price": "$5",
+      "available": false,
       "period": "/ month",
       "isPopular": true,
       "features": [
-        "Everything in Basic",
+        "Everything in Starter",
         "Custom fields for your forms",
         "Spam review and lead rescue",
         "Submission trends and source analytics",
@@ -305,7 +308,8 @@ export const marketingData: MarketingData = {
     {
       "name": "Business",
       "sub": "Client workspaces and server integrations in one place.",
-      "price": "$199",
+      "price": "$12",
+      "available": false,
       "period": "/ month",
       "isPopular": false,
       "features": [

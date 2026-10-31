@@ -28,3 +28,7 @@
 @media (max-width: 767px) { .section { padding: 4rem 0; } .container { padding: 0 1.5rem; } .grid { grid-template-columns: minmax(0, 1fr); max-width: 28rem; margin: 0 auto; } .heading { margin-bottom: 2rem; } .card { padding: 1.5rem; } .card header > p { min-height: 0; margin-bottom: 1.25rem; } }
 
 @media (min-width: 768px) and (max-width: 1023px) { .card header > p { min-height: 4.5rem; } }
+
+.unavailable { background: #f8fafc; border-color: #e2e8f0; box-shadow: none; }
+.unavailable li { color: #64748b; }
+.secondaryCta:disabled { color: #64748b; background: #eef2f6; border-color: #dce3ed; cursor: not-allowed; }

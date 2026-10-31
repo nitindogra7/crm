@@ -1,147 +1,157 @@
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
-import { Pill, Avatar } from "./ui";
-
-interface TestimonialItem {
-  id: number;
-  name: string;
-  role: string;
-  company: string;
-  avatarImg: string;
-  quote: string;
-}
-
-const TESTIMONIALS: TestimonialItem[] = [
-  {
-    id: 1,
-    name: "Alex Chen",
-    role: "Frontend Architect",
-    company: "Freelance",
-    avatarImg: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-    quote:
-      "I used to spend 2 to 3 hours on every client site setting up SendGrid, server route handlers, and environment secrets. With Salenova, I paste an endpoint and API key into the form and it works flawlessly.",
-  },
-  {
-    id: 2,
-    name: "Sarah Miller",
-    role: "Co-founder",
-    company: "Studio Labs",
-    avatarImg: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
-    quote:
-      "Other form services silently dropped submissions or charged crazy monthly fees. Salenova catches every real prospect with zero captchas while filtering out hundreds of scrapers every week.",
-  },
-  {
-    id: 3,
-    name: "Dev Patel",
-    role: "Founder & Developer",
-    company: "Devflow",
-    avatarImg: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-    quote:
-      "Deployed my static landing page without maintaining a single server route or database table. Our first enterprise quote landed right in our inbox and CRM dashboard 10 minutes later.",
-  },
-];
+import { marketingData } from "../data";
 
 export function Testimonials() {
-  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
-
-  const handleImgError = (id: string) => {
-    setImgErrors((prev) => ({ ...prev, [id]: true }));
-  };
+  const { testimonials } = marketingData;
 
   return (
-    <section className="py-[56px] md:py-[76px] relative z-10" id="voices">
-      <div className="max-w-[1100px] mx-auto px-[16px] sm:px-[24px] grid grid-cols-1 md:grid-cols-[1fr_1.25fr] gap-[36px] md:gap-[56px] items-start">
-        {/* Left Column */}
-        <div>
-          <Pill icon="star">Verified Developer Feedback</Pill>
-          <h2 className="text-[26px] sm:text-[34px] md:text-[40px] font-heading font-medium tracking-[-0.025em] leading-[1.2] mt-4 mb-3 text-white text-balance">
-            Loved by modern builders <br className="hidden sm:inline" />
-            <span className="text-zinc-400">across engineering teams and agencies.</span>
+    <section className="py-20 sm:py-28 bg-[#fafbfc] border-t border-slate-100" id="testimonials">
+      {/* Container aligned with the exact max-width and horizontal padding of the Navbar */}
+      <div className="max-w-[1240px] mx-auto px-6 sm:px-8">
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl md:text-[44px] font-bold tracking-tight text-slate-900 leading-[1.15] font-heading">
+            {testimonials.headline}<br className="hidden sm:inline" />{" "}
+            <span className="text-[#2563eb]">{testimonials.headlineHighlight}</span>
           </h2>
-          <p className="text-zinc-400 font-p font-normal max-w-[420px] text-[13.5px] sm:text-[14.5px] leading-[1.65]">
-            Real feedback from developers who stopped writing repetitive backend route handlers just to collect form submissions.
+          <p className="mt-3.5 text-xs sm:text-[14px] text-slate-500 font-normal">
+            {testimonials.subtitle}
           </p>
+        </div>
 
-          <div className="mt-[28px] md:mt-[36px] p-4 rounded-[16px] border border-white/[0.08] bg-[#1c1c1c] shadow-[0_8px_30px_rgba(0,0,0,0.5)] max-w-[320px] space-y-3 relative overflow-hidden group">
-            <div className="absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:via-emerald-400/30 transition-all" />
-            {/* 5-Star Indicator */}
-            <div className="flex items-center gap-1.5 text-amber-400/90 text-[12px]">
-              <span>★★★★★</span>
-              <span className="text-zinc-300 text-[12px] font-medium font-sans ml-1">4.9/5 Rating</span>
-            </div>
+        {/* 3-Column Contiguous Table Grid - Fully proportionate to Navbar container */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-0 items-stretch">
+          {/* Column 1: Featured Testimonial (Full Card with Blue Border) */}
+          <div className="relative z-10 border border-[#60a5fa] p-7 sm:p-8 md:p-9 lg:p-10 flex flex-col justify-between bg-white/70 transition-colors duration-200 hover:bg-slate-50/60">
+            <p className="text-slate-600 text-[13.5px] sm:text-[14px] lg:text-[14.5px] leading-[1.7] font-normal">
+              &ldquo;{testimonials.featured.quote}&rdquo;
+            </p>
 
-            <div className="flex items-center gap-[14px] pt-2 border-t border-white/[0.06]">
-              {/* Stacked Avatars */}
-              <div className="flex -space-x-2">
-                {[0, 1, 2, 3].map((idx) => (
-                  <div
-                    key={idx}
-                    className="w-[30px] h-[30px] rounded-full overflow-hidden border-2 border-[#1c1c1c] flex-none relative"
-                  >
-                    <Avatar size={30} index={idx} alt="Builder" />
-                  </div>
-                ))}
+            <div className="mt-8 sm:mt-10 pt-0 flex flex-col gap-5">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 bg-slate-100 relative">
+                  <Image
+                    src={testimonials.featured.avatar}
+                    alt={testimonials.featured.name}
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    className="w-full h-full object-cover select-none"
+                  />
+                </div>
+                <div>
+                  <h3 className="text-[14px] sm:text-[14.5px] font-semibold text-slate-900 leading-tight">
+                    {testimonials.featured.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-tight mt-1">
+                    {testimonials.featured.role}
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <div className="text-[22px] font-heading font-medium tracking-tight leading-none text-white tabular-nums">
-                  500+
+              {testimonials.featured.tag && (
+                <p className="text-xs sm:text-[12.5px] text-slate-500 font-normal">
+                  {testimonials.featured.tag}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Column 2: Stacked Two Cards */}
+          <div className="flex flex-col border border-slate-200 lg:border-l-0 lg:border-y lg:border-r border-slate-200 bg-white/70">
+            {/* Top Stacked Card */}
+            <div className="p-7 sm:p-8 lg:p-9 flex flex-col justify-between flex-1 border-b border-slate-200 transition-colors duration-200 hover:bg-slate-50/60">
+              <p className="text-slate-600 text-[13.5px] sm:text-[14px] lg:text-[14.5px] leading-[1.65] font-normal">
+                &ldquo;{testimonials.stacked.top.quote}&rdquo;
+              </p>
+
+              <div className="mt-6 sm:mt-8 flex items-center gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 bg-slate-100 relative">
+                  <Image
+                    src={testimonials.stacked.top.avatar}
+                    alt={testimonials.stacked.top.name}
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    className="w-full h-full object-cover select-none"
+                  />
                 </div>
-                <span className="text-zinc-500 text-[10.5px] font-mono">active websites live</span>
+                <div>
+                  <h3 className="text-[14px] sm:text-[14.5px] font-semibold text-slate-900 leading-tight">
+                    {testimonials.stacked.top.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-tight mt-1">
+                    {testimonials.stacked.top.role}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Stacked Card */}
+            <div className="p-7 sm:p-8 lg:p-9 flex flex-col justify-between flex-1 transition-colors duration-200 hover:bg-slate-50/60">
+              <p className="text-slate-600 text-[13.5px] sm:text-[14px] lg:text-[14.5px] leading-[1.65] font-normal">
+                &ldquo;{testimonials.stacked.bottom.quote}&rdquo;
+              </p>
+
+              <div className="mt-6 sm:mt-8 flex items-center gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 bg-slate-100 relative">
+                  <Image
+                    src={testimonials.stacked.bottom.avatar}
+                    alt={testimonials.stacked.bottom.name}
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    className="w-full h-full object-cover select-none"
+                  />
+                </div>
+                <div>
+                  <h3 className="text-[14px] sm:text-[14.5px] font-semibold text-slate-900 leading-tight">
+                    {testimonials.stacked.bottom.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-tight mt-1">
+                    {testimonials.stacked.bottom.role}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right Column: Quotes Cards */}
-        <div className="space-y-3">
-          {TESTIMONIALS.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-[16px] border border-white/[0.08] hover:border-emerald-500/30 bg-[#1c1c1c] hover:bg-[#232323] p-[20px] transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.5)] relative overflow-hidden group"
-            >
-              <div className="absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-white/0 group-hover:via-emerald-400/35 to-transparent transition-all" />
-              <div className="flex items-center justify-between mb-[12px]">
-                <div className="flex items-center gap-[10px]">
-                  {imgErrors[item.id] ? (
-                    <Avatar size={36} variant="square" />
-                  ) : (
-                    <div className="relative w-[36px] h-[36px] rounded-lg overflow-hidden border border-white/10 flex-none shadow-sm">
-                      <Image
-                        src={item.avatarImg}
-                        alt={item.name}
-                        width={36}
-                        height={36}
-                        unoptimized
-                        onError={() => handleImgError(String(item.id))}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <div className="text-[13.5px] text-white font-medium leading-tight flex items-center gap-1.5">
-                      {item.name}
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" title="Verified Customer" />
-                    </div>
-                    <div className="text-zinc-500 text-[10.5px] font-mono mt-0.5">
-                      {item.role} · <span className="text-zinc-400">{item.company}</span>
-                    </div>
-                  </div>
+          {/* Column 3: Secondary Testimonial (Full Card Matching Column 1) */}
+          <div className="p-7 sm:p-8 md:p-9 lg:p-10 flex flex-col justify-between border border-slate-200 lg:border-l-0 lg:border-y lg:border-r border-slate-200 bg-white/70 transition-colors duration-200 hover:bg-slate-50/60">
+            <p className="text-slate-600 text-[13.5px] sm:text-[14px] lg:text-[14.5px] leading-[1.7] font-normal">
+              &ldquo;{testimonials.secondary.quote}&rdquo;
+            </p>
+
+            <div className="mt-8 sm:mt-10 pt-0 flex flex-col gap-5">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 bg-slate-100 relative">
+                  <Image
+                    src={testimonials.secondary.avatar}
+                    alt={testimonials.secondary.name}
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    className="w-full h-full object-cover select-none"
+                  />
                 </div>
-
-                {/* Micro 5-Star */}
-                <div className="text-amber-400/80 text-[10.5px] tracking-widest hidden sm:block">
-                  ★★★★★
+                <div>
+                  <h3 className="text-[14px] sm:text-[14.5px] font-semibold text-slate-900 leading-tight">
+                    {testimonials.secondary.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-tight mt-1">
+                    {testimonials.secondary.role}
+                  </p>
                 </div>
               </div>
 
-              <p className="text-zinc-300 font-p font-normal text-[12.5px] leading-[1.65] border-t border-white/[0.04] pt-[12px]">
-                &ldquo;{item.quote}&rdquo;
-              </p>
+              {testimonials.secondary.tag && (
+                <p className="text-xs sm:text-[12.5px] text-slate-500 font-normal">
+                  {testimonials.secondary.tag}
+                </p>
+              )}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </section>

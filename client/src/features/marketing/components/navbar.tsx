@@ -1,185 +1,149 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Show, UserButton } from "@clerk/nextjs";
-import { Icon } from "./icons";
-import { Button } from "./ui";
-import { cn } from "@/shared/lib/utils";
+import Image from "next/image";
+import { Menu, X } from "lucide-react";
+import { marketingData } from "../data";
 
 export function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const navRef = useRef<HTMLElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (navRef.current && !navRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const isScrolled = window.scrollY > 15;
+          setScrolled((prev) => (prev !== isScrolled ? isScrolled : prev));
+          ticking = false;
+        });
+        ticking = true;
       }
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
-    }
-
-    document.addEventListener("click", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
     };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    setMobileMenuOpen(false);
+    const element = document.querySelector(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const { navbar, brand } = marketingData;
+
   return (
-    <nav
-      ref={navRef}
-      id="nav"
-      className={cn(
-        "fixed top-[14px] md:top-[18px] left-1/2 -translate-x-1/2 z-50 flex items-center justify-between py-[7px] px-[12px] md:py-[8px] md:px-[20px] border border-white/[0.08] rounded-full bg-[#181818]/90 backdrop-blur-[20px] shadow-[0_12px_36px_rgba(0,0,0,0.5)] transition-all",
-        "w-[calc(100%-24px)] sm:w-[calc(100%-48px)] max-w-[1100px]",
-        isOpen ? "open" : ""
-      )}
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-white/80 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.04)] py-3.5"
+          : "bg-transparent py-5"
+      }`}
     >
-      {/* Brand (Left) */}
-      <Link href="/" className="flex items-center gap-[9px] text-[13.5px] text-white group flex-none">
-        <span className="w-[24px] h-[24px] rounded-full bg-white/[0.08] border border-white/[0.14] inline-grid place-items-center flex-none text-white shadow-sm group-hover:scale-105 transition-transform">
-          <Icon name="logo" className="w-[12px] h-[12px] text-white" />
-        </span>
-        <span className="font-heading font-medium tracking-tight text-[14px]">Salenova</span>
-      </Link>
+      <div className="max-w-[1240px] mx-auto px-6 sm:px-8 flex items-center justify-between">
+        {/* Left: Brand Logo & Navigation Links */}
+        <div className="flex items-center gap-8 lg:gap-11">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 text-slate-900 group transition-transform active:scale-95"
+            aria-label={brand.ariaLabel}
+          >
+            {/* Infraly Logo Mark */}
+            <div className="w-8 h-8 flex items-center justify-center shrink-0">
+              <Image
+                src="/favicon.ico"
+                alt="Infraly"
+                width={32}
+                height={32}
+                unoptimized
+                className="w-7 h-7 object-contain group-hover:scale-105 transition-transform"
+                priority
+              />
+            </div>
+            <span className="text-[19px] font-bold tracking-tight text-slate-900 font-heading">
+              {navbar.brandName}
+            </span>
+          </Link>
 
-      {/* Desktop Links (Center) */}
-      <div className="hidden md:flex items-center gap-[28px] text-[13px] text-zinc-400 font-sans">
-        <a href="#benefits" className="hover:text-white transition-colors">
-          Product
-        </a>
-        <a href="#features" className="hover:text-white transition-colors">
-          Features
-        </a>
-        <a href="#try" className="hover:text-white transition-colors">
-          Sandbox
-        </a>
-        <a href="#pricing" className="hover:text-white transition-colors">
-          Pricing
-        </a>
-        <a href="#faq" className="hover:text-white transition-colors">
-          FAQ
-        </a>
-      </div>
+          {/* Desktop Navigation Links directly beside brand */}
+          <nav className="hidden md:flex items-center gap-7 lg:gap-8 text-sm font-medium text-slate-700">
+            {navbar.links.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                onClick={(e) => handleNavClick(e, link.href)}
+                className="hover:text-slate-950 transition-colors py-1"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+        </div>
 
-      {/* Action buttons (Right) */}
-      <div className="flex items-center gap-[10px]">
-        <Link
-          href="/dashboard"
-          className="text-[12px] text-zinc-200 hover:text-white transition-colors px-2.5 py-1 rounded-full border border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.09] font-sans flex items-center gap-1.5"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-          <span>Dashboard</span>
-        </Link>
-        <Show when="signed-out">
+        {/* Right: Actions */}
+        <div className="hidden md:flex items-center gap-4">
           <Link
             href="/sign-in"
-            className="hidden sm:inline-block text-[12px] text-neutral-400 hover:text-white transition-colors px-1.5 font-sans"
+            className="text-sm font-medium text-slate-700 hover:text-slate-950 transition-colors px-3 py-1.5"
           >
-            Sign in
+            {navbar.loginText}
           </Link>
-          <Button href="/sign-up" variant="solid" size="sm" className="shadow-sm">
-            Get started
-          </Button>
-        </Show>
-        <Show when="signed-in">
-          <UserButton
-            appearance={{
-              elements: {
-                userButtonAvatarBox: "w-8 h-8 rounded-full border border-white/20 shadow-sm",
-              },
-            }}
-          />
-        </Show>
+          <Link
+            href="/dashboard"
+            className="px-5 py-2.5 rounded-full bg-[#2563eb] hover:bg-blue-700 text-white text-sm font-medium shadow-[0_4px_14px_rgba(37,99,235,0.35)] transition-all hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] active:scale-95 inline-flex items-center justify-center"
+          >
+            {navbar.ctaText}
+          </Link>
+        </div>
 
-        {/* Burger Button */}
+        {/* Mobile Hamburger Toggle */}
         <button
-          id="burger"
           type="button"
-          aria-label="Menu"
-          aria-expanded={isOpen}
-          aria-controls="mp"
-          onClick={() => setIsOpen((prev) => !prev)}
-          className="grid md:hidden w-[32px] h-[32px] rounded-full border border-white/[0.17] bg-white/[0.04] text-white place-items-center cursor-pointer transition-colors hover:bg-white/[0.08]"
+          onClick={() => setMobileMenuOpen((prev) => !prev)}
+          className="md:hidden p-2 text-slate-700 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
+          aria-label="Toggle menu"
         >
-          {isOpen ? (
-            <Icon name="x" className="w-[15px] h-[15px]" />
-          ) : (
-            <Icon name="menu" className="w-[15px] h-[15px]" />
-          )}
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
-      {/* Mobile Menu Panel */}
-      <div
-        id="mp"
-        className={cn(
-          "md:hidden absolute left-0 right-0 top-[calc(100%+8px)] p-[10px] border border-white/[0.17] rounded-[20px] bg-[#1c1c1c]/95 backdrop-blur-[22px] transition-all duration-350 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
-          isOpen
-            ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
-            : "opacity-0 -translate-y-2 scale-[0.98] pointer-events-none"
-        )}
-      >
-        <a
-          className="flex justify-between items-center py-[13px] px-[12px] text-[14px] border-b border-white/[0.08] text-[#ddd] hover:text-white"
-          href="#benefits"
-          onClick={() => setIsOpen(false)}
-        >
-          Product <Icon name="arrow" className="w-[14px] h-[14px]" />
-        </a>
-        <a
-          className="flex justify-between items-center py-[13px] px-[12px] text-[14px] border-b border-white/[0.08] text-[#ddd] hover:text-white"
-          href="#features"
-          onClick={() => setIsOpen(false)}
-        >
-          Features <Icon name="arrow" className="w-[14px] h-[14px]" />
-        </a>
-        <a
-          className="flex justify-between items-center py-[13px] px-[12px] text-[14px] border-b border-white/[0.08] text-[#ddd] hover:text-white"
-          href="#pricing"
-          onClick={() => setIsOpen(false)}
-        >
-          Pricing <Icon name="arrow" className="w-[14px] h-[14px]" />
-        </a>
-        <a
-          className="flex justify-between items-center py-[13px] px-[12px] text-[14px] text-[#ddd] hover:text-white"
-          href="#faq"
-          onClick={() => setIsOpen(false)}
-        >
-          FAQ <Icon name="arrow" className="w-[14px] h-[14px]" />
-        </a>
-        <Show when="signed-out">
-          <div className="pt-[10px] flex flex-col gap-2">
-            <Button
-              href="/sign-up"
-              variant="solid"
-              className="w-full py-[12px]"
-              onClick={() => setIsOpen(false)}
-            >
-              Get started free
-            </Button>
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-white/95 backdrop-blur-xl px-6 py-6 space-y-4 shadow-xl">
+          <nav className="flex flex-col space-y-3 text-sm font-medium text-slate-700">
+            {navbar.links.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                onClick={(e) => handleNavClick(e, link.href)}
+                className="py-1 hover:text-blue-600"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+          <div className="pt-4 border-t border-slate-100 flex flex-col gap-3">
             <Link
               href="/sign-in"
-              className="text-center py-[10px] text-[13px] text-neutral-400 hover:text-white transition-colors"
-              onClick={() => setIsOpen(false)}
+              className="text-center py-2 text-sm font-medium text-slate-700 hover:text-slate-900"
             >
-              Sign in
+              {navbar.loginText}
+            </Link>
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full py-2.5 rounded-full bg-[#2563eb] hover:bg-blue-700 text-white text-sm font-semibold shadow-md shadow-blue-600/30 transition-all text-center block"
+            >
+              {navbar.ctaText}
             </Link>
           </div>
-        </Show>
-        <Show when="signed-in">
-          <div className="pt-[14px] pb-[6px] px-[12px] flex items-center justify-between border-t border-white/[0.08] mt-[10px]">
-            <span className="text-[13px] font-medium text-zinc-300">Account</span>
-            <UserButton />
-          </div>
-        </Show>
-      </div>
-    </nav>
+        </div>
+      )}
+    </header>
   );
 }

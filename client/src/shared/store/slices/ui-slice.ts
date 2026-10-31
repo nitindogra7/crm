@@ -23,7 +23,7 @@ export const createUISlice: StateCreator<
   closeTour: () => {
     if (typeof window !== "undefined") {
       try {
-        localStorage.setItem("salenova_tour_completed", "true");
+        localStorage.setItem("infraly_tour_completed", "true");
       } catch {
         // Safe fallback for private browsing
       }

@@ -40,42 +40,41 @@ const dashboardCors = cors({
   allowedHeaders: ["Content-Type", "Authorization", "x-api-key", "Accept"],
 });
 
+// Fast path matcher for public form ingestion & health check routes
+const publicPathPrefixes = [
+  "/api/forms-and-api/f",
+  "/api/forms-and-api/submit",
+  "/api/forms-and-api/simulate",
+  "/api/forms/f",
+  "/api/forms/submit",
+  "/api/forms/simulate",
+  "/api/v1/f",
+  "/api/f",
+  "/api/v1/leads",
+  "/v1/leads",
+];
+
+function isPublicRoute(path: string): boolean {
+  if (path === "/health") return true;
+  for (let i = 0; i < publicPathPrefixes.length; i++) {
+    const prefix = publicPathPrefixes[i];
+    if (path === prefix || path.startsWith(prefix + "/")) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Smart CORS routing: Public forms endpoints accept all origins; authenticated routes restrict to frontend
 app.use((req, res, next) => {
-  const isPublicFormRoute =
-    req.path.startsWith("/api/forms-and-api/f/") ||
-    req.path === "/api/forms-and-api/f" ||
-    req.path.startsWith("/api/forms-and-api/submit/") ||
-    req.path === "/api/forms-and-api/submit" ||
-    req.path === "/api/forms-and-api/simulate" ||
-    req.path.startsWith("/api/forms/f/") ||
-    req.path === "/api/forms/f" ||
-    req.path.startsWith("/api/forms/submit/") ||
-    req.path === "/api/forms/submit" ||
-    req.path === "/api/forms/simulate" ||
-    req.path.startsWith("/api/v1/f/") ||
-    req.path === "/api/v1/f" ||
-    req.path.startsWith("/api/f/") ||
-    req.path === "/api/f" ||
-    req.path.startsWith("/api/v1/leads") ||
-    req.path === "/api/v1/leads" ||
-    req.path.startsWith("/v1/leads") ||
-    req.path === "/v1/leads" ||
-    req.path === "/health";
-
-  if (isPublicFormRoute) {
+  if (isPublicRoute(req.path)) {
     publicSubmissionCors(req, res, next);
   } else {
     dashboardCors(req, res, next);
   }
 });
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(clerkMiddleware());
-
+// Fast-path Health Check: Execute before cookie parsing, body allocation, and auth validation
 app.get("/health", async (_req, res) => {
   try {
     await prisma.$queryRaw`select 1`;
@@ -84,6 +83,20 @@ app.get("/health", async (_req, res) => {
     console.error("Health check database failure:", error);
     res.status(503).json({ ok: false, error: "Database unavailable" });
   }
+});
+
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Scoped Clerk Authentication: Run JWT verification only for authenticated dashboard routes
+const clerkAuth = clerkMiddleware();
+app.use((req, res, next) => {
+  if (isPublicRoute(req.path)) {
+    return next();
+  }
+  return clerkAuth(req, res, next);
 });
 
 // Mounted Routes

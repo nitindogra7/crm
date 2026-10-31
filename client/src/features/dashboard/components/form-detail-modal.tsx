@@ -175,7 +175,7 @@ export function FormDetailModal() {
 
   const apiKeyToken = hasApiKey ? apiKey.fullKeyMock : "YOUR_API_KEY_HERE";
 
-  const htmlSnippet = `<!-- 1. Standard HTML Form Pointed to Salenova Endpoint -->
+  const htmlSnippet = `<!-- 1. Standard HTML Form Pointed to Infraly Endpoint -->
 <form action="${form.endpointUrl}" method="POST">
   <!-- Authorize submission with your workspace API key -->
   <input type="hidden" name="_api_key" value="${apiKeyToken}" />
@@ -204,7 +204,7 @@ const handleSubmit = async (data) => {
     }),
   });
   const result = await res.json();
-  console.log("Salenova response:", result);
+  console.log("Infraly response:", result);
 };`;
 
   const curlSnippet = `# 3. Direct HTTP POST cURL
@@ -221,29 +221,29 @@ curl -X POST ${form.endpointUrl} \\
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
         onClick={() => setSelectedFormId(null)}
       />
 
-      <div className="relative w-full max-w-2xl bg-[#161616] border border-white/[0.12] rounded-2xl shadow-2xl text-white z-10 max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-2xl text-slate-900 z-10 max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Modal Top Header */}
-        <div className="p-4 sm:p-5 border-b border-white/[0.08] flex items-center justify-between gap-4 flex-none bg-[#141414]">
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between gap-4 flex-none bg-slate-50/50">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span
-                className={`px-2 py-0.5 rounded text-[10.5px] font-mono border ${
+                className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-mono border font-semibold ${
                   form.enabled
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                    : "bg-zinc-800 text-zinc-400 border-zinc-700"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
+                    : "bg-slate-100 text-slate-600 border-slate-200"
                 }`}
               >
                 {form.enabled ? "Active" : "Paused"}
               </span>
-              <span className="text-[11px] font-mono text-zinc-500 truncate">
+              <span className="text-[11px] font-mono text-slate-400 truncate">
                 slug: {form.slug}
               </span>
             </div>
-            <h2 className="text-xl font-heading font-medium tracking-tight text-white truncate">
+            <h2 className="text-xl font-heading font-bold tracking-tight text-slate-900 truncate">
               {form.name}
             </h2>
           </div>
@@ -253,10 +253,10 @@ curl -X POST ${form.endpointUrl} \\
               type="button"
               onClick={handleToggleForm}
               disabled={isToggling}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors cursor-pointer disabled:opacity-60 ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer disabled:opacity-60 shadow-2xs ${
                 form.enabled
-                  ? "border-zinc-700 text-zinc-300 hover:bg-white/[0.05]"
-                  : "bg-emerald-500 text-black border-emerald-400 font-semibold"
+                  ? "border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
+                  : "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/20"
               }`}
             >
               {isToggling && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
@@ -266,7 +266,8 @@ curl -X POST ${form.endpointUrl} \\
             <button
               type="button"
               onClick={() => setSelectedFormId(null)}
-              className="text-zinc-400 hover:text-white p-1.5 rounded-lg transition-colors"
+              className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+              aria-label="Close dialog"
             >
               <X className="w-5 h-5" />
             </button>
@@ -274,14 +275,14 @@ curl -X POST ${form.endpointUrl} \\
         </div>
 
         {/* Tab Navigation */}
-        <div className="px-5 border-b border-white/[0.08] bg-[#141414] flex items-center gap-4 text-xs font-sans overflow-x-auto">
+        <div className="px-5 border-b border-slate-100 bg-white flex items-center gap-5 text-xs font-sans overflow-x-auto">
           <button
             type="button"
             onClick={() => setActiveTab("overview")}
-            className={`py-3 border-b-2 font-medium transition-colors cursor-pointer whitespace-nowrap ${
+            className={`py-3 border-b-2 font-semibold transition-colors cursor-pointer whitespace-nowrap ${
               activeTab === "overview"
-                ? "border-white text-white"
-                : "border-transparent text-zinc-400 hover:text-zinc-200"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
             Overview
@@ -289,10 +290,10 @@ curl -X POST ${form.endpointUrl} \\
           <button
             type="button"
             onClick={() => setActiveTab("fields")}
-            className={`py-3 border-b-2 font-medium transition-colors cursor-pointer whitespace-nowrap ${
+            className={`py-3 border-b-2 font-semibold transition-colors cursor-pointer whitespace-nowrap ${
               activeTab === "fields"
-                ? "border-white text-white"
-                : "border-transparent text-zinc-400 hover:text-zinc-200"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
             Fields ({form.fields.length})
@@ -300,10 +301,10 @@ curl -X POST ${form.endpointUrl} \\
           <button
             type="button"
             onClick={() => setActiveTab("integration")}
-            className={`py-3 border-b-2 font-medium transition-colors cursor-pointer whitespace-nowrap ${
+            className={`py-3 border-b-2 font-semibold transition-colors cursor-pointer whitespace-nowrap ${
               activeTab === "integration"
-                ? "border-white text-white"
-                : "border-transparent text-zinc-400 hover:text-zinc-200"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
             Integration & Snippet
@@ -311,10 +312,10 @@ curl -X POST ${form.endpointUrl} \\
           <button
             type="button"
             onClick={() => setActiveTab("simulate")}
-            className={`py-3 border-b-2 font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+            className={`py-3 border-b-2 font-semibold transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
               activeTab === "simulate"
-                ? "border-emerald-400 text-emerald-400"
-                : "border-transparent text-emerald-400/80 hover:text-emerald-300"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-blue-600"
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
@@ -323,33 +324,33 @@ curl -X POST ${form.endpointUrl} \\
         </div>
 
         {/* Tab Content Body */}
-        <div className="flex-1 overflow-y-auto p-5 text-xs">
+        <div className="flex-1 overflow-y-auto p-5 text-xs bg-slate-50/30">
           {/* TAB 1: OVERVIEW */}
           {activeTab === "overview" && (
             <div className="space-y-6">
               {/* Endpoint pill */}
-              <div className="p-3.5 rounded-xl border border-white/[0.08] bg-[#121212] flex items-center justify-between gap-3">
+              <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs">
                 <div className="min-w-0">
-                  <span className="text-[10.5px] font-mono uppercase text-zinc-500 block">
+                  <span className="text-[10.5px] font-mono uppercase text-slate-400 font-semibold block">
                     Public Submission Endpoint
                   </span>
-                  <span className="font-mono text-zinc-200 text-xs truncate block mt-0.5">
+                  <span className="font-mono text-slate-900 text-xs truncate block mt-0.5 font-semibold">
                     {form.endpointUrl}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleCopy(form.endpointUrl, "endpoint")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-xs text-zinc-200 flex-none transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs text-slate-700 font-semibold flex-none transition-colors shadow-2xs cursor-pointer"
                 >
                   {copiedEndpoint ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400">Copied</span>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700 font-semibold">Copied</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-3.5 h-3.5 text-slate-400" />
                       <span>Copy URL</span>
                     </>
                   )}
@@ -358,44 +359,44 @@ curl -X POST ${form.endpointUrl} \\
 
               {/* Stats Strip */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="p-3.5 rounded-xl border border-white/[0.08] bg-[#121212]">
-                  <span className="text-zinc-500 text-[11px] block font-mono">Total Submissions</span>
-                  <span className="text-xl font-heading font-medium text-white mt-1 block tabular-nums">
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-2xs">
+                  <span className="text-slate-400 text-[11px] block font-mono font-semibold">Total Submissions</span>
+                  <span className="text-xl font-heading font-bold text-slate-900 mt-1 block tabular-nums">
                     {form.leadCount}
                   </span>
                 </div>
-                <div className="p-3.5 rounded-xl border border-white/[0.08] bg-[#121212]">
-                  <span className="text-zinc-500 text-[11px] block font-mono">Spam Filtered</span>
-                  <span className="text-xl font-heading font-medium text-amber-400 mt-1 block tabular-nums">
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-2xs">
+                  <span className="text-slate-400 text-[11px] block font-mono font-semibold">Spam Filtered</span>
+                  <span className="text-xl font-heading font-bold text-amber-600 mt-1 block tabular-nums">
                     {form.spamCount}
                   </span>
                 </div>
-                <div className="p-3.5 rounded-xl border border-white/[0.08] bg-[#121212]">
-                  <span className="text-zinc-500 text-[11px] block font-mono">Created On</span>
-                  <span suppressHydrationWarning className="text-xs text-zinc-300 mt-1.5 block font-mono truncate">
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-2xs">
+                  <span className="text-slate-400 text-[11px] block font-mono font-semibold">Created On</span>
+                  <span suppressHydrationWarning className="text-xs text-slate-700 mt-1.5 block font-mono truncate font-medium">
                     <FormattedDate date={form.createdAt} format="date" />
                   </span>
                 </div>
               </div>
 
               {/* Edit Form Settings */}
-              <form onSubmit={handleSaveOverview} className="space-y-4 pt-2 border-t border-white/[0.06]">
-                <h4 className="text-xs font-mono uppercase tracking-wider text-zinc-400">
+              <form onSubmit={handleSaveOverview} className="space-y-4 pt-3 border-t border-slate-200">
+                <h4 className="text-xs font-mono uppercase tracking-wider text-slate-500 font-semibold">
                   Form Settings
                 </h4>
 
                 <div>
-                  <label className="block text-zinc-300 mb-1 font-medium">Display Name</label>
+                  <label className="block text-slate-700 mb-1 font-semibold">Display Name</label>
                   <input
                     type="text"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-white focus:outline-none focus:border-white/40"
+                    className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-sans shadow-2xs transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-zinc-300 mb-1 font-medium">
+                  <label className="block text-slate-700 mb-1 font-semibold">
                     Post-Submit Redirect URL
                   </label>
                   <input
@@ -403,7 +404,7 @@ curl -X POST ${form.endpointUrl} \\
                     value={redirectUrl}
                     onChange={(e) => setRedirectUrl(e.target.value)}
                     placeholder="https://mysite.com/thanks"
-                    className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-white placeholder-zinc-600 focus:outline-none focus:border-white/40 font-mono text-xs"
+                    className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-mono text-xs shadow-2xs transition-all"
                   />
                 </div>
 
@@ -412,7 +413,7 @@ curl -X POST ${form.endpointUrl} \\
                     type="button"
                     onClick={handleDeleteForm}
                     disabled={isDeleting || isSaving}
-                    className="inline-flex items-center gap-1.5 text-rose-400 hover:text-rose-300 text-xs transition-colors cursor-pointer disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 text-rose-600 hover:text-rose-700 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
                   >
                     {isDeleting ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -425,7 +426,7 @@ curl -X POST ${form.endpointUrl} \\
                   <button
                     type="submit"
                     disabled={isSaving || isDeleting}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black font-medium hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer disabled:opacity-70"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-70"
                   >
                     {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <span>{isSaving ? "Saving..." : "Save Changes"}</span>
@@ -438,17 +439,15 @@ curl -X POST ${form.endpointUrl} \\
           {/* TAB 2: FIELDS */}
           {activeTab === "fields" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-medium text-white">Configured Form Fields</h4>
-                  <p className="text-zinc-400 text-[11.5px] mt-0.5">
-                    Submissions are automatically normalized against this schema.
-                  </p>
-                </div>
+              <div>
+                <h4 className="text-sm font-heading font-bold text-slate-900">Configured Form Fields</h4>
+                <p className="text-slate-500 text-[11.5px] mt-0.5">
+                  Submissions are automatically normalized against this schema.
+                </p>
               </div>
 
-              <div className="rounded-xl border border-white/[0.08] bg-[#121212] overflow-hidden divide-y divide-white/[0.05]">
-                <div className="grid grid-cols-12 px-4 py-2 text-[10.5px] font-mono uppercase tracking-wider text-zinc-500 bg-white/[0.02]">
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden divide-y divide-slate-100 shadow-2xs">
+                <div className="grid grid-cols-12 px-4 py-2 text-[10.5px] font-mono uppercase tracking-wider text-slate-500 font-semibold bg-slate-50/70">
                   <span className="col-span-4">Field Key</span>
                   <span className="col-span-4">Label</span>
                   <span className="col-span-2">Type</span>
@@ -456,15 +455,15 @@ curl -X POST ${form.endpointUrl} \\
                 </div>
                 {form.fields.map((field) => (
                   <div key={field.id} className="grid grid-cols-12 px-4 py-3 items-center text-xs">
-                    <span className="col-span-4 font-mono text-zinc-200">{field.name}</span>
-                    <span className="col-span-4 text-zinc-300">{field.label}</span>
-                    <span className="col-span-2 font-mono text-zinc-400 text-[11px]">{field.type}</span>
+                    <span className="col-span-4 font-mono text-slate-900 font-semibold">{field.name}</span>
+                    <span className="col-span-4 text-slate-700 font-medium">{field.label}</span>
+                    <span className="col-span-2 font-mono text-slate-500 text-[11px]">{field.type}</span>
                     <span className="col-span-2 text-right">
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-mono border ${
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono border font-semibold ${
                           field.required
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                            : "bg-white/[0.02] text-zinc-500 border-white/[0.06]"
+                            ? "bg-blue-50 text-blue-700 border-blue-200/80"
+                            : "bg-slate-50 text-slate-600 border-slate-200"
                         }`}
                       >
                         {field.required ? "Required" : "Optional"}
@@ -481,10 +480,10 @@ curl -X POST ${form.endpointUrl} \\
             <div className="space-y-5">
               {/* API Key Missing Alert if user hasn't generated their single key yet */}
               {!hasApiKey && (
-                <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="p-3.5 rounded-xl border border-amber-200/80 bg-amber-50/70 text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    <AlertTriangle className="w-4 h-4 text-amber-400 flex-none" />
-                    <span className="text-xs text-zinc-300">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 flex-none" />
+                    <span className="text-xs">
                       Workspace API key required before connecting this form to external sites.
                     </span>
                   </div>
@@ -492,7 +491,7 @@ curl -X POST ${form.endpointUrl} \\
                     type="button"
                     onClick={handleGenerateKey}
                     disabled={isGeneratingKey}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-black font-semibold text-xs transition-colors self-start sm:self-auto flex-none cursor-pointer disabled:opacity-70"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors self-start sm:self-auto flex-none cursor-pointer disabled:opacity-70 shadow-2xs"
                   >
                     {isGeneratingKey ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -505,19 +504,19 @@ curl -X POST ${form.endpointUrl} \\
               )}
 
               {/* Endpoint banner */}
-              <div className="p-3 rounded-xl border border-white/[0.08] bg-[#121212] flex items-center justify-between gap-3">
+              <div className="p-3.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-2xs">
                 <div className="min-w-0">
-                  <span className="text-[10px] font-mono uppercase text-zinc-500">
+                  <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold">
                     HTTP Target Endpoint
                   </span>
-                  <code className="text-zinc-200 block text-xs mt-0.5 truncate">
+                  <code className="text-slate-900 block text-xs mt-0.5 truncate font-semibold">
                     POST {form.endpointUrl}
                   </code>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleCopy(form.endpointUrl, "endpoint")}
-                  className="px-2.5 py-1.5 rounded-lg border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-xs text-zinc-200 transition-colors flex items-center gap-1.5 flex-none"
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs text-slate-700 font-semibold transition-colors flex items-center gap-1.5 flex-none cursor-pointer shadow-2xs"
                 >
                   <Copy className="w-3.5 h-3.5" />
                   <span>Copy</span>
@@ -527,18 +526,18 @@ curl -X POST ${form.endpointUrl} \\
               {/* HTML Snippet */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-mono uppercase text-zinc-400">
+                  <label className="text-[11px] font-mono uppercase text-slate-500 font-semibold">
                     HTML Form Snippet
                   </label>
                   <button
                     type="button"
                     onClick={() => handleCopy(htmlSnippet, "html")}
-                    className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white transition-colors"
+                    className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-blue-600 transition-colors font-semibold cursor-pointer"
                   >
                     {copiedHtml ? (
                       <>
-                        <Check className="w-3 h-3 text-emerald-400" />
-                        <span className="text-emerald-400">Copied</span>
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span className="text-emerald-700">Copied</span>
                       </>
                     ) : (
                       <>
@@ -548,7 +547,7 @@ curl -X POST ${form.endpointUrl} \\
                     )}
                   </button>
                 </div>
-                <pre className="p-3.5 rounded-xl border border-white/[0.08] bg-[#101010] text-[11.5px] font-mono text-zinc-300 overflow-x-auto leading-relaxed">
+                <pre className="p-3.5 rounded-2xl border border-slate-800 bg-[#0f172a] text-[11.5px] font-mono text-slate-200 overflow-x-auto leading-relaxed shadow-xs">
                   {htmlSnippet}
                 </pre>
               </div>
@@ -556,18 +555,18 @@ curl -X POST ${form.endpointUrl} \\
               {/* React / JS Snippet */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-mono uppercase text-zinc-400">
+                  <label className="text-[11px] font-mono uppercase text-slate-500 font-semibold">
                     JavaScript / React Fetch
                   </label>
                   <button
                     type="button"
                     onClick={() => handleCopy(jsSnippet, "js")}
-                    className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white transition-colors"
+                    className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-blue-600 transition-colors font-semibold cursor-pointer"
                   >
                     {copiedJs ? (
                       <>
-                        <Check className="w-3 h-3 text-emerald-400" />
-                        <span className="text-emerald-400">Copied</span>
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span className="text-emerald-700">Copied</span>
                       </>
                     ) : (
                       <>
@@ -577,7 +576,7 @@ curl -X POST ${form.endpointUrl} \\
                     )}
                   </button>
                 </div>
-                <pre className="p-3.5 rounded-xl border border-white/[0.08] bg-[#101010] text-[11.5px] font-mono text-zinc-300 overflow-x-auto leading-relaxed">
+                <pre className="p-3.5 rounded-2xl border border-slate-800 bg-[#0f172a] text-[11.5px] font-mono text-slate-200 overflow-x-auto leading-relaxed shadow-xs">
                   {jsSnippet}
                 </pre>
               </div>
@@ -585,18 +584,18 @@ curl -X POST ${form.endpointUrl} \\
               {/* cURL */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-mono uppercase text-zinc-400">
+                  <label className="text-[11px] font-mono uppercase text-slate-500 font-semibold">
                     cURL Command
                   </label>
                   <button
                     type="button"
                     onClick={() => handleCopy(curlSnippet, "curl")}
-                    className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white transition-colors"
+                    className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-blue-600 transition-colors font-semibold cursor-pointer"
                   >
                     {copiedCurl ? (
                       <>
-                        <Check className="w-3 h-3 text-emerald-400" />
-                        <span className="text-emerald-400">Copied</span>
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span className="text-emerald-700">Copied</span>
                       </>
                     ) : (
                       <>
@@ -606,7 +605,7 @@ curl -X POST ${form.endpointUrl} \\
                     )}
                   </button>
                 </div>
-                <pre className="p-3.5 rounded-xl border border-white/[0.08] bg-[#101010] text-[11.5px] font-mono text-zinc-300 overflow-x-auto leading-relaxed">
+                <pre className="p-3.5 rounded-2xl border border-slate-800 bg-[#0f172a] text-[11.5px] font-mono text-slate-200 overflow-x-auto leading-relaxed shadow-xs">
                   {curlSnippet}
                 </pre>
               </div>
@@ -616,17 +615,17 @@ curl -X POST ${form.endpointUrl} \\
           {/* TAB 4: SIMULATE TEST SUBMISSION */}
           {activeTab === "simulate" && (
             <div className="space-y-4">
-              <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] text-xs text-emerald-300 leading-relaxed">
+              <div className="p-3.5 rounded-xl border border-blue-100 bg-blue-50/60 text-xs text-blue-900 leading-relaxed">
                 <span className="font-semibold block mb-0.5">Local Simulation Sandbox</span>
                 Submitting this form injects a realistic mock lead directly into your local dashboard state and updates counts.{" "}
-                <span className="text-zinc-400">
+                <span className="text-slate-600">
                   No actual network request is sent to the internet, and no emails are dispatched.
                 </span>
               </div>
 
               <form onSubmit={handleSimulateSubmit} className="space-y-3.5">
                 <div>
-                  <label className="block text-zinc-300 font-medium mb-1">
+                  <label className="block text-slate-700 font-semibold mb-1">
                     Contact Name
                   </label>
                   <input
@@ -634,12 +633,12 @@ curl -X POST ${form.endpointUrl} \\
                     required
                     value={simName}
                     onChange={(e) => setSimName(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-white focus:outline-none focus:border-white/40"
+                    className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 transition-all font-sans"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-zinc-300 font-medium mb-1">
+                  <label className="block text-slate-700 font-semibold mb-1">
                     Contact Email
                   </label>
                   <input
@@ -647,12 +646,12 @@ curl -X POST ${form.endpointUrl} \\
                     required
                     value={simEmail}
                     onChange={(e) => setSimEmail(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-white focus:outline-none focus:border-white/40"
+                    className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 transition-all font-sans"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-zinc-300 font-medium mb-1">
+                  <label className="block text-slate-700 font-semibold mb-1">
                     Message Body
                   </label>
                   <textarea
@@ -660,7 +659,7 @@ curl -X POST ${form.endpointUrl} \\
                     required
                     value={simMessage}
                     onChange={(e) => setSimMessage(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-white focus:outline-none focus:border-white/40 resize-none font-sans"
+                    className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 transition-all resize-none font-sans"
                   />
                 </div>
 
@@ -674,7 +673,7 @@ curl -X POST ${form.endpointUrl} \\
                         "Hi! Inquiring about enterprise tier licensing and dedicated webhook support for our 30 client brands."
                       );
                     }}
-                    className="text-xs text-zinc-400 hover:text-white underline cursor-pointer"
+                    className="text-xs text-slate-500 hover:text-blue-600 font-medium underline cursor-pointer"
                   >
                     Quick fill sample inquiry
                   </button>
@@ -682,7 +681,7 @@ curl -X POST ${form.endpointUrl} \\
                   <button
                     type="submit"
                     disabled={isSimulating}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black font-medium hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer disabled:opacity-70"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-70"
                   >
                     {isSimulating ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />

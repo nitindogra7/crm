@@ -12,7 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "test": "tsx test/leads-qa.test.ts && tsx test/leads-http.test.ts"
+    "test": "tsx test/leads-qa.test.ts && tsx test/leads-http.test.ts && tsx test/performance-regression.test.ts"
   },
   "keywords": [],
   "author": "",

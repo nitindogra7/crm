@@ -101,17 +101,13 @@ export function FormsView() {
     setTimeout(() => setCopiedKey(false), 2000);
   };
 
-  // Selected items for code snippet
-  const activeTargetForm = forms.find((f) => f.id === selectedFormIdForCode) || forms[0];
-  const currentEndpoint = activeTargetForm?.endpointUrl || "https://api.salenova.com/v1/f/your-form-slug";
-  const currentKeyMock = hasApiKey ? apiKey.fullKeyMock : "sln_live_YOUR_API_KEY_HERE";
-
-  // API Action Handlers with Loading State
+  // Generate Key handler
   const handleGenerateKey = async () => {
     if (isGeneratingKey) return;
     setIsGeneratingKey(true);
     try {
-      await createApiKeyAsync();
+      await createApiKeyAsync("Inbound Live Key");
+      addToast("API Key Created", "Key created successfully.", "success");
     } catch {
       addToast("Error", "Failed to generate API key", "error");
     } finally {
@@ -119,11 +115,13 @@ export function FormsView() {
     }
   };
 
+  // Regenerate Key handler
   const handleRegenerateKey = async () => {
-    if (isRegeneratingKey) return;
+    if (!apiKey || isRegeneratingKey) return;
     setIsRegeneratingKey(true);
     try {
       await regenerateApiKeyAsync();
+      addToast("Key Regenerated", "Old key revoked, new key generated.", "success");
       setIsRegenerateModalOpen(false);
     } catch {
       addToast("Error", "Failed to regenerate API key", "error");
@@ -132,17 +130,13 @@ export function FormsView() {
     }
   };
 
+  // Revoke Key handler
   const handleRevokeKey = async () => {
-    if (isRevokingKey || !apiKey) return;
-    if (
-      !window.confirm(
-        "Revoking will disable live submissions until a new key is generated. Proceed?"
-      )
-    )
-      return;
+    if (!apiKey || isRevokingKey) return;
     setIsRevokingKey(true);
     try {
       await revokeApiKeyAsync(apiKey.id);
+      addToast("API Key Revoked", "Live endpoints will reject requests until a new key is created.", "info");
     } catch {
       addToast("Error", "Failed to revoke API key", "error");
     } finally {
@@ -166,6 +160,10 @@ export function FormsView() {
   if (isLoading) {
     return <FormsSkeleton />;
   }
+
+  const currentFormForCode = forms.find((f) => f.id === selectedFormIdForCode) || forms[0];
+  const currentEndpoint = currentFormForCode?.endpointUrl || "https://api.infraly.com/api/v1/inbound/your-slug";
+  const currentKeyMock = apiKey?.fullKeyMock || "inf_live_••••••••••••••••••••";
 
   const getCodeSnippet = (lang: CodeLang): string => {
     switch (lang) {
@@ -262,18 +260,18 @@ print(response.json())`;
 
   return (
     <div className="space-y-6">
-      {/* Top Header - Apple-Grade Restraint */}
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-white">
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-slate-900">
             Forms & Endpoints
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-1 font-sans">
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-sans">
             {forms.length} {forms.length === 1 ? "endpoint" : "endpoints"} · {totalLeads} verified submissions
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
           {!hasApiKey && (
             <button
               type="button"
@@ -282,7 +280,7 @@ print(response.json())`;
                 await handleGenerateKey();
                 setActiveTab("key");
               }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 text-xs font-medium transition-colors cursor-pointer disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-all shadow-2xs cursor-pointer disabled:opacity-60"
             >
               {isGeneratingKey && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>{isGeneratingKey ? "Generating Key..." : "Generate API Key"}</span>
@@ -293,7 +291,7 @@ print(response.json())`;
             data-tour="create-form-btn"
             type="button"
             onClick={() => setIsCreateFormOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white text-black font-medium text-xs hover:bg-zinc-200 transition-colors shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Create Form</span>
@@ -302,15 +300,15 @@ print(response.json())`;
       </div>
 
       {/* Segmented Control Tabs */}
-      <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
-        <div className="inline-flex p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
+        <div className="inline-flex p-1 rounded-xl bg-slate-100/90 border border-slate-200/80 text-xs">
           <button
             type="button"
             onClick={() => setActiveTab("forms")}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
               activeTab === "forms"
-                ? "bg-white/[0.08] text-white shadow-xs"
-                : "text-zinc-400 hover:text-white"
+                ? "bg-white text-slate-900 shadow-2xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             Endpoints ({forms.length})
@@ -319,25 +317,25 @@ print(response.json())`;
           <button
             type="button"
             onClick={() => setActiveTab("key")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
               activeTab === "key"
-                ? "bg-white/[0.08] text-white shadow-xs"
-                : "text-zinc-400 hover:text-white"
+                ? "bg-white text-slate-900 shadow-2xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             <span>API Key</span>
             {!hasApiKey && (
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
             )}
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("integration")}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
               activeTab === "integration"
-                ? "bg-white/[0.08] text-white shadow-xs"
-                : "text-zinc-400 hover:text-white"
+                ? "bg-white text-slate-900 shadow-2xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             Code & SDK
@@ -345,7 +343,7 @@ print(response.json())`;
         </div>
 
         {activeTab === "forms" && forms.length > 0 && (
-          <span className="text-xs text-zinc-500 font-mono hidden sm:inline">
+          <span className="text-xs text-slate-500 font-mono hidden sm:inline">
             Showing {filteredForms.length} of {forms.length}
           </span>
         )}
@@ -356,11 +354,11 @@ print(response.json())`;
       {/* ========================================================================= */}
       {activeTab === "forms" && (
         <div className="space-y-4">
-          {/* Subtle Key Requirement Notice */}
+          {/* Key Requirement Notice */}
           {!hasApiKey && (
-            <div className="p-3.5 rounded-xl border border-white/[0.08] bg-white/[0.02] flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5 text-zinc-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-none" />
+            <div className="p-3.5 rounded-xl border border-amber-200/80 bg-amber-50/70 flex items-center justify-between gap-3 text-xs text-amber-900">
+              <div className="flex items-center gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-none" />
                 <span>Workspace API key required to authenticate live external submissions.</span>
               </div>
               <button
@@ -370,7 +368,7 @@ print(response.json())`;
                   setActiveTab("key");
                 }}
                 disabled={isGeneratingKey}
-                className="text-xs text-white hover:text-zinc-300 font-medium underline cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5"
+                className="text-xs text-amber-800 hover:text-amber-950 font-semibold underline cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5"
               >
                 {isGeneratingKey && <Loader2 className="w-3 h-3 animate-spin" />}
                 <span>Generate Key →</span>
@@ -381,18 +379,18 @@ print(response.json())`;
           {/* Search bar */}
           {forms.length > 3 && (
             <div className="relative max-w-sm">
-              <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={formSearch}
                 onChange={(e) => setFormSearch(e.target.value)}
                 placeholder="Search forms..."
-                className="w-full pl-8.5 pr-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/[0.08] text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/20"
+                className="w-full pl-8.5 pr-3 py-1.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 transition-all"
               />
             </div>
           )}
 
-          {/* Forms Grid - Apple Minimalist Luxury */}
+          {/* Forms Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredForms.map((form) => {
               const isCopied = copiedEndpointId === form.id;
@@ -400,7 +398,7 @@ print(response.json())`;
                 <div
                   key={form.id}
                   onClick={() => setSelectedFormId(form.id)}
-                  className="group relative p-5 rounded-2xl border border-white/[0.06] bg-[#131316] hover:bg-[#16161b] hover:border-white/[0.14] transition-all duration-200 shadow-xs cursor-pointer flex flex-col justify-between"
+                  className="group relative p-5 rounded-2xl border border-slate-200/80 bg-white hover:border-blue-400/80 hover:shadow-[0_8px_24px_-4px_rgba(37,99,235,0.08)] transition-all duration-200 shadow-xs cursor-pointer flex flex-col justify-between"
                 >
                   <div>
                     {/* Header: Status Dot + Name + Slug */}
@@ -408,39 +406,39 @@ print(response.json())`;
                       <div className="flex items-center gap-2 min-w-0">
                         <span
                           className={`w-1.5 h-1.5 rounded-full flex-none ${
-                            form.enabled ? "bg-emerald-400" : "bg-zinc-600"
+                            form.enabled ? "bg-emerald-500" : "bg-slate-400"
                           }`}
                         />
-                        <h3 className="text-sm sm:text-base font-medium text-white group-hover:text-zinc-100 transition-colors truncate">
+                        <h3 className="text-sm sm:text-base font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
                           {form.name}
                         </h3>
                       </div>
-                      <span className="text-[11px] font-mono text-zinc-500 flex-none">
+                      <span className="text-[11px] font-mono text-slate-400 flex-none">
                         /{form.slug}
                       </span>
                     </div>
 
-                    {/* Clean Redirect Info */}
-                    <p className="text-xs text-zinc-400 truncate font-sans">
+                    {/* Redirect Info */}
+                    <p className="text-xs text-slate-500 truncate font-sans">
                       {form.redirectUrl
                         ? `Redirects to ${form.redirectUrl.replace(/^https?:\/\//, "")}`
                         : "Direct JSON response"}
                     </p>
 
-                    {/* Understated Metrics (No colored border pills) */}
-                    <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center gap-2.5 text-xs text-zinc-400 font-sans">
-                      <span className="text-white font-medium">
-                        {form.leadCount} <span className="text-zinc-500 font-normal">leads</span>
+                    {/* Metrics */}
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2.5 text-xs text-slate-500 font-sans">
+                      <span className="text-slate-900 font-semibold">
+                        {form.leadCount} <span className="text-slate-500 font-normal">leads</span>
                       </span>
-                      <span className="text-zinc-700">·</span>
+                      <span className="text-slate-300">·</span>
                       <span>
-                        {form.fields.length} <span className="text-zinc-500">fields</span>
+                        {form.fields.length} <span className="text-slate-500">fields</span>
                       </span>
                       {form.spamCount > 0 && (
                         <>
-                          <span className="text-zinc-700">·</span>
-                          <span className="text-zinc-400">
-                            {form.spamCount} <span className="text-zinc-500">quarantined</span>
+                          <span className="text-slate-300">·</span>
+                          <span className="text-amber-700 font-medium">
+                            {form.spamCount} <span className="text-slate-500">quarantined</span>
                           </span>
                         </>
                       )}
@@ -448,21 +446,21 @@ print(response.json())`;
                   </div>
 
                   {/* Clean Bottom Actions */}
-                  <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between text-xs text-zinc-400">
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                     <button
                       type="button"
                       onClick={(e) => handleCopyEndpoint(e, form.id, form.endpointUrl)}
-                      className="inline-flex items-center gap-1.5 hover:text-white transition-colors"
+                      className="inline-flex items-center gap-1.5 hover:text-blue-600 font-medium transition-colors"
                       title="Copy endpoint URL"
                     >
                       {isCopied ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span className="text-emerald-400">Copied</span>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-700 font-semibold">Copied</span>
                         </>
                       ) : (
                         <>
-                          <Copy className="w-3.5 h-3.5 text-zinc-500" />
+                          <Copy className="w-3.5 h-3.5 text-slate-400" />
                           <span>Copy URL</span>
                         </>
                       )}
@@ -473,7 +471,7 @@ print(response.json())`;
                         type="button"
                         onClick={(e) => handleToggleForm(e, form.id)}
                         disabled={togglingFormId === form.id}
-                        className="hover:text-white transition-colors text-zinc-500 hover:text-zinc-300 inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                        className="hover:text-slate-900 transition-colors text-slate-400 hover:text-slate-700 inline-flex items-center gap-1 cursor-pointer disabled:opacity-50 font-medium"
                       >
                         {togglingFormId === form.id && (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -481,7 +479,7 @@ print(response.json())`;
                         <span>{form.enabled ? "Pause" : "Enable"}</span>
                       </button>
 
-                      <span className="text-zinc-300 group-hover:text-white flex items-center gap-0.5 font-medium">
+                      <span className="text-slate-400 group-hover:text-blue-600 flex items-center gap-0.5 font-semibold transition-colors">
                         Details →
                       </span>
                     </div>
@@ -492,14 +490,14 @@ print(response.json())`;
           </div>
 
           {filteredForms.length === 0 && (
-            <div className="p-12 text-center rounded-2xl border border-white/[0.06] bg-[#131316] space-y-3">
-              <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto text-zinc-400">
+            <div className="p-12 text-center rounded-2xl border border-slate-200/80 bg-white space-y-3 shadow-xs">
+              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
                 <FileText className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-medium text-white">
+              <h3 className="text-sm font-semibold text-slate-900">
                 {formSearch ? "No matching forms found" : "No forms created yet"}
               </h3>
-              <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
                 {formSearch
                   ? "Try searching for a different keyword."
                   : "Create your first form to start collecting submissions."}
@@ -508,7 +506,7 @@ print(response.json())`;
                 <button
                   type="button"
                   onClick={() => setFormSearch("")}
-                  className="px-3 py-1.5 rounded-xl border border-white/[0.1] text-xs text-white hover:bg-white/[0.04]"
+                  className="px-3.5 py-1.5 rounded-xl border border-slate-200/90 text-xs text-slate-700 hover:bg-slate-50 font-medium"
                 >
                   Clear search
                 </button>
@@ -516,7 +514,7 @@ print(response.json())`;
                 <button
                   type="button"
                   onClick={() => setIsCreateFormOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-white text-black font-medium text-xs hover:bg-zinc-200"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm shadow-blue-500/20"
                 >
                   Create Form
                 </button>
@@ -532,16 +530,16 @@ print(response.json())`;
       {activeTab === "key" && (
         <div className="space-y-6 max-w-2xl">
           {!hasApiKey ? (
-            <div className="p-8 text-center rounded-2xl border border-white/[0.06] bg-[#131316] space-y-4 shadow-xs">
-              <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mx-auto text-zinc-300">
+            <div className="p-8 text-center rounded-2xl border border-slate-200/80 bg-white space-y-4 shadow-xs">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200/80 flex items-center justify-center mx-auto text-blue-600">
                 <Key className="w-5 h-5" />
               </div>
 
               <div className="space-y-1">
-                <h3 className="text-base font-medium text-white">
+                <h3 className="text-base font-heading font-bold text-slate-900">
                   Workspace API Key
                 </h3>
-                <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
+                <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
                   Generate an authorized key to protect your endpoints and authenticate incoming submissions.
                 </p>
               </div>
@@ -551,7 +549,7 @@ print(response.json())`;
                   type="button"
                   onClick={handleGenerateKey}
                   disabled={isGeneratingKey}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black font-medium text-xs hover:bg-zinc-200 transition-colors cursor-pointer disabled:opacity-70"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-70"
                 >
                   {isGeneratingKey ? (
                     <>
@@ -565,25 +563,25 @@ print(response.json())`;
               </div>
             </div>
           ) : (
-            <div className="p-6 rounded-2xl border border-white/[0.06] bg-[#131316] space-y-5 shadow-xs">
+            <div className="p-6 rounded-2xl border border-slate-200/80 bg-white space-y-5 shadow-xs">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-white">
+                  <h3 className="text-sm font-heading font-bold text-slate-900">
                     Workspace Inbound Key
                   </h3>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Authorized for all form endpoints across your workspace.
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs text-emerald-700 bg-emerald-50 border border-emerald-200/80 font-semibold font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                   <span>Active</span>
                 </span>
               </div>
 
               {/* Key display box */}
-              <div className="p-3 rounded-xl border border-white/[0.08] bg-[#0c0c0e] flex items-center justify-between gap-3">
-                <code className="text-xs font-mono text-zinc-200 truncate select-all">
+              <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/80 flex items-center justify-between gap-3">
+                <code className="text-xs font-mono text-slate-900 truncate select-all font-semibold">
                   {showFullKey ? apiKey.fullKeyMock : `${apiKey.keyPrefix}••••••••••••••••••••`}
                 </code>
 
@@ -591,7 +589,7 @@ print(response.json())`;
                   <button
                     type="button"
                     onClick={() => setShowFullKey(!showFullKey)}
-                    className="p-1.5 rounded-lg text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-white transition-colors cursor-pointer"
                     title={showFullKey ? "Hide key" : "Show key"}
                   >
                     {showFullKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -600,12 +598,12 @@ print(response.json())`;
                   <button
                     type="button"
                     onClick={handleCopyKey}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-xs font-medium transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
                   >
                     {copiedKey ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-emerald-400">Copied</span>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-emerald-700 font-semibold">Copied</span>
                       </>
                     ) : (
                       <>
@@ -618,11 +616,11 @@ print(response.json())`;
               </div>
 
               {/* Actions */}
-              <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between text-xs">
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                 <button
                   type="button"
                   onClick={() => setIsRegenerateModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-slate-600 hover:text-slate-900 font-medium transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Regenerate Key</span>
@@ -632,7 +630,7 @@ print(response.json())`;
                   type="button"
                   onClick={handleRevokeKey}
                   disabled={isRevokingKey}
-                  className="text-zinc-500 hover:text-rose-400 transition-colors cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
+                  className="text-rose-600 hover:text-rose-700 font-medium transition-colors cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
                 >
                   {isRevokingKey && <Loader2 className="w-3 h-3 animate-spin" />}
                   <span>{isRevokingKey ? "Revoking..." : "Revoke"}</span>
@@ -648,14 +646,14 @@ print(response.json())`;
       {/* ========================================================================= */}
       {activeTab === "integration" && (
         <div className="space-y-4 max-w-3xl">
-          <div className="flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center justify-between gap-3 text-xs flex-wrap">
             <div className="flex items-center gap-2">
-              <span className="text-zinc-400">Target:</span>
+              <span className="text-slate-500 font-medium">Target Form:</span>
               <select
                 value={selectedFormIdForCode}
                 onChange={(e) => setSelectedFormIdForCode(e.target.value)}
                 disabled={forms.length === 0}
-                className="px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white focus:outline-none disabled:opacity-60"
+                className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs focus:outline-none focus:border-blue-600 disabled:opacity-60 font-medium shadow-2xs"
               >
                 {forms.length === 0 ? (
                   <option value="">No forms created yet</option>
@@ -675,10 +673,10 @@ print(response.json())`;
                   key={lang}
                   type="button"
                   onClick={() => setCodeLang(lang)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-colors ${
                     codeLang === lang
-                      ? "bg-white/[0.1] text-white"
-                      : "text-zinc-400 hover:text-white"
+                      ? "bg-blue-50 text-blue-700 border border-blue-200/80 font-semibold"
+                      : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
                   {lang}
@@ -687,21 +685,21 @@ print(response.json())`;
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0c0c0e] overflow-hidden">
-            <div className="p-4 overflow-x-auto text-zinc-300 font-mono text-xs leading-relaxed">
+          <div className="rounded-2xl border border-slate-800 bg-[#0f172a] overflow-hidden shadow-sm">
+            <div className="p-4 overflow-x-auto text-slate-200 font-mono text-xs leading-relaxed">
               <pre className="whitespace-pre">{getCodeSnippet(codeLang)}</pre>
             </div>
 
-            <div className="p-3 border-t border-white/[0.04] bg-[#121215] flex items-center justify-between text-xs">
-              <span className="text-zinc-500 font-mono text-[11px] truncate">
+            <div className="p-3 border-t border-slate-800 bg-[#1e293b] flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-mono text-[11px] truncate">
                 {currentEndpoint}
               </span>
               <button
                 type="button"
                 onClick={handleCopyCode}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white text-black font-medium transition-colors hover:bg-zinc-200"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm shadow-blue-500/20 transition-all cursor-pointer"
               >
-                {copiedCodeSnippet ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                {copiedCodeSnippet ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedCodeSnippet ? "Copied" : "Copy"}</span>
               </button>
             </div>
@@ -711,20 +709,21 @@ print(response.json())`;
 
       {/* Confirmation Modal */}
       {isRegenerateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-[#141416] border border-white/[0.1] rounded-2xl p-5 shadow-2xl text-white space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-2xl text-slate-900 space-y-4 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-white">Regenerate API Key?</h3>
+              <h3 className="text-base font-heading font-bold text-slate-900">Regenerate API Key?</h3>
               <button
                 type="button"
                 onClick={() => setIsRegenerateModalOpen(false)}
-                className="text-zinc-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-700"
+                aria-label="Close dialog"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-xs text-slate-500 leading-relaxed">
               Your existing key will stop accepting submissions immediately until you update your forms.
             </p>
 
@@ -733,7 +732,7 @@ print(response.json())`;
                 type="button"
                 onClick={() => setIsRegenerateModalOpen(false)}
                 disabled={isRegeneratingKey}
-                className="px-3 py-1.5 text-zinc-400 hover:text-white disabled:opacity-50"
+                className="px-3.5 py-2 rounded-xl border border-slate-200/90 text-slate-600 hover:text-slate-900 font-medium transition-colors"
               >
                 Cancel
               </button>
@@ -741,9 +740,9 @@ print(response.json())`;
                 type="button"
                 onClick={handleRegenerateKey}
                 disabled={isRegeneratingKey}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white text-black font-medium hover:bg-zinc-200 disabled:opacity-70 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all disabled:opacity-70 cursor-pointer"
               >
-                {isRegeneratingKey && <Loader2 className="w-3 h-3 animate-spin" />}
+                {isRegeneratingKey && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 <span>{isRegeneratingKey ? "Regenerating..." : "Regenerate"}</span>
               </button>
             </div>

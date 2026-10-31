@@ -34,7 +34,7 @@ router.delete("/keys/:id", formsAndApiController.revokeApiKey);
 router.get("/f/:slug", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Salenova Form Endpoint is active. Submit submissions via POST.",
+    message: "Infraly Form Endpoint is active. Submit submissions via POST.",
     slug: req.params.slug,
   });
 });

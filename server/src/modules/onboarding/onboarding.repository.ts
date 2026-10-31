@@ -7,11 +7,18 @@ import type {
 
 export class OnboardingRepository {
   async create(data: CreateOnboardingInput): Promise<OnboardingRecord> {
+    const slug =
+      data.slug ||
+      data.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .slice(0, 48) ||
+      `workspace-${Date.now().toString(36)}`;
     return prisma.onboarding.create({
       data: {
         userId: data.userId,
         name: data.name,
-        slug: data.slug,
+        slug: slug,
         ownerEmail: data.ownerEmail ?? null,
         avatarTone: data.avatarTone ?? "zinc",
         teamSize: data.teamSize ?? "team",
@@ -23,12 +30,19 @@ export class OnboardingRepository {
   }
 
   async upsert(data: CreateOnboardingInput): Promise<OnboardingRecord> {
+    const slug =
+      data.slug ||
+      data.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .slice(0, 48) ||
+      `workspace-${Date.now().toString(36)}`;
     return prisma.onboarding.upsert({
       where: { userId: data.userId },
       create: {
         userId: data.userId,
         name: data.name,
-        slug: data.slug,
+        slug: slug,
         ownerEmail: data.ownerEmail ?? null,
         avatarTone: data.avatarTone ?? "zinc",
         teamSize: data.teamSize ?? "team",
@@ -38,7 +52,7 @@ export class OnboardingRepository {
       },
       update: {
         name: data.name,
-        slug: data.slug,
+        slug: slug,
         ...(data.ownerEmail !== undefined && { ownerEmail: data.ownerEmail }),
         ...(data.avatarTone !== undefined && { avatarTone: data.avatarTone }),
         ...(data.teamSize !== undefined && { teamSize: data.teamSize }),

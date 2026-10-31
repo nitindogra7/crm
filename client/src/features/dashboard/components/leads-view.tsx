@@ -101,13 +101,12 @@ export function LeadsView() {
 
   // Filtered Leads
   const filteredLeads = useMemo(() => {
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const sevenDaysAgo = startOfToday - 6 * 24 * 60 * 60 * 1000;
-    const thirtyDaysAgo = startOfToday - 29 * 24 * 60 * 60 * 1000;
+    // eslint-disable-next-line react-hooks/purity
+    const now = Date.now();
+    const oneDayMs = 24 * 60 * 60 * 1000;
 
     return leads.filter((lead) => {
-      // Search: name, email, message
+      // 1. Search term match
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
         const matchesName = lead.name.toLowerCase().includes(query);
@@ -116,31 +115,29 @@ export function LeadsView() {
         if (!matchesName && !matchesEmail && !matchesMessage) return false;
       }
 
-      // Form filter
+      // 2. Form filter
       if (selectedForm !== "all" && lead.formId !== selectedForm) {
         return false;
       }
 
-      // Source filter
+      // 3. Source filter
       if (selectedSource !== "all" && lead.source !== selectedSource) {
         return false;
       }
 
-      // Status filter
+      // 4. Status filter
       if (selectedStatus !== "all" && lead.status !== selectedStatus) {
         return false;
       }
 
-      // Date filter
-      const leadTime = new Date(lead.receivedAt).getTime();
-      if (selectedDate === "today" && leadTime < startOfToday) {
-        return false;
-      }
-      if (selectedDate === "week" && leadTime < sevenDaysAgo) {
-        return false;
-      }
-      if (selectedDate === "month" && leadTime < thirtyDaysAgo) {
-        return false;
+      // 5. Date filter
+      if (selectedDate !== "all") {
+        const leadDate = new Date(lead.receivedAt).getTime();
+        const diffMs = now - leadDate;
+
+        if (selectedDate === "today" && diffMs > oneDayMs) return false;
+        if (selectedDate === "week" && diffMs > 7 * oneDayMs) return false;
+        if (selectedDate === "month" && diffMs > 30 * oneDayMs) return false;
       }
 
       return true;
@@ -148,24 +145,26 @@ export function LeadsView() {
   }, [leads, searchTerm, selectedForm, selectedSource, selectedStatus, selectedDate]);
 
   // Pagination calculation
-  const totalPages = Math.ceil(filteredLeads.length / pageSize) || 1;
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
   const paginatedLeads = useMemo(() => {
     const start = (safePage - 1) * pageSize;
     return filteredLeads.slice(start, start + pageSize);
   }, [filteredLeads, safePage, pageSize]);
 
-  // Select all on current page logic
+  // Selection handlers
   const isAllCurrentPageSelected =
     paginatedLeads.length > 0 &&
     paginatedLeads.every((lead) => selectedIds.includes(lead.id));
 
   const handleToggleSelectAll = () => {
     if (isAllCurrentPageSelected) {
-      const pageIds = new Set(paginatedLeads.map((l) => l.id));
-      setSelectedIds((prev) => prev.filter((id) => !pageIds.has(id)));
+      setSelectedIds((prev) =>
+        prev.filter((id) => !paginatedLeads.some((l) => l.id === id))
+      );
     } else {
-      const newIds = new Set([...selectedIds, ...paginatedLeads.map((l) => l.id)]);
+      const newIds = new Set(selectedIds);
+      paginatedLeads.forEach((l) => newIds.add(l.id));
       setSelectedIds(Array.from(newIds));
     }
   };
@@ -183,7 +182,6 @@ export function LeadsView() {
     setSelectedStatus("all");
     setSelectedDate("all");
     setCurrentPage(1);
-    setSelectedIds([]);
   };
 
   const hasActiveFilters =
@@ -193,33 +191,33 @@ export function LeadsView() {
     selectedStatus !== "all" ||
     selectedDate !== "all";
 
-  // Status badge styling
+  // Badge stylings
   const getStatusBadge = (status: LeadStatus) => {
     switch (status) {
       case "New":
         return {
-          bg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-          dot: "bg-emerald-400",
+          bg: "bg-blue-50 text-blue-700 border-blue-200/80",
+          dot: "bg-blue-600",
         };
       case "Contacted":
         return {
-          bg: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-          dot: "bg-sky-400",
+          bg: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+          dot: "bg-emerald-600",
         };
       case "Qualified":
         return {
-          bg: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-          dot: "bg-purple-400",
+          bg: "bg-purple-50 text-purple-700 border-purple-200/80",
+          dot: "bg-purple-600",
         };
       case "Archived":
         return {
-          bg: "bg-zinc-800 text-zinc-400 border-zinc-700",
-          dot: "bg-zinc-500",
+          bg: "bg-slate-100 text-slate-600 border-slate-200",
+          dot: "bg-slate-500",
         };
       default:
         return {
-          bg: "bg-zinc-800 text-zinc-300 border-zinc-700",
-          dot: "bg-zinc-400",
+          bg: "bg-slate-100 text-slate-600 border-slate-200",
+          dot: "bg-slate-400",
         };
     }
   };
@@ -281,20 +279,20 @@ export function LeadsView() {
     <div ref={menuContainerRef} className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-medium tracking-tight text-white">
+        <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-slate-900">
           Leads Inbox
         </h1>
-        <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+        <p className="text-xs sm:text-sm text-slate-500 mt-1">
           Review, filter, and track inquiries received from your live form endpoints.
         </p>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-3.5 sm:p-4 rounded-2xl border border-white/[0.08] bg-[#181818]/90 space-y-3 shadow-sm">
+      <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 bg-white space-y-3 shadow-xs">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchTerm}
@@ -303,7 +301,7 @@ export function LeadsView() {
                 setCurrentPage(1);
               }}
               placeholder="Search by name, email, or message content..."
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white/40 font-sans"
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 font-sans transition-all"
             />
             {searchTerm && (
               <button
@@ -312,7 +310,7 @@ export function LeadsView() {
                   setSearchTerm("");
                   setCurrentPage(1);
                 }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
                 aria-label="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
@@ -329,7 +327,7 @@ export function LeadsView() {
                 setSelectedForm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-2.5 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-zinc-200 focus:outline-none text-[11.5px] cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[11.5px] cursor-pointer transition-all"
             >
               <option value="all">All Forms</option>
               {forms.map((f) => (
@@ -346,7 +344,7 @@ export function LeadsView() {
                 setSelectedSource(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-2.5 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-zinc-200 focus:outline-none text-[11.5px] cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[11.5px] cursor-pointer transition-all"
             >
               <option value="all">All Sources</option>
               {allSources.map((s) => (
@@ -363,7 +361,7 @@ export function LeadsView() {
                 setSelectedDate(e.target.value as "all" | "today" | "week" | "month");
                 setCurrentPage(1);
               }}
-              className="px-2.5 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-zinc-200 focus:outline-none text-[11.5px] cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[11.5px] cursor-pointer transition-all"
             >
               <option value="all">All Dates</option>
               <option value="today">Today</option>
@@ -378,7 +376,7 @@ export function LeadsView() {
                 setSelectedStatus(e.target.value as "all" | LeadStatus);
                 setCurrentPage(1);
               }}
-              className="px-2.5 py-2 rounded-xl bg-zinc-900 border border-white/[0.1] text-zinc-200 focus:outline-none text-[11.5px] cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-500/10 text-[11.5px] cursor-pointer transition-all"
             >
               <option value="all">All Statuses</option>
               <option value="New">New</option>
@@ -393,7 +391,7 @@ export function LeadsView() {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-white/[0.1] text-xs text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors whitespace-nowrap cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all whitespace-nowrap cursor-pointer shadow-2xs"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset</span>
@@ -403,15 +401,15 @@ export function LeadsView() {
 
         {/* Bulk Actions Floating Toolbar */}
         {selectedIds.length > 0 && (
-          <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between flex-wrap gap-2 text-xs animate-in fade-in duration-150">
+          <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2 text-xs animate-in fade-in duration-150">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-zinc-300 font-medium">
+              <span className="font-mono text-slate-700 font-semibold">
                 {selectedIds.length} lead{selectedIds.length > 1 ? "s" : ""} selected
               </span>
               <button
                 type="button"
                 onClick={() => setSelectedIds([])}
-                className="text-[11px] text-zinc-500 hover:text-zinc-300 underline cursor-pointer"
+                className="text-[11px] text-slate-500 hover:text-slate-800 underline cursor-pointer"
               >
                 Clear selection
               </button>
@@ -421,7 +419,7 @@ export function LeadsView() {
               <button
                 type="button"
                 onClick={() => handleBulkStatusChange("Contacted")}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-sky-500/20 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 transition-colors cursor-pointer text-xs font-medium"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer text-xs font-semibold"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Mark Contacted</span>
@@ -430,7 +428,7 @@ export function LeadsView() {
               <button
                 type="button"
                 onClick={() => handleBulkStatusChange("New")}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors cursor-pointer text-xs font-medium"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer text-xs font-semibold"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Mark New</span>
@@ -441,7 +439,7 @@ export function LeadsView() {
                 onClick={() =>
                   setDeleteTarget({ type: "batch", ids: selectedIds })
                 }
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer text-xs font-medium"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer text-xs font-semibold"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Delete ({selectedIds.length})</span>
@@ -452,11 +450,11 @@ export function LeadsView() {
       </div>
 
       {/* Leads Table Card */}
-      <div className="rounded-2xl border border-white/[0.08] bg-[#181818]/90 overflow-hidden shadow-sm">
+      <div className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-xs">
         <div className="overflow-x-auto min-h-[360px]">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-white/[0.06] text-zinc-500 font-mono text-[10.5px] uppercase tracking-wider bg-white/[0.01]">
+              <tr className="border-b border-slate-200/80 text-slate-500 font-semibold text-[11px] uppercase tracking-wider bg-slate-50/70">
                 <th className="py-3.5 pl-4 pr-2 w-8">
                   <input
                     type="checkbox"
@@ -464,30 +462,30 @@ export function LeadsView() {
                     onChange={handleToggleSelectAll}
                     disabled={paginatedLeads.length === 0}
                     aria-label="Select all leads on current page"
-                    className="rounded bg-zinc-900 border-white/20 text-emerald-500 focus:ring-0 cursor-pointer"
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
                   />
                 </th>
-                <th className="py-3.5 px-4 font-normal">Contact (Name & Email)</th>
-                <th className="py-3.5 px-4 font-normal hidden sm:table-cell">Form</th>
-                <th className="py-3.5 px-4 font-normal hidden md:table-cell">Source</th>
-                <th className="py-3.5 px-4 font-normal">Status</th>
-                <th className="py-3.5 px-4 font-normal text-right">Received</th>
-                <th className="py-3.5 px-4 font-normal text-right w-12">Actions</th>
+                <th className="py-3.5 px-4 font-semibold">Contact (Name & Email)</th>
+                <th className="py-3.5 px-4 font-semibold hidden sm:table-cell">Form</th>
+                <th className="py-3.5 px-4 font-semibold hidden md:table-cell">Source</th>
+                <th className="py-3.5 px-4 font-semibold">Status</th>
+                <th className="py-3.5 px-4 font-semibold text-right">Received</th>
+                <th className="py-3.5 px-4 font-semibold text-right w-12">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.04]">
+            <tbody className="divide-y divide-slate-100">
               {paginatedLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-zinc-400">
+                  <td colSpan={7} className="py-16 text-center text-slate-500">
                     <div className="max-w-xs mx-auto space-y-3">
-                      <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mx-auto text-zinc-500">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
                         <Inbox className="w-5 h-5" />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-white">
+                        <p className="text-sm font-semibold text-slate-900">
                           {leads.length === 0 ? "No leads received yet" : "No leads match filters"}
                         </p>
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-slate-400">
                           {leads.length === 0
                             ? "Submissions captured by your forms will automatically show up here."
                             : "Try adjusting your search criteria, dates, or status toggles."}
@@ -497,7 +495,7 @@ export function LeadsView() {
                         <button
                           type="button"
                           onClick={handleResetFilters}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-black text-xs font-medium hover:bg-zinc-200 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors cursor-pointer shadow-sm shadow-blue-500/20"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span>Reset all filters</span>
@@ -517,8 +515,8 @@ export function LeadsView() {
                     <tr
                       key={lead.id}
                       onClick={() => setSelectedLeadId(lead.id)}
-                      className={`hover:bg-white/[0.03] transition-colors cursor-pointer group ${
-                        isSelected ? "bg-white/[0.02]" : ""
+                      className={`hover:bg-slate-50/80 transition-colors cursor-pointer group ${
+                        isSelected ? "bg-blue-50/30" : ""
                       }`}
                     >
                       {/* Checkbox */}
@@ -531,30 +529,30 @@ export function LeadsView() {
                           checked={isSelected}
                           onChange={() => handleToggleSelectOne(lead.id)}
                           aria-label={`Select lead ${lead.name}`}
-                          className="rounded bg-zinc-900 border-white/20 text-emerald-500 focus:ring-0 cursor-pointer"
+                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
                         />
                       </td>
 
                       {/* Contact Name & Email */}
                       <td className="py-3.5 px-4">
-                        <div className="font-medium text-zinc-200 group-hover:text-white transition-colors truncate max-w-[180px] sm:max-w-[240px]">
+                        <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate max-w-[180px] sm:max-w-[240px]">
                           {lead.name}
                         </div>
-                        <div className="text-[11px] text-zinc-500 truncate max-w-[180px] sm:max-w-[240px]">
+                        <div className="text-[11px] text-slate-500 truncate max-w-[180px] sm:max-w-[240px]">
                           {lead.email}
                         </div>
                       </td>
 
                       {/* Form */}
                       <td className="py-3.5 px-4 hidden sm:table-cell">
-                        <span className="font-sans text-zinc-300 truncate block max-w-[160px]">
+                        <span className="font-sans text-slate-600 truncate block max-w-[160px] font-medium">
                           {lead.formName}
                         </span>
                       </td>
 
                       {/* Source */}
                       <td className="py-3.5 px-4 hidden md:table-cell">
-                        <span className="font-mono text-[11px] text-zinc-400">
+                        <span className="font-mono text-[11px] text-slate-500">
                           {lead.source}
                         </span>
                       </td>
@@ -571,32 +569,32 @@ export function LeadsView() {
                               setOpenActionMenuId(null);
                               setOpenStatusMenuId(isStatusMenuOpen ? null : lead.id);
                             }}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10.5px] font-mono border transition-all cursor-pointer hover:border-white/40 ${badge.bg}`}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${badge.bg}`}
                             title="Click to change lead status"
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
                             <span>{lead.status}</span>
-                            <ChevronDown className="w-3 h-3 text-zinc-400 opacity-60 group-hover:opacity-100" />
+                            <ChevronDown className="w-3 h-3 text-slate-400 opacity-60 group-hover:opacity-100" />
                           </button>
 
                           {/* Status Popover Dropdown */}
                           {isStatusMenuOpen && (
-                            <div className="absolute left-0 mt-1 w-32 rounded-xl bg-[#202022] border border-white/[0.12] shadow-xl py-1 z-30 animate-in fade-in duration-100">
+                            <div className="absolute left-0 mt-1 w-32 rounded-xl bg-white border border-slate-200 shadow-xl py-1 z-30 animate-in fade-in duration-100">
                               {(["New", "Contacted", "Qualified", "Archived"] as LeadStatus[]).map(
                                 (st) => (
                                   <button
                                     key={st}
                                     type="button"
                                     onClick={() => handleUpdateStatus(lead.id, st)}
-                                    className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-white/[0.08] transition-colors cursor-pointer ${
+                                    className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer ${
                                       lead.status === st
-                                        ? "text-white font-medium bg-white/[0.04]"
-                                        : "text-zinc-400"
+                                        ? "text-blue-700 font-semibold bg-blue-50/60"
+                                        : "text-slate-700"
                                     }`}
                                   >
                                     <span>{st}</span>
                                     {lead.status === st && (
-                                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                      <Check className="w-3.5 h-3.5 text-blue-600" />
                                     )}
                                   </button>
                                 )
@@ -609,7 +607,7 @@ export function LeadsView() {
                       {/* Received Date */}
                       <td
                         suppressHydrationWarning
-                        className="py-3.5 px-4 text-right font-mono text-[11px] text-zinc-400 whitespace-nowrap"
+                        className="py-3.5 px-4 text-right font-mono text-[11px] text-slate-400 whitespace-nowrap"
                       >
                         <FormattedDate date={lead.receivedAt} format="both" />
                       </td>
@@ -626,7 +624,7 @@ export function LeadsView() {
                               setOpenStatusMenuId(null);
                               setOpenActionMenuId(isActionMenuOpen ? null : lead.id);
                             }}
-                            className="p-1 rounded-lg hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                            className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                             aria-label="Lead actions"
                           >
                             <MoreVertical className="w-4 h-4" />
@@ -634,35 +632,35 @@ export function LeadsView() {
 
                           {/* Action Dropdown Menu */}
                           {isActionMenuOpen && (
-                            <div className="absolute right-0 mt-1 w-44 rounded-xl bg-[#202022] border border-white/[0.12] shadow-2xl py-1 z-30 animate-in fade-in duration-100">
+                            <div className="absolute right-0 mt-1 w-44 rounded-xl bg-white border border-slate-200 shadow-xl py-1 z-30 animate-in fade-in duration-100">
                               <button
                                 type="button"
                                 onClick={() => {
                                   setSelectedLeadId(lead.id);
                                   setOpenActionMenuId(null);
                                 }}
-                                className="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:text-white hover:bg-white/[0.08] flex items-center gap-2 transition-colors cursor-pointer"
+                                className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:text-blue-600 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
                               >
-                                <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+                                <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
                                 <span>View Details</span>
                               </button>
 
                               <button
                                 type="button"
                                 onClick={(e) => handleCopyEmail(lead.email, e)}
-                                className="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:text-white hover:bg-white/[0.08] flex items-center gap-2 transition-colors cursor-pointer"
+                                className="w-full text-left px-3 py-2 text-xs text-slate-700 hover:text-blue-600 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
                               >
-                                <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                                <Copy className="w-3.5 h-3.5 text-slate-400" />
                                 <span>Copy Email</span>
                               </button>
 
-                              <div className="my-1 border-t border-white/[0.06]" />
+                              <div className="my-1 border-t border-slate-100" />
 
                               {lead.status !== "Contacted" && (
                                 <button
                                   type="button"
                                   onClick={() => handleUpdateStatus(lead.id, "Contacted")}
-                                  className="w-full text-left px-3 py-2 text-xs text-sky-400 hover:bg-white/[0.08] flex items-center gap-2 transition-colors cursor-pointer"
+                                  className="w-full text-left px-3 py-2 text-xs text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" />
                                   <span>Mark Contacted</span>
@@ -673,14 +671,14 @@ export function LeadsView() {
                                 <button
                                   type="button"
                                   onClick={() => handleUpdateStatus(lead.id, "New")}
-                                  className="w-full text-left px-3 py-2 text-xs text-emerald-400 hover:bg-white/[0.08] flex items-center gap-2 transition-colors cursor-pointer"
+                                  className="w-full text-left px-3 py-2 text-xs text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
                                 >
                                   <Sparkles className="w-3.5 h-3.5" />
                                   <span>Mark New</span>
                                 </button>
                               )}
 
-                              <div className="my-1 border-t border-white/[0.06]" />
+                              <div className="my-1 border-t border-slate-100" />
 
                               <button
                                 type="button"
@@ -688,7 +686,7 @@ export function LeadsView() {
                                   setOpenActionMenuId(null);
                                   setDeleteTarget({ type: "single", lead });
                                 }}
-                                className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors cursor-pointer"
+                                className="w-full text-left px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors cursor-pointer font-medium"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                                 <span>Delete Lead</span>
@@ -706,12 +704,12 @@ export function LeadsView() {
         </div>
 
         {/* Pagination & Count Bar */}
-        <div className="p-3.5 sm:p-4 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400 flex-wrap gap-2">
+        <div className="p-3.5 sm:p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 flex-wrap gap-2">
           {/* Showing Count & Per Page Selector */}
           <div className="flex items-center gap-3">
             <div className="font-mono text-[11px]">
               Showing{" "}
-              <span className="text-white font-medium">
+              <span className="text-slate-900 font-semibold">
                 {filteredLeads.length > 0
                   ? `${(safePage - 1) * pageSize + 1}-${Math.min(
                       safePage * pageSize,
@@ -720,7 +718,7 @@ export function LeadsView() {
                   : "0"}
               </span>{" "}
               of{" "}
-              <span className="text-white font-medium">{filteredLeads.length}</span>{" "}
+              <span className="text-slate-900 font-semibold">{filteredLeads.length}</span>{" "}
               leads
             </div>
 
@@ -732,7 +730,7 @@ export function LeadsView() {
                   setPageSize(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="px-2 py-0.5 rounded bg-zinc-900 border border-white/[0.1] text-zinc-200 text-[11px] focus:outline-none cursor-pointer"
+                className="px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-[11px] focus:outline-none cursor-pointer"
               >
                 {PAGE_SIZE_OPTIONS.map((size) => (
                   <option key={size} value={size}>
@@ -749,13 +747,13 @@ export function LeadsView() {
               type="button"
               disabled={safePage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="p-1.5 rounded-lg border border-white/[0.08] hover:bg-white/[0.05] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer shadow-2xs"
               aria-label="Previous page"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <span className="px-2 font-mono text-[11px] text-zinc-300">
+            <span className="px-2 font-mono text-[11px] text-slate-600 font-medium">
               Page {safePage} of {totalPages}
             </span>
 
@@ -763,7 +761,7 @@ export function LeadsView() {
               type="button"
               disabled={safePage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="p-1.5 rounded-lg border border-white/[0.08] hover:bg-white/[0.05] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer shadow-2xs"
               aria-label="Next page"
             >
               <ChevronRight className="w-4 h-4" />
@@ -774,19 +772,19 @@ export function LeadsView() {
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="relative w-full max-w-sm bg-[#181818] border border-white/[0.12] rounded-2xl p-5 shadow-2xl text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-2xl text-slate-900 animate-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3 mb-3">
-              <span className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center flex-none">
+              <span className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-600 flex items-center justify-center flex-none">
                 <AlertTriangle className="w-5 h-5" />
               </span>
               <div>
-                <h3 className="text-sm font-medium font-heading">
+                <h3 className="text-sm font-heading font-bold text-slate-900">
                   {deleteTarget.type === "single"
                     ? "Delete Lead"
                     : "Delete Selected Leads"}
                 </h3>
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-[11.5px] text-slate-500">
                   {deleteTarget.type === "single"
                     ? `Are you sure you want to remove "${deleteTarget.lead.name}"?`
                     : `Are you sure you want to delete ${deleteTarget.ids.length} selected lead(s)?`}
@@ -794,7 +792,7 @@ export function LeadsView() {
               </div>
             </div>
 
-            <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
+            <p className="text-xs text-slate-500 mb-4 leading-relaxed">
               This action permanently deletes the submission record and cannot be undone.
             </p>
 
@@ -803,7 +801,7 @@ export function LeadsView() {
                 type="button"
                 disabled={isDeleting}
                 onClick={() => setDeleteTarget(null)}
-                className="px-3 py-2 rounded-xl border border-white/[0.1] text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                className="px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 font-medium transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -811,7 +809,7 @@ export function LeadsView() {
                 type="button"
                 disabled={isDeleting}
                 onClick={handleConfirmDelete}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-medium transition-colors cursor-pointer disabled:opacity-60 shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors cursor-pointer disabled:opacity-60 shadow-sm shadow-rose-500/20"
               >
                 {isDeleting ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

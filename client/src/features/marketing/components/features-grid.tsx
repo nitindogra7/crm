@@ -1,225 +1,299 @@
 "use client";
 
-import React from "react";
-import { Pill, Avatar } from "./ui";
-import { Icon } from "./icons";
+import React, { useState } from "react";
+import {
+  TrendingUp,
+  CheckCircle2,
+  Sparkles,
+  Zap,
+  ShieldCheck,
+  Bell,
+  Database,
+  ArrowUpRight,
+  Sliders,
+} from "lucide-react";
 
 export function FeaturesGrid() {
-  return (
-    <section id="features" className="py-[56px] md:py-[76px] relative z-10">
-      {/* Subtle deep emerald ambient lighting */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-1/3 -translate-y-1/2 h-[500px] w-full max-w-[900px] mx-auto rounded-full blur-[150px] opacity-20 -z-10"
-        style={{
-          background: "radial-gradient(ellipse at 50% 50%, rgba(52,211,153,0.15) 0%, rgba(16,185,129,0.08) 50%, transparent 70%)",
-        }}
-      />
+  const [pipelineScore, setPipelineScore] = useState(94);
 
-      <div className="max-w-[1100px] mx-auto px-[16px] sm:px-[24px]">
-        {/* Head */}
-        <div className="text-center max-w-[560px] mx-auto mb-[40px] sm:mb-[48px]">
-          <Pill icon="shield">Engineered for Scale</Pill>
-          <h2 className="text-[26px] sm:text-[34px] md:text-[40px] font-heading font-medium tracking-[-0.025em] leading-[1.2] mt-4 mb-3 text-white text-balance">
-            Everything your form pipeline needs <br className="hidden sm:inline" />
-            <span className="text-zinc-400">with zero backend servers to build.</span>
+  return (
+    <section className="py-20 md:py-28 bg-[#f2f4f2] border-t border-[#e2e8e4]" id="features">
+      <div className="w-[min(1160px,calc(100%-36px))] mx-auto">
+        {/* Section Header */}
+        <div className="text-center max-w-[680px] mx-auto mb-16 md:mb-20">
+          <h2
+            className="text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-[#1a2321] leading-[1.15]"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            Smart CRM Made{" "}
+            <span
+              style={{
+                background: "linear-gradient(100deg, #d97706, #f59e0b 80%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Simple
+            </span>
           </h2>
-          <p className="text-zinc-400 font-p font-normal mt-3 text-[13.5px] sm:text-[14.5px] leading-[1.65] max-w-[520px] mx-auto text-pretty">
-            From automated spam filtering to multi-channel webhooks, Salenova replaces complex backend form infrastructure with one secure endpoint.
+          <p className="text-xs sm:text-sm text-[#5d6967] leading-relaxed mt-4 max-w-[480px] mx-auto">
+            Clear, real-time analytics to steer your pipeline, eliminate lead leaks, and accelerate conversion with confidence.
           </p>
         </div>
 
-        {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-[14px]">
-          {/* Card 1: Intelligent Multi-Layer Spam Shield (Large 2 Cols) */}
-          <div className="md:col-span-2 rounded-[18px] border border-white/[0.09] hover:border-emerald-500/35 bg-[#1c1c1c] hover:bg-[#232323] p-[24px] md:p-[28px] transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(52,211,153,0.1)] group relative">
-            {/* Top specular edge */}
-            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-            <div>
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 grid place-items-center text-emerald-400 group-hover:border-emerald-500/40 group-hover:shadow-[0_0_16px_rgba(52,211,153,0.25)] transition-all">
-                  <Icon name="shield" className="w-[18px] h-[18px]" />
-                </span>
-                <span className="text-[10.5px] font-sans text-emerald-300 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-1.5 font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Zero Captchas Required
-                </span>
-              </div>
-
-              <h3 className="text-[18px] font-heading font-medium tracking-tight text-white mb-2 group-hover:text-white transition-colors">
-                Intelligent Multi-Layer Spam Shield
-              </h3>
-              <p className="text-zinc-400 font-p font-normal text-[13px] leading-[1.65] max-w-[520px] mb-5">
-                Never lose a prospective lead to annoying puzzle captchas. Silent honeypots, disposable email detection, and IP reputation heuristics screen out bot crawlers in milliseconds.
-              </p>
-            </div>
-
-            {/* Interactive Visual Widget */}
-            <div className="rounded-xl border border-white/[0.06] bg-[#141414] p-3.5 font-sans shadow-inner">
-              <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/[0.05] text-[11px] text-zinc-300">
-                <span className="font-sans text-zinc-400 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  Salenova Heuristics Engine
-                </span>
-                <span className="flex items-center gap-1.5 text-emerald-400 font-sans text-[10.5px] bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Active • 0 False Drops
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/25 hover:bg-emerald-500/[0.03] transition-colors">
-                  <span className="text-[10px] text-zinc-500 block mb-0.5 font-sans">Silent Honeypot</span>
-                  <span className="text-[12px] text-white font-medium flex items-center gap-1.5">
-                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400" /> Active Trap
-                  </span>
+        {/* Bento Grid: 2 Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          {/* Left Column (7 cols): 2 Cards stacked */}
+          <div className="lg:col-span-7 flex flex-col gap-6">
+            {/* Card 1: Real-Time Overview with embedded graph card */}
+            <div className="p-7 sm:p-8 rounded-3xl bg-[#fafbfa] border border-[#dce3de] shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+                <div>
+                  <h3
+                    className="text-xl sm:text-2xl font-semibold text-[#1a2321] tracking-tight"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    Real-Time Overview
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#5d6967] mt-1">
+                    Track lead velocity, conversion rate, and pipeline health live.
+                  </p>
                 </div>
-                <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/25 hover:bg-emerald-500/[0.03] transition-colors">
-                  <span className="text-[10px] text-zinc-500 block mb-0.5 font-sans">Domain MX Verify</span>
-                  <span className="text-[12px] text-white font-medium flex items-center gap-1.5">
-                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400" /> DNS Validated
-                  </span>
-                </div>
-                <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/25 hover:bg-emerald-500/[0.03] transition-colors">
-                  <span className="text-[10px] text-zinc-500 block mb-0.5 font-sans">Rate Limiter</span>
-                  <span className="text-[12px] text-white font-medium flex items-center gap-1.5">
-                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400" /> Token Bucket
-                  </span>
-                </div>
-                <div className="p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/25 hover:bg-emerald-500/[0.03] transition-colors">
-                  <span className="text-[10px] text-zinc-500 block mb-0.5 font-sans">Disposable Filter</span>
-                  <span className="text-[12px] text-white font-medium flex items-center gap-1.5">
-                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400" /> 18k Domains
-                  </span>
+
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10b981]/10 text-[#059669] text-xs font-semibold self-start sm:self-auto">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+                  <span>Live Stream</span>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Card 2: Instant Form Ingestion */}
-          <div className="rounded-[18px] border border-white/[0.09] hover:border-emerald-500/35 bg-[#1c1c1c] hover:bg-[#232323] p-[24px] md:p-[28px] transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(52,211,153,0.1)] group relative">
-            {/* Top specular edge */}
-            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 grid place-items-center text-emerald-400 group-hover:border-emerald-500/40 group-hover:shadow-[0_0_16px_rgba(52,211,153,0.25)] transition-all">
-                  <Icon name="cpu" className="w-[18px] h-[18px]" />
-                </span>
-                <span className="text-[10.5px] font-sans text-emerald-300 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 font-medium">
-                  Zero Backend
-                </span>
-              </div>
-
-              <h3 className="text-[18px] font-heading font-medium tracking-tight text-white mb-2 group-hover:text-white transition-colors">
-                Instant Form Ingestion
-              </h3>
-              <p className="text-zinc-400 font-p font-normal text-[13px] leading-[1.65] mb-5">
-                Handles CORS headers, automated preflights, and JSON or FormData payloads. Connect plain HTML forms, React, or Webflow with zero server logic.
-              </p>
-            </div>
-
-            {/* Code Chip */}
-            <div className="rounded-xl border border-white/[0.06] bg-[#141414] p-3.5 font-sans text-[11px] text-zinc-300 space-y-2 shadow-inner">
-              <div className="flex items-center justify-between text-zinc-500 text-[10px]">
-                <span>REQUEST METHOD</span>
-                <span className="text-emerald-400 font-sans text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">200 OK</span>
-              </div>
-              <div className="text-white font-medium truncate flex items-center gap-2">
-                <span className="text-emerald-400 font-bold">POST</span>
-                <span>/v1/leads</span>
-              </div>
-              <div className="text-zinc-500 truncate text-[10.5px]">Host: api.salenova.com</div>
-              <div className="text-emerald-300/80 truncate text-[10.5px]">x-api-key: sln_live_••••</div>
-            </div>
-          </div>
-
-          {/* Card 3: Real-Time Routing */}
-          <div className="rounded-[18px] border border-white/[0.09] hover:border-emerald-500/35 bg-[#1c1c1c] hover:bg-[#232323] p-[24px] md:p-[28px] transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(52,211,153,0.1)] group relative">
-            {/* Top specular edge */}
-            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 grid place-items-center text-emerald-400 group-hover:border-emerald-500/40 group-hover:shadow-[0_0_16px_rgba(52,211,153,0.25)] transition-all">
-                  <Icon name="hook" className="w-[18px] h-[18px]" />
-                </span>
-                <span className="text-[10.5px] font-sans text-emerald-300 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 font-medium">
-                  Sub-200ms
-                </span>
-              </div>
-
-              <h3 className="text-[18px] font-heading font-medium tracking-tight text-white mb-2 group-hover:text-white transition-colors">
-                Multi-Channel Routing
-              </h3>
-              <p className="text-zinc-400 font-p font-normal text-[13px] leading-[1.65] mb-5">
-                Receive formatted email alerts instantly. Forward leads to Slack, Discord, Zapier, or your external CRM via signed webhooks with exponential backoff.
-              </p>
-            </div>
-
-            {/* Delivery Pipeline Visual */}
-            <div className="rounded-xl border border-white/[0.06] bg-[#141414] p-3.5 font-sans text-[11px] space-y-2 shadow-inner">
-              <div className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-                <span className="text-zinc-200 flex items-center gap-2">
-                  <Icon name="mail" className="w-3.5 h-3.5 text-emerald-400" /> Immediate Email Alert
-                </span>
-                <span className="text-emerald-400 font-sans text-[10px]">Delivered</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-                <span className="text-zinc-200 flex items-center gap-2">
-                  <Icon name="hook" className="w-3.5 h-3.5 text-emerald-400" /> Signed Webhook
-                </span>
-                <span className="text-emerald-400 font-sans text-[10px]">200 OK • 0 Retries</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 4: Organisation Workspaces (Large 2 Cols) */}
-          <div className="md:col-span-2 rounded-[18px] border border-white/[0.09] hover:border-emerald-500/35 bg-[#1c1c1c] hover:bg-[#232323] p-[24px] md:p-[28px] transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_24px_rgba(52,211,153,0.1)] group relative">
-            {/* Top specular edge */}
-            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-            <div>
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <span className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 grid place-items-center text-emerald-400 group-hover:border-emerald-500/40 group-hover:shadow-[0_0_16px_rgba(52,211,153,0.25)] transition-all">
-                  <Icon name="brief" className="w-[18px] h-[18px]" />
-                </span>
-                <span className="text-[10.5px] font-sans text-emerald-300 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 font-medium">
-                  Team Hub
-                </span>
-              </div>
-
-              <h3 className="text-[18px] font-heading font-medium tracking-tight text-white mb-2 group-hover:text-white transition-colors">
-                Workspaces & Scoped API Credentials
-              </h3>
-              <p className="text-zinc-400 font-p font-normal text-[13px] leading-[1.65] max-w-[520px] mb-5">
-                Organise staging and production environments with scoped API keys. Invite team members with role-based access and export inquiries via CSV or REST API anytime.
-              </p>
-            </div>
-
-            {/* Workspace Hub Preview */}
-            <div className="rounded-xl border border-white/[0.06] bg-[#141414] p-3.5 font-sans shadow-inner">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 grid place-items-center text-emerald-300 text-[11px] font-semibold">
-                    A
+              {/* Embedded White Card with Line Chart */}
+              <div className="p-5 sm:p-6 rounded-2xl bg-white border border-[#e4ebe6] shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-medium text-[#73847c] uppercase tracking-wider font-mono">
+                    Total Leads Handled
                   </span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-[#10b981]/15 text-[#059669] flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" /> +14.2%
+                  </span>
+                </div>
+
+                <div className="text-2xl sm:text-3xl font-bold text-[#1a2321] tracking-tight">
+                  24,150.00
+                </div>
+
+                {/* Smooth SVG Area Line Chart */}
+                <div className="h-28 w-full my-3 relative">
+                  <svg
+                    className="w-full h-full overflow-visible"
+                    viewBox="0 0 500 120"
+                    preserveAspectRatio="none"
+                  >
+                    <defs>
+                      <linearGradient id="bentoGlow" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+                        <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                      </linearGradient>
+                      <linearGradient id="bentoLine" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#14b8a6" />
+                        <stop offset="60%" stopColor="#10b981" />
+                        <stop offset="100%" stopColor="#f59e0b" />
+                      </linearGradient>
+                    </defs>
+
+                    <path
+                      d="M 0 95 Q 60 80, 120 75 T 240 50 T 360 40 T 450 15 L 500 20 L 500 120 L 0 120 Z"
+                      fill="url(#bentoGlow)"
+                    />
+                    <path
+                      d="M 0 95 Q 60 80, 120 75 T 240 50 T 360 40 T 450 15 L 500 20"
+                      fill="none"
+                      stroke="url(#bentoLine)"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="450" cy="15" r="4.5" fill="#10b981" stroke="#ffffff" strokeWidth="2" />
+                  </svg>
+                </div>
+
+                {/* Sub Metrics */}
+                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-[#edf2ee] text-xs">
                   <div>
-                    <span className="text-[13px] font-medium text-white block leading-tight">Acme Production Workspace</span>
-                    <span className="text-[10.5px] text-zinc-400 font-sans">key: sln_live_acme_••••</span>
+                    <span className="text-[10px] text-[#73847c] block">Inbound</span>
+                    <strong className="text-[#1a2321] font-semibold text-xs sm:text-sm">18,290</strong>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex -space-x-2">
-                    <Avatar size={24} index={0} alt="Member 1" />
-                    <Avatar size={24} index={1} alt="Member 2" />
-                    <Avatar size={24} index={2} alt="Member 3" />
+                  <div>
+                    <span className="text-[10px] text-[#73847c] block">Qualified</span>
+                    <strong className="text-[#1a2321] font-semibold text-xs sm:text-sm">4,710</strong>
                   </div>
-                  <span className="text-[10.5px] text-emerald-300 font-sans bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                    3 Active Seats
-                  </span>
+                  <div>
+                    <span className="text-[10px] text-[#73847c] block">Conversion</span>
+                    <strong className="text-[#059669] font-semibold text-xs sm:text-sm">84.2%</strong>
+                  </div>
                 </div>
               </div>
+            </div>
+
+            {/* Card 2: Automate & Save Time with checklist */}
+            <div className="p-7 sm:p-8 rounded-3xl bg-[#fafbfa] border border-[#dce3de] shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+              <div className="mb-5">
+                <h3
+                  className="text-xl sm:text-2xl font-semibold text-[#1a2321] tracking-tight"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  Automate & Save Time
+                </h3>
+                <p className="text-xs sm:text-sm text-[#5d6967] mt-1">
+                  Automate lead routing, instant notifications, and auto-tagging.
+                </p>
+              </div>
+
+              {/* Status Row Checklist (Matching template visual) */}
+              <div className="space-y-2.5">
+                {[
+                  {
+                    title: "Inbound Lead Captured",
+                    desc: "Instantly ingested from website forms",
+                    icon: Zap,
+                    color: "text-[#10b981] bg-[#10b981]/15",
+                  },
+                  {
+                    title: "AI Spam Filter Verified",
+                    desc: "Automated honeypot & screening passed",
+                    icon: ShieldCheck,
+                    color: "text-[#f59e0b] bg-[#f59e0b]/15",
+                  },
+                  {
+                    title: "Team Notification Sent",
+                    desc: "Slack & email alert dispatched in 0.2s",
+                    icon: Bell,
+                    color: "text-[#8b5cf6] bg-[#8b5cf6]/15",
+                  },
+                  {
+                    title: "CRM Pipeline Synced",
+                    desc: "Contact added to active opportunity list",
+                    icon: Database,
+                    color: "text-[#0284c7] bg-[#0284c7]/15",
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.title}
+                    className="p-3.5 rounded-xl bg-white border border-[#e4ebe6] flex items-center justify-between gap-3 shadow-2xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.color}`}>
+                        <item.icon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs sm:text-sm font-semibold text-[#1a2321]">
+                          {item.title}
+                        </div>
+                        <div className="text-[10px] text-[#73847c]">
+                          {item.desc}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="w-5 h-5 rounded-full bg-[#10b981]/15 text-[#059669] flex items-center justify-center flex-none">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column (5 cols): Tall Card (Smarter Insights for Better Growth) */}
+          <div className="lg:col-span-5 p-7 sm:p-8 rounded-3xl bg-[#fafbfa] border border-[#dce3de] shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div>
+              <h3
+                className="text-xl sm:text-2xl font-semibold text-[#1a2321] tracking-tight"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                Smarter Insights for Better Growth
+              </h3>
+              <p className="text-xs sm:text-sm text-[#5d6967] mt-2 leading-relaxed">
+                Powerful analytics and reports to help you track conversions, forecast pipeline, and scale your business with confidence.
+              </p>
+            </div>
+
+            {/* Embedded Pipeline Score Card with Amber Tick Slider (Matching template visual!) */}
+            <div className="p-6 rounded-2xl bg-gradient-to-b from-white to-[#fffcf7] border border-[#edd5bf] shadow-sm my-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-xl bg-[#fef3c7] text-[#d97706] flex items-center justify-center shadow-xs">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-[#1a2321]">
+                    Monthly Pipeline Score
+                  </h4>
+                  <p className="text-[10px] text-[#8c7e73]">
+                    Inbound velocity & qualification efficiency
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#6e6359] leading-relaxed mb-6">
+                Pipeline efficiency and lead health score represents total qualified opportunities generated within the single monthly billing period.
+              </p>
+
+              {/* Big Score Pill */}
+              <div className="flex items-center justify-center mb-5">
+                <div className="px-5 py-2 rounded-full bg-gradient-to-r from-[#ffb080] to-[#f59e0b] text-[#2d1b09] font-bold text-lg sm:text-xl shadow-[0_4px_16px_rgba(245,158,11,0.25)] flex items-center gap-1.5">
+                  <span>{pipelineScore}%</span>
+                  <span className="text-xs font-medium text-[#4d2909]">Healthy</span>
+                </div>
+              </div>
+
+              {/* Progress Slider Track with Vertical Tick Marks (Just like template!) */}
+              <div className="space-y-2">
+                {/* Tick marks bar */}
+                <div className="flex justify-between px-1 text-[8px] text-[#b3a191] font-mono select-none">
+                  {[0, 20, 40, 60, 80, 100].map((v) => (
+                    <span key={v}>{v}%</span>
+                  ))}
+                </div>
+
+                {/* Custom Slider Track */}
+                <div className="relative h-6 flex items-center">
+                  {/* Background track */}
+                  <div className="w-full h-3 rounded-full bg-[#f3eae0] overflow-hidden relative border border-[#e4d3c3]">
+                    {/* Filled gradient bar */}
+                    <div
+                      className="h-full bg-gradient-to-r from-[#f59e0b] to-[#ea580c] rounded-full transition-all duration-300"
+                      style={{ width: `${pipelineScore}%` }}
+                    />
+                  </div>
+
+                  {/* Interactive Slider Thumb / Draggable */}
+                  <input
+                    type="range"
+                    min="50"
+                    max="100"
+                    value={pipelineScore}
+                    onChange={(e) => setPipelineScore(Number(e.target.value))}
+                    className="absolute inset-0 w-full opacity-0 cursor-pointer"
+                    aria-label="Pipeline Score adjustment"
+                  />
+                </div>
+
+                {/* Vertical tick lines below */}
+                <div className="flex justify-between px-2 pt-1 opacity-40">
+                  {Array.from({ length: 25 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-[1px] bg-[#a89584] ${i % 5 === 0 ? "h-2" : "h-1"}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom summary note */}
+            <div className="p-4 rounded-xl bg-white border border-[#e4ebe6] flex items-center justify-between text-xs text-[#5d6967]">
+              <span>Real-time conversion benchmark</span>
+              <strong className="text-[#059669] font-semibold flex items-center gap-1">
+                <TrendingUp className="w-3.5 h-3.5" /> Top 5% of SaaS
+              </strong>
             </div>
           </div>
         </div>

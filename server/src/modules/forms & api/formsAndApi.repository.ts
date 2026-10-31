@@ -168,31 +168,20 @@ export class FormsAndApiRepository {
     });
   }
 
-  async decrementSpamCount(formId: string): Promise<void> {
-    const form = await prisma.form.findUnique({
-      where: { id: formId },
-      select: { spamCount: true },
-    });
-    if (form && form.spamCount > 0) {
-      await prisma.form.update({
-        where: { id: formId },
-        data: { spamCount: { decrement: 1 } },
-      });
-    }
+  async decrementSpamCount(formId: string, count: number = 1): Promise<void> {
+    await prisma.$executeRaw`
+      UPDATE "forms"
+      SET "spamCount" = GREATEST(0, "spamCount" - ${count})
+      WHERE "id" = ${formId}
+    `;
   }
 
   async decrementLeadCount(formId: string, count: number = 1): Promise<void> {
-    const form = await prisma.form.findUnique({
-      where: { id: formId },
-      select: { leadCount: true },
-    });
-    if (form && form.leadCount > 0) {
-      const newCount = Math.max(0, form.leadCount - count);
-      await prisma.form.update({
-        where: { id: formId },
-        data: { leadCount: newCount },
-      });
-    }
+    await prisma.$executeRaw`
+      UPDATE "forms"
+      SET "leadCount" = GREATEST(0, "leadCount" - ${count})
+      WHERE "id" = ${formId}
+    `;
   }
 
   // ==========================================
@@ -305,39 +294,51 @@ export class FormsAndApiRepository {
   }
 
   async deleteLead(id: string): Promise<LeadRecord | null> {
-    const lead = await prisma.lead.findUnique({ where: { id } });
-    if (!lead) return null;
-    await prisma.lead.delete({ where: { id } });
-    if (lead.formId) {
-      await this.decrementLeadCount(lead.formId);
-    }
-    return lead;
+    return prisma.$transaction(async (tx) => {
+      const lead = await tx.lead.findUnique({ where: { id } });
+      if (!lead) return null;
+      await tx.lead.delete({ where: { id } });
+      if (lead.formId) {
+        await tx.$executeRaw`
+          UPDATE "forms"
+          SET "leadCount" = GREATEST(0, "leadCount" - 1)
+          WHERE "id" = ${lead.formId}
+        `;
+      }
+      return lead;
+    });
   }
 
   async deleteLeads(dashboardId: string, ids: string[]): Promise<number> {
-    const leads = await prisma.lead.findMany({
-      where: { id: { in: ids }, dashboardId },
-      select: { id: true, formId: true },
-    });
+    return prisma.$transaction(async (tx) => {
+      const leads = await tx.lead.findMany({
+        where: { id: { in: ids }, dashboardId },
+        select: { formId: true },
+      });
 
-    if (leads.length === 0) return 0;
+      if (leads.length === 0) return 0;
 
-    const formCounts: Record<string, number> = {};
-    for (const lead of leads) {
-      if (lead.formId) {
-        formCounts[lead.formId] = (formCounts[lead.formId] || 0) + 1;
+      const formCounts: Record<string, number> = {};
+      for (const lead of leads) {
+        if (lead.formId) {
+          formCounts[lead.formId] = (formCounts[lead.formId] || 0) + 1;
+        }
       }
-    }
 
-    const deleteResult = await prisma.lead.deleteMany({
-      where: { id: { in: ids }, dashboardId },
+      const deleteResult = await tx.lead.deleteMany({
+        where: { id: { in: ids }, dashboardId },
+      });
+
+      for (const [formId, count] of Object.entries(formCounts)) {
+        await tx.$executeRaw`
+          UPDATE "forms"
+          SET "leadCount" = GREATEST(0, "leadCount" - ${count})
+          WHERE "id" = ${formId}
+        `;
+      }
+
+      return deleteResult.count;
     });
-
-    for (const [formId, count] of Object.entries(formCounts)) {
-      await this.decrementLeadCount(formId, count);
-    }
-
-    return deleteResult.count;
   }
 
   async batchUpdateLeadStatus(
@@ -498,27 +499,26 @@ export class FormsAndApiRepository {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const sevenDaysAgo = new Date(startOfToday.getTime() - 6 * 24 * 60 * 60 * 1000);
 
-    const [totalLeads, leadsToday, leadsThisWeek, spamFlagged] = await Promise.all([
-      prisma.lead.count({ where: { dashboardId } }),
-      prisma.lead.count({
-        where: {
-          dashboardId,
-          receivedAt: { gte: startOfToday },
-        },
-      }),
-      prisma.lead.count({
-        where: {
-          dashboardId,
-          receivedAt: { gte: sevenDaysAgo },
-        },
-      }),
+    const [leadStats, spamFlagged] = await Promise.all([
+      prisma.$queryRaw<
+        Array<{ totalLeads: number; leadsToday: number; leadsThisWeek: number }>
+      >`
+        SELECT
+          COUNT(*)::int AS "totalLeads",
+          COUNT(*) FILTER (WHERE "receivedAt" >= ${startOfToday})::int AS "leadsToday",
+          COUNT(*) FILTER (WHERE "receivedAt" >= ${sevenDaysAgo})::int AS "leadsThisWeek"
+        FROM "leads"
+        WHERE "dashboardId" = ${dashboardId}
+      `,
       prisma.spam.count({ where: { dashboardId } }),
     ]);
 
+    const stats = leadStats[0] || { totalLeads: 0, leadsToday: 0, leadsThisWeek: 0 };
+
     return {
-      totalLeads,
-      leadsToday,
-      leadsThisWeek,
+      totalLeads: Number(stats.totalLeads ?? 0),
+      leadsToday: Number(stats.leadsToday ?? 0),
+      leadsThisWeek: Number(stats.leadsThisWeek ?? 0),
       spamFlagged,
     };
   }

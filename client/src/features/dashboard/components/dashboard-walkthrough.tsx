@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import Image from "next/image";
 import { useDashboard } from "../context/dashboard-context";
 import {
   BarChart3,
@@ -107,7 +108,7 @@ export function DashboardWalkthrough() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const hasCompleted = localStorage.getItem("salenova_tour_completed");
+      const hasCompleted = localStorage.getItem("infraly_tour_completed");
       if (!hasCompleted) {
         const timer = setTimeout(() => {
           startTour();
@@ -210,7 +211,7 @@ export function DashboardWalkthrough() {
         particleCount: 70,
         spread: 60,
         origin: { y: 0.6 },
-        colors: ["#10b981", "#ffffff", "#34d399", "#a7f3d0"],
+        colors: ["#2563eb", "#3b82f6", "#60a5fa", "#93c5fd"],
       });
     } catch {
       // Safe fallback
@@ -260,7 +261,7 @@ export function DashboardWalkthrough() {
         aria-hidden="true"
       >
         <defs>
-          <mask id="salenova-tour-mask">
+          <mask id="infraly-tour-mask">
             {/* White covers entire viewport */}
             <rect x="0" y="0" width="100%" height="100%" fill="white" />
             {/* Black hole cuts out target element */}
@@ -281,8 +282,8 @@ export function DashboardWalkthrough() {
           y="0"
           width="100%"
           height="100%"
-          fill="rgba(0, 0, 0, 0.76)"
-          mask="url(#salenova-tour-mask)"
+          fill="rgba(15, 23, 42, 0.45)"
+          mask="url(#infraly-tour-mask)"
           className="pointer-events-auto cursor-default"
           onClick={closeTour}
         />
@@ -297,7 +298,7 @@ export function DashboardWalkthrough() {
             width: targetRect.width + 12,
             height: targetRect.height + 12,
           }}
-          className="fixed pointer-events-none rounded-xl border-2 border-emerald-400 ring-4 ring-emerald-500/20 shadow-[0_0_35px_rgba(52,211,153,0.4)] transition-all duration-300 z-50 animate-pulse"
+          className="fixed pointer-events-none rounded-xl border-2 border-blue-600 ring-4 ring-blue-500/25 shadow-[0_0_35px_rgba(37,99,235,0.35)] transition-all duration-300 z-50 animate-pulse"
         />
       )}
 
@@ -309,16 +310,24 @@ export function DashboardWalkthrough() {
           left: popoverPos.left,
           width: Math.min(420, typeof window !== "undefined" ? window.innerWidth - 32 : 400),
         }}
-        className="fixed z-50 p-5 sm:p-6 bg-[#181818]/95 backdrop-blur-2xl border border-white/[0.12] rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] text-white transition-all duration-200 animate-in fade-in zoom-in-95"
+        className="fixed z-50 p-5 sm:p-6 bg-white/95 backdrop-blur-2xl border border-slate-200/90 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.18)] text-slate-900 transition-all duration-200 animate-in fade-in zoom-in-95"
       >
         {/* Top Header: Step Indicator & Close Button */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[11px] font-mono font-medium text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+            <Image
+              src="/favicon.ico"
+              alt="Infraly"
+              width={18}
+              height={18}
+              unoptimized
+              className="w-4 h-4 object-contain"
+            />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200/80 text-[11px] font-mono font-medium text-blue-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping" />
               <span>Step {tourStep + 1} of {TOUR_STEPS.length}</span>
             </span>
-            <span className="text-[11px] font-mono text-zinc-500 hidden sm:inline">
+            <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
               · {currentStep.subtitle}
             </span>
           </div>
@@ -326,7 +335,7 @@ export function DashboardWalkthrough() {
           <button
             type="button"
             onClick={closeTour}
-            className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/[0.06] transition-colors"
+            className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors"
             title="Skip tour (Esc)"
             aria-label="Skip walkthrough"
           >
@@ -341,15 +350,15 @@ export function DashboardWalkthrough() {
               key={step.id}
               type="button"
               onClick={() => setTourStep(idx)}
-              className="h-1 rounded-full transition-all duration-300 cursor-pointer"
+              className="h-1.5 rounded-full transition-all duration-300 cursor-pointer"
               style={{
                 backgroundColor:
                   idx <= tourStep
-                    ? "#10b981"
-                    : "rgba(255, 255, 255, 0.1)",
+                    ? "#2563eb"
+                    : "#e2e8f0",
                 boxShadow:
                   idx === tourStep
-                    ? "0 0 10px rgba(52, 211, 153, 0.6)"
+                    ? "0 0 10px rgba(37, 99, 235, 0.4)"
                     : "none",
               }}
               title={`Jump to step ${idx + 1}`}
@@ -360,35 +369,35 @@ export function DashboardWalkthrough() {
         {/* Content Body */}
         <div className="space-y-3 pt-1">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/[0.06] border border-white/[0.1] flex items-center justify-center flex-none text-emerald-400 shadow-inner">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-none text-blue-600 shadow-sm">
               <StepIcon className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-heading font-medium tracking-tight text-white leading-snug">
+              <h3 className="text-sm sm:text-base font-heading font-bold tracking-tight text-slate-900 leading-snug">
                 {currentStep.title}
               </h3>
-              <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">
+              <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                 {currentStep.description}
               </p>
             </div>
           </div>
 
           {/* Pro Tip Box */}
-          <div className="flex items-start gap-2 p-2.5 rounded-xl bg-emerald-500/[0.05] border border-emerald-500/15 text-[11.5px] text-zinc-300">
-            <Lightbulb className="w-3.5 h-3.5 text-emerald-400 flex-none mt-0.5" />
+          <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-[11.5px] text-amber-900">
+            <Lightbulb className="w-3.5 h-3.5 text-amber-600 flex-none mt-0.5" />
             <p className="leading-snug">
-              <strong className="text-emerald-400 font-medium">Pro Tip: </strong>
+              <strong className="text-amber-800 font-semibold">Pro Tip: </strong>
               {currentStep.tip}
             </p>
           </div>
         </div>
 
         {/* Action Controls & Navigation */}
-        <div className="mt-5 pt-3.5 border-t border-white/[0.08] flex items-center justify-between gap-3">
+        <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={closeTour}
-            className="text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="text-xs text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
           >
             Skip walkthrough
           </button>
@@ -398,7 +407,7 @@ export function DashboardWalkthrough() {
               <button
                 type="button"
                 onClick={prevTourStep}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-xs font-medium text-zinc-200 transition-colors shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 transition-colors shadow-sm cursor-pointer"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
                 <span>Back</span>
@@ -409,7 +418,7 @@ export function DashboardWalkthrough() {
               <button
                 type="button"
                 onClick={handleFinish}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-medium transition-colors shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors shadow-sm shadow-blue-500/20 cursor-pointer"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Get Started</span>
@@ -418,7 +427,7 @@ export function DashboardWalkthrough() {
               <button
                 type="button"
                 onClick={nextTourStep}
-                className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-medium transition-colors shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors shadow-sm shadow-blue-500/20 cursor-pointer"
               >
                 <span>Next</span>
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -429,8 +438,8 @@ export function DashboardWalkthrough() {
 
         {/* Keyboard Helper Footer */}
         <div className="mt-2.5 text-center">
-          <span className="text-[10px] font-mono text-zinc-500">
-            Use <kbd className="px-1 py-0.5 rounded bg-white/[0.06] text-zinc-400">←</kbd> <kbd className="px-1 py-0.5 rounded bg-white/[0.06] text-zinc-400">→</kbd> to navigate · <kbd className="px-1 py-0.5 rounded bg-white/[0.06] text-zinc-400">Esc</kbd> to exit
+          <span className="text-[10px] font-mono text-slate-400">
+            Use <kbd className="px-1 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600">←</kbd> <kbd className="px-1 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600">→</kbd> to navigate · <kbd className="px-1 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600">Esc</kbd> to exit
           </span>
         </div>
       </div>

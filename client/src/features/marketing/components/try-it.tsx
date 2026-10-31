@@ -2,64 +2,70 @@
 
 import React, { useState } from "react";
 import { Icon } from "./icons";
-import { Pill, Avatar, Button } from "./ui";
+import { Avatar } from "./ui";
 import { cn } from "@/shared/lib/utils";
-
-const SNIPPETS = {
-  html: `<!-- 1. Point standard HTML form to Salenova with your API key -->
-<form action="https://api.salenova.com/v1/leads?apiKey=sln_live_acme_9f2k" method="POST">
-  <input name="name" type="text" placeholder="Full name" required />
-  <input name="email" type="email" placeholder="work@acme.com" required />
-  <input name="company" type="text" placeholder="Company name" />
-  <input name="_gotcha" tabindex="-1" hidden /> <!-- silent honeypot -->
-  <button type="submit">Submit Lead</button>
-</form>`,
-  js: `// 2. Or send POST with your workspace x-api-key header
-const res = await fetch("https://api.salenova.com/v1/leads", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "x-api-key": "sln_live_acme_9f2k"
-  },
-  body: JSON.stringify({
-    name: "Maya Lin",
-    email: "maya@studio.co",
-    company: "Studio Labs",
-    message: "Interested in pro plan"
-  })
-});
-const lead = await res.json(); // { id: "lead_89a", status: "delivered" }`,
-  curl: `# 3. Direct HTTP POST from cURL, Python, or Webhooks
-curl -X POST https://api.salenova.com/v1/leads \\
-  -H "Content-Type: application/json" \\
-  -H "x-api-key: sln_live_acme_9f2k" \\
-  -d '{
-    "name": "Alex Vance",
-    "email": "alex@startup.io",
-    "source": "Landing Page Form"
-  }'`,
-};
-
-type TabType = "html" | "js" | "curl";
 
 interface LeadItem {
   id: string;
   name: string;
   email: string;
-  status: "ok" | "no";
+  company: string;
+  status: "verified" | "quarantined";
   reason: string;
   avatarIndex: number;
   time: string;
   isNew?: boolean;
 }
 
-const LEADS_DATA: Array<{ name: string; email: string; status: "ok" | "no"; reason: string; avatarIndex: number }> = [
-  { name: "Maya Lin", email: "maya@studio.co", status: "ok", reason: "Verified lead", avatarIndex: 0 },
-  { name: "Bot Crawler", email: "bot.crawler@test.com", status: "no", reason: "Rate limited", avatarIndex: 1 },
-  { name: "Dev Patel", email: "dev@startup.io", status: "ok", reason: "Verified lead", avatarIndex: 2 },
-  { name: "Disposable User", email: "fake@tempmail.com", status: "no", reason: "Disposable email", avatarIndex: 3 },
-  { name: "Lena Rossi", email: "lena@agency.com", status: "ok", reason: "Verified lead", avatarIndex: 4 },
-  { name: "Spam Bot 7", email: "x7@spam.net", status: "no", reason: "Honeypot hit", avatarIndex: 5 },
+const SAMPLE_CUSTOMERS = [
+  {
+    name: "Maya Lin",
+    email: "maya@studio.co",
+    company: "Studio Labs",
+    inquiry: "Website redesign & branding consultation",
+    budget: "$8,000",
+    avatarIndex: 0,
+  },
+  {
+    name: "Dev Patel",
+    email: "dev@cloudtech.io",
+    company: "CloudTech",
+    inquiry: "Requesting pricing for 15 team seats",
+    budget: "$12,000",
+    avatarIndex: 2,
+  },
+  {
+    name: "Lena Rossi",
+    email: "lena@agencypro.com",
+    company: "Agency Pro",
+    inquiry: "Custom quote for multi-client portal",
+    budget: "$15,000",
+    avatarIndex: 4,
+  },
+];
+
+const SAMPLE_BOTS = [
+  {
+    name: "Spam Crawler 9",
+    email: "crawler@scrape-harvest.net",
+    company: "Unknown",
+    reason: "Automated spam bot detected",
+    avatarIndex: 1,
+  },
+  {
+    name: "Burner Mailer",
+    email: "throwaway@tempmail.com",
+    company: "None",
+    reason: "Disposable fake email address",
+    avatarIndex: 3,
+  },
+  {
+    name: "Backlink Spammer",
+    email: "promo@mailinator.com",
+    company: "SEO Blast",
+    reason: "Blocked disposable domain",
+    avatarIndex: 5,
+  },
 ];
 
 interface TryItProps {
@@ -75,184 +81,336 @@ export function TryIt({
   onIncrementKept,
   onIncrementBlocked,
 }: TryItProps) {
-  const [activeTab, setActiveTab] = useState<TabType>("html");
-  const [copied, setCopied] = useState(false);
-  const [leadsIndex, setLeadsIndex] = useState(2);
+  const [visitorType, setVisitorType] = useState<"clean" | "spam">("clean");
+  const [formName, setFormName] = useState("Maya Lin");
+  const [formEmail, setFormEmail] = useState("maya@studio.co");
+  const [formCompany, setFormCompany] = useState("Studio Labs");
+  const [formBudget, setFormBudget] = useState("$5,000 - $10,000");
+  const [formMessage, setFormMessage] = useState(
+    "Hi there! We would love to book a consultation to discuss our new project."
+  );
+  const [submittedAlert, setSubmittedAlert] = useState<string | null>(null);
+
+  const [customerIdx, setCustomerIdx] = useState(0);
+  const [botIdx, setBotIdx] = useState(0);
+
   const [feedItems, setFeedItems] = useState<LeadItem[]>([
-    { id: "1", name: "Bot Crawler", email: "bot.crawler@test.com", status: "no", reason: "Rate limited", avatarIndex: 1, time: "Just now" },
-    { id: "0", name: "Maya Lin", email: "maya@studio.co", status: "ok", reason: "Verified lead", avatarIndex: 0, time: "1m ago" },
+    {
+      id: "1",
+      name: "Spam Crawler 9",
+      email: "crawler@scrape-harvest.net",
+      company: "Bot Script",
+      status: "quarantined",
+      reason: "Automated bot blocked",
+      avatarIndex: 1,
+      time: "Just now",
+    },
+    {
+      id: "0",
+      name: "Maya Lin",
+      email: "maya@studio.co",
+      company: "Studio Labs",
+      status: "verified",
+      reason: "Verified inquiry (Delivered)",
+      avatarIndex: 0,
+      time: "1m ago",
+    },
   ]);
 
-  const handleCopySnippet = () => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(SNIPPETS[activeTab]);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+  const handleTypeChange = (type: "clean" | "spam") => {
+    setVisitorType(type);
+    if (type === "clean") {
+      const cust = SAMPLE_CUSTOMERS[customerIdx % SAMPLE_CUSTOMERS.length];
+      setFormName(cust.name);
+      setFormEmail(cust.email);
+      setFormCompany(cust.company);
+      setFormBudget(cust.budget);
+      setFormMessage(
+        "Hi! We are interested in your services and would like to get a project estimate."
+      );
+    } else {
+      const bot = SAMPLE_BOTS[botIdx % SAMPLE_BOTS.length];
+      setFormName(bot.name);
+      setFormEmail(bot.email);
+      setFormCompany(bot.company);
+      setFormBudget("Free");
+      setFormMessage("Buy cheap backlinks now! Visit junk-promo-site.com/offer");
     }
   };
 
-  const handleSendTestLead = () => {
-    const nextLead = LEADS_DATA[leadsIndex % LEADS_DATA.length];
-    setLeadsIndex((prev) => prev + 1);
+  const handleSubmitForm = (e: React.FormEvent) => {
+    e.preventDefault();
 
-    const newItem: LeadItem = {
-      id: `${Date.now()}-${Math.random()}`,
-      name: nextLead.name,
-      email: nextLead.email,
-      status: nextLead.status,
-      reason: nextLead.reason,
-      avatarIndex: nextLead.avatarIndex,
-      time: "Just now",
-      isNew: true,
-    };
-
-    setFeedItems((prev) => [newItem, ...prev.slice(0, 3)]);
-
-    if (nextLead.status === "ok") {
+    if (visitorType === "clean") {
+      const newItem: LeadItem = {
+        id: `${Date.now()}-${Math.random()}`,
+        name: formName || "Genuine Customer",
+        email: formEmail || "customer@example.com",
+        company: formCompany || "Business Client",
+        status: "verified",
+        reason: "Verified inquiry (Delivered)",
+        avatarIndex: Math.floor(Math.random() * 8),
+        time: "Just now",
+        isNew: true,
+      };
+      setFeedItems((prev) => [newItem, ...prev.slice(0, 3)]);
       onIncrementKept();
+      setSubmittedAlert(`Inquiry from "${formName}" delivered to CRM inbox!`);
+
+      // Cycle to next sample for convenience
+      setCustomerIdx((prev) => prev + 1);
     } else {
+      const newItem: LeadItem = {
+        id: `${Date.now()}-${Math.random()}`,
+        name: formName || "Spam Bot",
+        email: formEmail || "bot@tempmail.com",
+        company: formCompany || "Scraper",
+        status: "quarantined",
+        reason: "Spam blocked invisibly",
+        avatarIndex: Math.floor(Math.random() * 8),
+        time: "Just now",
+        isNew: true,
+      };
+      setFeedItems((prev) => [newItem, ...prev.slice(0, 3)]);
       onIncrementBlocked();
+      setSubmittedAlert(`Spam submission from "${formName}" caught and quarantined!`);
+
+      // Cycle to next bot for convenience
+      setBotIdx((prev) => prev + 1);
     }
+
+    setTimeout(() => setSubmittedAlert(null), 3500);
+  };
+
+  const handleRescueItem = (itemId: string) => {
+    setFeedItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              status: "verified" as const,
+              reason: "Restored to verified leads",
+              isNew: true,
+            }
+          : item
+      )
+    );
+    onIncrementKept();
   };
 
   return (
-    <section className="py-[56px] md:py-[76px] relative z-10" id="try">
-      {/* Subtle deep emerald ambient lighting */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-[450px] w-full max-w-[900px] mx-auto rounded-full blur-[150px] opacity-20 -z-10"
-        style={{
-          background: "radial-gradient(ellipse at 50% 50%, rgba(52,211,153,0.15) 0%, rgba(16,185,129,0.08) 50%, transparent 70%)",
-        }}
-      />
-
-      <div className="max-w-[1100px] mx-auto px-[16px] sm:px-[24px]">
-        {/* Head */}
-        <div className="text-center max-w-[560px] mx-auto mb-[40px] sm:mb-[48px]">
-          <Pill icon="code">Live Interactive Sandbox</Pill>
-          <h2 className="text-[26px] sm:text-[34px] md:text-[40px] font-heading font-medium tracking-[-0.025em] leading-[1.2] mt-4 mb-3 text-white text-balance">
-            Send a test submission <br className="hidden sm:inline" />
-            <span className="text-zinc-400">and watch it land live in your CRM.</span>
+    <section className="py-14 md:py-20 relative z-10" id="try">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        {/* Section Heading */}
+        <div className="text-center max-w-xl mx-auto mb-10 sm:mb-12">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-900/60 bg-[#0E1411] text-[11px] font-medium text-emerald-400 mb-3">
+            <span>[ LIVE INTERACTIVE PREVIEW ]</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-heading font-medium tracking-tight text-white leading-tight mb-3">
+            See how it works in real life: <br />
+            <span className="text-zinc-400">from website form to your CRM.</span>
           </h2>
-          <p className="text-zinc-400 font-p font-normal mt-3 text-[13.5px] sm:text-[14.5px] leading-[1.65] max-w-[520px] mx-auto text-pretty">
-            Pick your frontend syntax below. Hit the test submission button to simulate an inbound POST request with automated spam inspection.
+          <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed max-w-lg mx-auto">
+            Test a form submission below. See how real inquiries land instantly in your sales inbox, while spam bots are stopped dead in their tracks.
           </p>
         </div>
 
-        {/* Dual Sandbox Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-[14px]">
-          {/* Left: Code Terminal */}
-          <div className="rounded-[18px] border border-white/[0.09] bg-[#1c1c1c] shadow-[0_16px_45px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col justify-between relative group">
-            {/* Top specular edge */}
-            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent pointer-events-none" />
-
+        {/* Dual Interactive Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-4">
+          {/* Left: Simulated Website Contact Form */}
+          <div className="rounded-xl border border-zinc-800/80 bg-[#0E1411] shadow-[0_16px_45px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col justify-between">
             <div>
-              {/* Terminal Window Header */}
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06] bg-white/[0.02] flex-wrap gap-2">
-                <div className="flex items-center gap-3">
-                  {/* macOS dots */}
+              {/* Browser bar */}
+              <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-zinc-800/70 bg-[#0A0F0D]">
+                <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-zinc-700/60" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-zinc-700/40" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-zinc-700/40" />
                   </div>
-                  <span className="h-3 w-[1px] bg-white/[0.1]" />
-                  {/* Language Tabs */}
-                  <div className="flex items-center gap-1 bg-black/40 p-0.5 rounded-lg border border-white/[0.06]">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("html")}
-                      className={cn(
-                        "px-2.5 py-1 rounded-md text-[11px] font-sans transition-all cursor-pointer",
-                        activeTab === "html" ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium shadow-sm" : "text-zinc-400 hover:text-white"
-                      )}
-                    >
-                      HTML Form
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("js")}
-                      className={cn(
-                        "px-2.5 py-1 rounded-md text-[11px] font-sans transition-all cursor-pointer",
-                        activeTab === "js" ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium shadow-sm" : "text-zinc-400 hover:text-white"
-                      )}
-                    >
-                      fetch (POST)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("curl")}
-                      className={cn(
-                        "px-2.5 py-1 rounded-md text-[11px] font-sans transition-all cursor-pointer",
-                        activeTab === "curl" ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium shadow-sm" : "text-zinc-400 hover:text-white"
-                      )}
-                    >
-                      cURL
-                    </button>
+                  <span className="h-3 w-px bg-zinc-800 mx-1" />
+                  <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[#070B09] border border-zinc-800 text-[10.5px] text-zinc-400">
+                    <Icon name="chk" className="w-2.5 h-2.5 text-emerald-400" />
+                    <span>yourwebsite.com/contact</span>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleCopySnippet}
-                  aria-label="Copy code snippet"
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/[0.08] hover:border-emerald-500/30 bg-white/[0.03] hover:bg-white/[0.06] text-[11px] text-zinc-300 hover:text-white transition-all cursor-pointer select-none"
-                >
-                  <Icon name={copied ? "chk" : "copy"} className="w-3 h-3 text-zinc-300" />
-                  <span>{copied ? "Copied" : "Copy"}</span>
-                </button>
+                <span className="text-[10px] text-zinc-400 font-medium hidden sm:inline">
+                  Step 1: Visitor Fills Form
+                </span>
               </div>
 
-              {/* Code Display */}
-              <div className="p-4 font-sans text-[11.5px] leading-[1.75] text-zinc-300 overflow-x-auto min-h-[220px]">
-                <pre className="whitespace-pre">{SNIPPETS[activeTab]}</pre>
+              {/* Mode Selector */}
+              <div className="p-3 border-b border-zinc-800/60 bg-[#090D0B] flex items-center justify-between gap-2 flex-wrap">
+                <span className="text-[11px] text-zinc-400">Choose who is submitting:</span>
+                <div className="inline-flex p-0.5 rounded-md border border-zinc-800 bg-[#070B09] text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => handleTypeChange("clean")}
+                    className={cn(
+                      "px-2.5 py-1 rounded transition-colors cursor-pointer font-medium flex items-center gap-1.5",
+                      visitorType === "clean"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        : "text-zinc-400 hover:text-white"
+                    )}
+                  >
+                    <Icon name="chk" className="w-3 h-3 text-emerald-400" />
+                    <span>Real Customer</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTypeChange("spam")}
+                    className={cn(
+                      "px-2.5 py-1 rounded transition-colors cursor-pointer font-medium flex items-center gap-1.5",
+                      visitorType === "spam"
+                        ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                        : "text-zinc-400 hover:text-white"
+                    )}
+                  >
+                    <Icon name="shield" className="w-3 h-3 text-red-400" />
+                    <span>Spam Bot</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Form Body */}
+              <form onSubmit={handleSubmitForm} className="p-4 sm:p-5 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
+                      required
+                      className="w-full px-2.5 py-1.5 rounded-md bg-[#080C0A] border border-zinc-800 text-xs text-white focus:outline-none focus:border-emerald-500/60 transition-colors"
+                      placeholder="Jane Doe"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={formEmail}
+                      onChange={(e) => setFormEmail(e.target.value)}
+                      required
+                      className="w-full px-2.5 py-1.5 rounded-md bg-[#080C0A] border border-zinc-800 text-xs text-white focus:outline-none focus:border-emerald-500/60 transition-colors"
+                      placeholder="jane@company.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                      Company
+                    </label>
+                    <input
+                      type="text"
+                      value={formCompany}
+                      onChange={(e) => setFormCompany(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-md bg-[#080C0A] border border-zinc-800 text-xs text-white focus:outline-none focus:border-emerald-500/60 transition-colors"
+                      placeholder="Acme Co."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                      Budget / Timeline
+                    </label>
+                    <input
+                      type="text"
+                      value={formBudget}
+                      onChange={(e) => setFormBudget(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-md bg-[#080C0A] border border-zinc-800 text-xs text-white focus:outline-none focus:border-emerald-500/60 transition-colors"
+                      placeholder="$5,000"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                    Message / Project Details
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formMessage}
+                    onChange={(e) => setFormMessage(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-md bg-[#080C0A] border border-zinc-800 text-xs text-white focus:outline-none focus:border-emerald-500/60 transition-colors resize-none"
+                    placeholder="Tell us about your inquiry..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className={cn(
+                    "w-full py-2 px-4 rounded-md text-xs font-semibold tracking-tight transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5",
+                    visitorType === "clean"
+                      ? "bg-emerald-500 hover:bg-emerald-400 text-[#070B09]"
+                      : "bg-red-500/90 hover:bg-red-500 text-white"
+                  )}
+                >
+                  <span>
+                    {visitorType === "clean"
+                      ? "Submit Customer Inquiry →"
+                      : "Send Bot Spam Submission →"}
+                  </span>
+                </button>
+              </form>
             </div>
 
-            {/* Bottom Status */}
-            <div className="px-4 py-2.5 border-t border-white/[0.06] bg-[#141414] text-[11px] text-zinc-400 flex items-center justify-between">
-              <span className="flex items-center gap-2 font-sans">
-                <span className="text-zinc-500">Target Endpoint:</span>
-                <span className="text-emerald-400 font-medium">POST /v1/leads</span>
+            {/* Bottom Alert notification */}
+            <div className="px-4 py-2 border-t border-zinc-800/70 bg-[#0C120F] text-xs text-zinc-400 flex items-center justify-between">
+              <span className="text-[11px]">
+                {submittedAlert ? (
+                  <span className="text-emerald-300 font-medium flex items-center gap-1.5">
+                    <Icon name="chk" className="w-3.5 h-3.5 text-emerald-400 flex-none" />
+                    {submittedAlert}
+                  </span>
+                ) : (
+                  <span>Click submit above to test the live connection</span>
+                )}
               </span>
-              <span className="flex items-center gap-1.5 text-emerald-400 font-sans text-[10.5px] bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                x-api-key authorized
+              <span className="text-[10px] text-zinc-400 bg-white/[0.04] px-2 py-0.5 rounded border border-zinc-800 hidden sm:inline">
+                Instant Processing
               </span>
             </div>
           </div>
 
-          {/* Right: Workspace CRM Dashboard Simulator */}
-          <div className="rounded-[18px] border border-white/[0.09] bg-[#1c1c1c] shadow-[0_16px_45px_rgba(0,0,0,0.6)] p-[22px] flex flex-col justify-between relative group">
-            {/* Top specular edge */}
-            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent pointer-events-none" />
-
+          {/* Right: infraly Workspace CRM Inbox */}
+          <div className="rounded-xl border border-zinc-800/80 bg-[#0E1411] shadow-[0_16px_45px_rgba(0,0,0,0.6)] p-4 sm:p-5 flex flex-col justify-between">
             <div>
               {/* Header */}
-              <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-white/[0.06]">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded-md bg-emerald-500/15 border border-emerald-500/30 grid place-items-center text-emerald-300 text-[11px] font-semibold">
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-zinc-800/60">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded bg-emerald-500/15 border border-emerald-500/30 grid place-items-center text-emerald-300 text-[10px] font-bold">
                     A
                   </span>
                   <div>
-                    <span className="text-[13px] font-medium text-white block leading-tight">Acme Workspace CRM</span>
-                    <span className="text-[10px] text-zinc-400 font-sans">key: sln_live_acme_••••</span>
+                    <span className="text-xs font-medium text-zinc-100 block leading-tight">
+                      Acme Sales Inbox
+                    </span>
+                    <span className="text-[10px] text-zinc-400">Step 2: Captured in your CRM</span>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[10px] text-emerald-400 font-sans flex items-center gap-1.5 justify-end bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  <span className="text-[10.5px] text-emerald-400 font-medium flex items-center gap-1.5 justify-end bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Live Intake Active
+                    Live Active
                   </span>
                 </div>
               </div>
 
               {/* Feed Stats Bar */}
-              <div className="flex items-center justify-between mb-3 text-[11px] text-zinc-300 bg-[#141414] p-2 rounded-lg border border-white/[0.06] shadow-inner">
-                <span className="font-sans text-zinc-400">Telemetry Feed</span>
-                <span className="space-x-2 font-sans text-[10.5px]">
+              <div className="flex items-center justify-between mb-2.5 text-xs text-zinc-300 bg-[#080C0A] p-2.5 rounded-md border border-zinc-800/70">
+                <span className="text-zinc-400 text-[11px]">Today&apos;s Lead Stream</span>
+                <span className="space-x-2 text-[11px]">
                   <span>
-                    <b className="text-emerald-400 font-semibold tabular-nums">{kept}</b> delivered
+                    <b className="text-emerald-400 font-semibold tabular-nums">{kept}</b> verified
                   </span>
                   <span className="text-zinc-600">•</span>
                   <span>
@@ -262,52 +420,111 @@ export function TryIt({
               </div>
 
               {/* Lead Feed Items */}
-              <ul className="space-y-2 min-h-[170px]">
+              <ul className="space-y-2 min-h-[180px]">
                 {feedItems.map((item) => (
                   <li
                     key={item.id}
                     className={cn(
-                      "flex items-center gap-2.5 p-2.5 rounded-lg border bg-[#141414] text-[11.5px] transition-all",
-                      item.status === "ok"
+                      "flex items-center gap-2 p-2.5 rounded-md border bg-[#080C0A] text-xs transition-all",
+                      item.status === "verified"
                         ? "border-emerald-500/20 hover:border-emerald-500/40"
-                        : "border-white/[0.06] hover:border-white/[0.14]",
-                      item.isNew && "bg-emerald-500/[0.06] ring-1 ring-emerald-500/25"
+                        : "border-red-500/20 hover:border-red-500/40",
+                      item.isNew && "bg-white/[0.04] ring-1 ring-emerald-500/30 animate-pulse"
                     )}
                   >
-                    <Avatar size={22} index={item.avatarIndex} alt={item.email} />
+                    <Avatar size={24} index={item.avatarIndex} alt={item.email} />
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-white text-[11.5px] truncate">{item.name}</span>
-                        <span className="text-[9.5px] text-zinc-500 font-sans">{item.time}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-zinc-100 text-[11.5px] truncate">
+                          {item.name}
+                        </span>
+                        <span className="text-[9.5px] text-zinc-500 font-medium">{item.time}</span>
                       </div>
-                      <span className="truncate text-zinc-400 text-[10px] block font-sans">{item.email}</span>
+                      <span className="truncate text-zinc-400 text-[10.5px] block">
+                        {item.email} • {item.company}
+                      </span>
                     </div>
 
-                    <em
-                      className={cn(
-                        "ml-auto not-italic text-[9.5px] py-0.5 px-2 rounded-full font-sans border whitespace-nowrap font-medium",
-                        item.status === "ok"
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                          : "bg-white/[0.03] text-zinc-400 border-white/[0.08]"
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={cn(
+                          "text-[9.5px] py-0.5 px-2 rounded border whitespace-nowrap font-medium",
+                          item.status === "verified"
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            : "bg-red-500/10 text-red-300 border-red-500/20"
+                        )}
+                      >
+                        {item.reason}
+                      </span>
+                      {item.status === "quarantined" && (
+                        <button
+                          type="button"
+                          onClick={() => handleRescueItem(item.id)}
+                          className="text-[10px] px-2 py-0.5 rounded bg-zinc-800 hover:bg-emerald-500/20 text-zinc-300 hover:text-emerald-300 border border-zinc-700 transition-colors cursor-pointer font-medium"
+                          title="Restore lead to verified list"
+                        >
+                          Restore
+                        </button>
                       )}
-                    >
-                      {item.reason}
-                    </em>
+                    </div>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Inbound Simulator CTA */}
-            <Button
-              id="send"
-              variant="solid"
-              onClick={handleSendTestLead}
-              className="mt-4 w-full justify-center py-2.5 text-[12.5px] shadow-[0_0_24px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)]"
-            >
-              <Icon name="bolt" className="w-3.5 h-3.5 text-black" />
-              <span>Simulate Inbound POST Lead</span>
-            </Button>
+            {/* Quick Simulation Buttons */}
+            <div className="mt-3.5 pt-3 border-t border-zinc-800/60 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  handleTypeChange("clean");
+                  const nextLead = SAMPLE_CUSTOMERS[customerIdx % SAMPLE_CUSTOMERS.length];
+                  setCustomerIdx((prev) => prev + 1);
+                  const newItem: LeadItem = {
+                    id: `${Date.now()}-${Math.random()}`,
+                    name: nextLead.name,
+                    email: nextLead.email,
+                    company: nextLead.company,
+                    status: "verified",
+                    reason: "Verified inquiry (Delivered)",
+                    avatarIndex: nextLead.avatarIndex,
+                    time: "Just now",
+                    isNew: true,
+                  };
+                  setFeedItems((prev) => [newItem, ...prev.slice(0, 3)]);
+                  onIncrementKept();
+                }}
+                className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-md bg-emerald-500 hover:bg-emerald-400 text-[#070B09] text-xs font-semibold transition-all cursor-pointer shadow-sm"
+              >
+                <Icon name="chk" className="w-3.5 h-3.5" />
+                <span>Simulate Good Lead</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleTypeChange("spam");
+                  const nextBot = SAMPLE_BOTS[botIdx % SAMPLE_BOTS.length];
+                  setBotIdx((prev) => prev + 1);
+                  const newItem: LeadItem = {
+                    id: `${Date.now()}-${Math.random()}`,
+                    name: nextBot.name,
+                    email: nextBot.email,
+                    company: nextBot.company,
+                    status: "quarantined",
+                    reason: nextBot.reason,
+                    avatarIndex: nextBot.avatarIndex,
+                    time: "Just now",
+                    isNew: true,
+                  };
+                  setFeedItems((prev) => [newItem, ...prev.slice(0, 3)]);
+                  onIncrementBlocked();
+                }}
+                className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-md border border-zinc-800 bg-[#0E1411] hover:bg-red-500/10 hover:border-red-500/30 text-zinc-300 hover:text-red-300 text-xs transition-all cursor-pointer font-medium"
+              >
+                <Icon name="shield" className="w-3.5 h-3.5 text-red-400" />
+                <span>Simulate Spam Bot</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

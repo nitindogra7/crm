@@ -27,16 +27,16 @@ export function Pill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-[7px] border border-white/[0.14] rounded-full py-[4.5px] pr-[12px] pl-[6px] text-[11px] font-sans font-medium text-neutral-200 bg-white/[0.05] hover:border-white/30 hover:bg-white/[0.08] backdrop-blur-md shadow-sm transition-all duration-300",
+        "inline-flex items-center gap-1.5 border border-emerald-900/60 rounded-full py-1 pr-3 pl-2 text-[11px] font-mono text-emerald-400 bg-[#0E1411] shadow-sm",
         className
       )}
     >
       {icon && (
-        <b className="w-[17px] h-[17px] rounded-full grid place-items-center bg-white/[0.08] border border-white/[0.14] text-zinc-200 flex-none shadow-sm">
-          <Icon name={icon} className="w-[9px] h-[9px]" />
+        <b className="w-4 h-4 rounded-full grid place-items-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex-none">
+          <Icon name={icon} className="w-2.5 h-2.5" />
         </b>
       )}
-      {children}
+      <span>{children}</span>
     </span>
   );
 }
@@ -65,21 +65,17 @@ export function Button({
   disabled = false,
 }: ButtonProps) {
   const baseClasses =
-    "inline-flex items-center justify-center gap-[7px] font-sans transition-all duration-200 cursor-pointer whitespace-nowrap outline-none focus-visible:outline-1 focus-visible:outline-white focus-visible:outline-offset-2 select-none active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100";
+    "inline-flex items-center justify-center gap-1.5 font-sans transition-colors cursor-pointer whitespace-nowrap outline-none select-none active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none rounded-md";
 
   const sizeClasses =
-    variant === "solid"
-      ? size === "sm"
-        ? "px-[14px] py-[6px] text-[11px] rounded-[8px]"
-        : "px-[18px] py-[8.5px] text-[12.5px] rounded-[10px]"
-      : size === "sm"
-      ? "px-[14px] py-[6px] text-[11px] rounded-full"
-      : "px-[18px] py-[9px] text-[12px] rounded-full";
+    size === "sm"
+      ? "px-3 py-1.5 text-xs"
+      : "px-4 py-2 text-xs font-semibold";
 
   const variantClasses =
     variant === "solid"
-      ? "font-medium text-black bg-gradient-to-b from-[#ffffff] via-[#ffffff] to-[#f4f4f4] border border-black/10 shadow-[0_0_0_2px_#000,0_0_0_3.5px_rgba(255,255,255,0.45),inset_0_1px_0_rgba(255,255,255,1),inset_0_-1px_1px_rgba(0,0,0,0.06),0_2px_4px_rgba(0,0,0,0.3)] hover:shadow-[0_0_0_2px_#000,0_0_0_3.5px_rgba(255,255,255,0.85),0_0_16px_rgba(255,255,255,0.35),inset_0_1px_0_rgba(255,255,255,1)] hover:bg-[#ffffff] group"
-      : "font-normal border border-white/[0.17] text-white bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.01))] hover:border-white hover:bg-white hover:text-black shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+      ? "text-[#070B09] bg-emerald-500 hover:bg-emerald-400 font-semibold shadow-sm"
+      : "text-zinc-200 hover:text-white bg-[#0E1411] hover:bg-[#141C17] border border-zinc-800 hover:border-zinc-700";
 
   const combinedClasses = cn(baseClasses, sizeClasses, variantClasses, className);
 
@@ -124,18 +120,14 @@ export function Orb({
     <div
       style={{ width: `${size}px`, height: `${size}px` }}
       className={cn(
-        "relative rounded-full grid place-items-center bg-[radial-gradient(circle_at_32%_24%,#585858_0%,#1d1d1d_38%,#030303_72%)] border border-[#333] shadow-[0_0_70px_rgba(255,255,255,0.07),inset_0_2px_6px_rgba(255,255,255,0.18),inset_0_-14px_24px_#000] flex-none",
+        "relative rounded-full grid place-items-center bg-[radial-gradient(circle_at_32%_24%,#2a3530_0%,#131b17_40%,#090d0b_75%)] border border-emerald-950/60 shadow-lg flex-none",
         className
       )}
     >
-      <div
-        className="absolute rounded-full border border-white/[0.08] pointer-events-none"
-        style={{ inset: `-${size * 0.11}px` }}
-      />
       {children || (
         <Icon
           name="logo"
-          className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
+          className="text-emerald-400"
           style={{ width: `${size * 0.36}px`, height: `${size * 0.36}px` }}
         />
       )}
@@ -146,7 +138,7 @@ export function Orb({
 export function IcoCircle({
   icon,
   className,
-  size = 34,
+  size = 32,
 }: {
   icon: IconName;
   className?: string;
@@ -156,11 +148,11 @@ export function IcoCircle({
     <div
       style={{ width: `${size}px`, height: `${size}px` }}
       className={cn(
-        "rounded-full grid place-items-center bg-[radial-gradient(circle_at_32%_26%,#4a4a4a,#0c0c0c_70%)] border border-[#333] shadow-[inset_0_1px_3px_rgba(255,255,255,0.2),0_0_0_5px_rgba(255,255,255,0.025),0_0_0_6px_rgba(255,255,255,0.08)] text-white flex-none",
+        "rounded-lg grid place-items-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex-none",
         className
       )}
     >
-      <Icon name={icon} className="w-[14px] h-[14px]" />
+      <Icon name={icon} className="w-3.5 h-3.5" />
     </div>
   );
 }
@@ -180,7 +172,7 @@ export function Avatar({
   alt?: string;
   index?: number;
 }) {
-  const isLg2 = variant === "square";
+  const isSquare = variant === "square";
   const [error, setError] = useState(false);
 
   const imageSource = src || PERSON_AVATARS[index % PERSON_AVATARS.length];
@@ -189,8 +181,8 @@ export function Avatar({
     <span
       style={{ width: `${size}px`, height: `${size}px` }}
       className={cn(
-        "relative border border-white/[0.17] overflow-hidden flex-none inline-block bg-[#1a1a1a]",
-        isLg2 ? "rounded-[10px]" : "rounded-full",
+        "relative border border-zinc-800 overflow-hidden flex-none inline-block bg-[#0E1411]",
+        isSquare ? "rounded-md" : "rounded-full",
         className
       )}
     >
@@ -205,7 +197,7 @@ export function Avatar({
           className="w-full h-full object-cover grayscale contrast-105"
         />
       ) : (
-        <span className="w-full h-full flex items-center justify-center bg-[#2a2a2a] text-white text-[10px]">
+        <span className="w-full h-full flex items-center justify-center bg-[#151E19] text-zinc-300 text-[10px]">
           {alt.slice(0, 1)}
         </span>
       )}
@@ -232,7 +224,7 @@ export function Card({
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
       className={cn(
-        "relative border border-white/[0.08] rounded-[16px] bg-[#1c1c1c] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_24px_50px_-24px_#000]",
+        "relative border border-zinc-800/80 rounded-xl bg-[#0E1411] shadow-sm",
         className
       )}
     >

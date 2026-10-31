@@ -1,15 +1,14 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck } from "lucide-react";
-import { Icon } from "@/features/marketing/components/icons";
+import { ArrowRight } from "lucide-react";
 
 interface AuthFormSkeletonProps {
   mode: "sign-in" | "sign-up";
 }
 
 /**
- * Pixel-perfect Skeleton for Clerk Auth Forms.
+ * Pixel-perfect Skeleton for Clerk Auth Forms matching Infraly Landing Page.
  * Precisely mirrors Clerk's mode-specific layouts:
  * - sign-in: 1 email field, 1 submit button, Google OAuth button, footer link
  * - sign-up: email + password fields, 1 submit button, Google OAuth button, footer link
@@ -18,57 +17,57 @@ export function AuthFormSkeleton({ mode }: AuthFormSkeletonProps) {
   const isSignIn = mode === "sign-in";
 
   return (
-    <div className="w-full space-y-3.5 select-none" aria-busy="true" aria-label="Loading authentication form">
+    <div className="w-full space-y-3 select-none" aria-busy="true" aria-label="Loading authentication form">
       {/* Step Header Skeleton */}
-      <div className="space-y-2 mb-5">
-        <div className="h-7 w-44 sm:w-52 rounded-lg bg-white/[0.12] animate-skeleton-shimmer" />
-        <div className="h-3.5 w-60 sm:w-72 rounded-md bg-white/[0.06] animate-skeleton-shimmer" />
+      <div className="space-y-1.5 mb-4">
+        <div className="h-7 w-48 sm:w-56 rounded-lg bg-slate-200 animate-skeleton-shimmer" />
+        <div className="h-3.5 w-64 sm:w-72 rounded-md bg-slate-100 animate-skeleton-shimmer" />
       </div>
 
       {/* Social Button Skeleton (Google) */}
-      <div className="w-full h-[42px] rounded-xl bg-[#141414] border border-white/[0.08] flex items-center justify-center gap-2.5 shadow-sm">
-        <div className="w-4 h-4 rounded-full bg-white/20 animate-pulse" />
-        <div className="w-36 h-3 rounded bg-white/15 animate-skeleton-shimmer" />
+      <div className="w-full h-[40px] rounded-xl bg-white border border-slate-200 flex items-center justify-center gap-2.5 shadow-2xs">
+        <div className="w-4 h-4 rounded-full bg-slate-200 animate-pulse" />
+        <div className="w-36 h-3 rounded bg-slate-200 animate-skeleton-shimmer" />
       </div>
 
       {/* Divider Skeleton */}
-      <div className="my-3 flex items-center justify-center relative">
-        <div className="w-full h-[1px] bg-white/[0.08]" />
-        <span className="absolute px-2.5 bg-[#181818] text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
+      <div className="my-2.5 flex items-center justify-center relative">
+        <div className="w-full h-[1px] bg-slate-200/80" />
+        <span className="absolute px-2.5 bg-white text-[10px] font-mono text-slate-400 uppercase tracking-widest font-medium">
           or
         </span>
       </div>
 
       {/* Email Field Skeleton */}
-      <div className="space-y-1.5">
-        <div className="h-3 w-20 rounded bg-white/[0.12] animate-skeleton-shimmer" />
-        <div className="w-full h-[42px] rounded-xl bg-[#141414] border border-white/[0.08] flex items-center px-3.5">
-          <div className="w-40 h-2.5 rounded bg-white/[0.07] animate-skeleton-shimmer" />
+      <div className="space-y-1">
+        <div className="h-3 w-20 rounded bg-slate-200 animate-skeleton-shimmer" />
+        <div className="w-full h-[40px] rounded-xl bg-slate-50 border border-slate-200 flex items-center px-3.5">
+          <div className="w-40 h-2.5 rounded bg-slate-200 animate-skeleton-shimmer" />
         </div>
       </div>
 
       {/* Password Field Skeleton (Rendered on sign-up, omitted on initial sign-in step) */}
       {!isSignIn && (
-        <div className="space-y-1.5 animate-in fade-in duration-200">
+        <div className="space-y-1 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
-            <div className="h-3 w-16 rounded bg-white/[0.12] animate-skeleton-shimmer" />
+            <div className="h-3 w-16 rounded bg-slate-200 animate-skeleton-shimmer" />
           </div>
-          <div className="w-full h-[42px] rounded-xl bg-[#141414] border border-white/[0.08] flex items-center px-3.5">
-            <div className="w-28 h-2.5 rounded bg-white/[0.07] animate-skeleton-shimmer" />
+          <div className="w-full h-[40px] rounded-xl bg-slate-50 border border-slate-200 flex items-center px-3.5">
+            <div className="w-28 h-2.5 rounded bg-slate-200 animate-skeleton-shimmer" />
           </div>
         </div>
       )}
 
       {/* Primary Submit Button Skeleton */}
-      <div className="w-full h-[42px] rounded-xl bg-white/[0.14] border border-white/10 mt-3 flex items-center justify-center gap-2 shadow-sm animate-skeleton-shimmer">
-        <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-        <span className="text-[12px] font-mono text-zinc-300">Connecting securely...</span>
+      <div className="w-full h-[40px] rounded-xl bg-[#2563eb]/20 border border-[#2563eb]/30 mt-2.5 flex items-center justify-center gap-2 shadow-2xs animate-skeleton-shimmer">
+        <div className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <span className="text-[12px] font-mono text-blue-700 font-medium">Connecting securely...</span>
       </div>
 
       {/* Footer Navigation Link Skeleton */}
-      <div className="mt-4 flex items-center justify-center gap-1.5 pt-1">
-        <div className="h-3 w-36 rounded bg-white/[0.06] animate-skeleton-shimmer" />
-        <div className="h-3 w-12 rounded bg-white/[0.14] animate-skeleton-shimmer" />
+      <div className="mt-3 flex items-center justify-center gap-1.5 pt-1">
+        <div className="h-3 w-36 rounded bg-slate-200 animate-skeleton-shimmer" />
+        <div className="h-3 w-12 rounded bg-blue-200 animate-skeleton-shimmer" />
       </div>
     </div>
   );
@@ -80,109 +79,84 @@ export function AuthFormSkeleton({ mode }: AuthFormSkeletonProps) {
  */
 export function AuthPageSkeleton({ mode }: AuthFormSkeletonProps) {
   return (
-    <div className="fixed inset-0 h-screen h-[100dvh] w-screen bg-[#121212] text-[#f4f4f5] flex items-center justify-center p-3 sm:p-5 lg:p-6 overflow-hidden overscroll-none selection:bg-white selection:text-black">
-      {/* Ambient Radial Lighting in Salenova Emerald / Obsidian theme */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[540px] rounded-full blur-[150px] opacity-20"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, rgba(52,211,153,0.18) 0%, rgba(18,18,18,0.92) 70%)",
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              "radial-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-          }}
+    <div className="fixed inset-0 h-screen h-[100dvh] w-screen overflow-hidden overscroll-none bg-white text-slate-900 flex flex-col md:flex-row selection:bg-blue-500/20 selection:text-blue-900">
+      
+      {/* Left Column (50% Width, 100vh Height): Full Screen Photo */}
+      <div className="hidden md:block md:w-1/2 h-full relative overflow-hidden select-none shrink-0 bg-slate-100">
+        <Image
+          src="/auth-showcase.jpg"
+          alt="Infraly Auth Showcase"
+          fill
+          className="object-cover object-center"
+          priority
+          sizes="50vw"
         />
       </div>
 
-      {/* Fixed-Height Modal Card Container: Locked in place, page does not move */}
-      <div className="relative z-10 w-full max-w-[1040px] h-[min(650px,calc(100dvh-28px))] rounded-[26px] sm:rounded-[30px] bg-[#181818] border border-white/[0.08] shadow-[0_24px_80px_rgba(0,0,0,0.85)] p-2.5 sm:p-3.5 md:p-4 overflow-hidden flex flex-col justify-center animate-in fade-in zoom-in-[0.99] duration-200">
-        <div className="h-full w-full grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 items-stretch overflow-hidden">
+      {/* Right Column (50% Width, 100vh Height): Non-scrollable Centered Input / Form Box */}
+      <div className="w-full md:w-1/2 h-full flex flex-col justify-center items-center px-6 sm:px-10 lg:px-14 xl:px-16 overflow-hidden bg-white relative auth-scroll-panel selection:bg-blue-500/20">
+        {/* Background Top Gradient matching Hero Section */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none" aria-hidden="true">
+          {/* Top Only: Left-to-Right Blue to Light Very Light Pink Gradient */}
+          <div
+            className="absolute top-0 left-0 right-0 h-[360px] sm:h-[400px] pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(to right, rgba(186, 218, 255, 0.72) 0%, rgba(206, 227, 255, 0.45) 25%, rgba(242, 237, 254, 0.28) 50%, rgba(253, 230, 244, 0.48) 75%, rgba(252, 216, 236, 0.75) 100%)",
+              maskImage:
+                "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0) 100%)",
+              WebkitMaskImage:
+                "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0) 100%)",
+            }}
+          />
+        </div>
+
+        <div className="relative z-10 w-full max-w-[400px] sm:max-w-[420px] mx-auto py-2 flex flex-col justify-center">
           
-          {/* Left Column: Fixed Visual Showcase Card */}
-          <div className="hidden md:flex md:col-span-5 h-full relative rounded-[20px] sm:rounded-[22px] overflow-hidden flex-col justify-between p-6 lg:p-7 border border-white/[0.08] shadow-inner select-none shrink-0">
-            <Image
-              src="/auth-showcase.jpg"
-              alt="Salenova Visual Atmosphere"
-              fill
-              className="object-cover object-center scale-[1.02]"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/20 to-black/90 pointer-events-none" />
-
-            {/* Top Bar: Brand Logo & Back to Website Link */}
-            <div className="relative z-10 flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-2.5 group">
-                <span className="w-8 h-8 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 inline-grid place-items-center text-white group-hover:scale-105 transition-transform shadow-sm">
-                  <Icon name="logo" className="w-4 h-4 text-white" />
-                </span>
-                <span className="font-heading font-semibold tracking-tight text-[16px] text-white drop-shadow-sm">
-                  Salenova
-                </span>
-              </Link>
-
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11.5px] font-sans text-white/90 shadow-sm">
-                <span>Back to website</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+          {/* Brand Logo & Back to Website Navigation */}
+          <div className="flex items-center justify-between mb-4 sm:mb-5">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                <Image
+                  src="/favicon.ico"
+                  alt="Infraly"
+                  width={32}
+                  height={32}
+                  unoptimized
+                  className="w-7 h-7 object-contain group-hover:scale-105 transition-transform"
+                  priority
+                />
+              </div>
+              <span className="font-heading font-bold tracking-tight text-[18px] text-slate-900">
+                infraly
               </span>
-            </div>
+            </Link>
 
-            {/* Bottom Section: Dynamic Taglines & Security Badge */}
-            <div className="relative z-10 space-y-4 pt-4">
-              <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-[10.5px] font-mono tracking-wide uppercase mb-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  High Velocity
-                </div>
-                <h2 className="text-lg sm:text-xl font-heading font-medium tracking-tight text-white leading-snug drop-shadow-md">
-                  Capturing Inbound Leads, Powering Modern Teams
-                </h2>
-                <p className="text-[12px] text-zinc-300/90 font-sans leading-relaxed max-w-xs drop-shadow-sm line-clamp-2">
-                  Zero server setups. Collect, protect, and route form submissions in seconds with a single endpoint.
-                </p>
-              </div>
-
-              {/* 3-Dash Indicators & Security Badge */}
-              <div className="flex items-center justify-between pt-1 border-t border-white/10 text-[11px] font-mono text-zinc-400">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-7 h-1 rounded-full bg-white shadow-sm" />
-                  <span className="w-2 h-1 rounded-full bg-white/35" />
-                  <span className="w-2 h-1 rounded-full bg-white/35" />
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>TLS 1.3 · Turnstile</span>
-                </div>
-              </div>
-            </div>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/80 hover:bg-white border border-slate-200/90 text-[12px] font-sans font-medium text-slate-600 hover:text-slate-900 shadow-2xs transition-all"
+            >
+              <span>Back to website</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
-          {/* Right Column: The ONLY Scrollable Panel (Page does not move) */}
-          <div className="col-span-1 md:col-span-7 h-full flex flex-col overflow-y-auto overflow-x-hidden auth-scroll-panel overscroll-contain px-4 sm:px-8 lg:px-10 py-5 sm:py-6">
-            <div className="my-auto w-full max-w-[400px] sm:max-w-[420px] mx-auto px-1 py-3">
-              <AuthFormSkeleton mode={mode} />
+          <AuthFormSkeleton mode={mode} />
 
-              {/* Subtle Security & Terms Footer */}
-              <p className="mt-4 text-center text-[11px] text-zinc-500 font-sans leading-relaxed">
-                Protected by 256-bit encryption. By continuing, you agree to Salenova&apos;s{" "}
-                <Link href="/" className="text-zinc-400 hover:text-white underline underline-offset-2 transition-colors">
-                  Terms
-                </Link>{" "}
-                &{" "}
-                <Link href="/" className="text-zinc-400 hover:text-white underline underline-offset-2 transition-colors">
-                  Privacy Policy
-                </Link>.
-              </p>
-            </div>
-          </div>
-
+          {/* Subtle Security & Terms Footer */}
+          <p className="mt-3 text-center text-[11px] text-slate-400 font-sans leading-relaxed">
+            Protected by 256-bit encryption. By continuing, you agree to Infraly&apos;s{" "}
+            <Link href="/" className="text-slate-600 hover:text-blue-600 underline underline-offset-2 transition-colors">
+              Terms
+            </Link>{" "}
+            &{" "}
+            <Link href="/" className="text-slate-600 hover:text-blue-600 underline underline-offset-2 transition-colors">
+              Privacy Policy
+            </Link>.
+          </p>
         </div>
       </div>
+
     </div>
   );
 }

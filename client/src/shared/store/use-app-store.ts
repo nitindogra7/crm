@@ -75,7 +75,7 @@ export const useAppStore = create<AppStoreState>()(
       },
     }),
     {
-      name: "salenova_crm_dashboard_state_v3",
+      name: "infraly_crm_dashboard_state_v3",
       partialize: (state) => ({
         workspace: state.workspace,
         webhook: state.webhook,

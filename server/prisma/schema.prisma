@@ -75,6 +75,7 @@ model Form {
   @@index([dashboardId])
   @@index([dashboardId, environment])
   @@index([dashboardId, createdAt(sort: Desc)])
+  @@index([dashboardId, environment, createdAt(sort: Desc)])
   @@index([slug])
   @@map("forms")
 }
@@ -96,6 +97,7 @@ model ApiKey {
 
   @@index([dashboardId])
   @@index([dashboardId, environment])
+  @@index([dashboardId, environment, revoked, createdAt(sort: Desc)])
   @@map("api_keys")
 }
 
@@ -124,6 +126,8 @@ model Lead {
   @@index([dashboardId, environment, receivedAt(sort: Desc)])
   @@index([dashboardId, receivedAt(sort: Desc)])
   @@index([dashboardId, status, receivedAt(sort: Desc)])
+  @@index([dashboardId, environment, status, receivedAt(sort: Desc)])
+  @@index([dashboardId, environment, formId, receivedAt(sort: Desc)])
   @@index([formId])
   @@map("leads")
 }

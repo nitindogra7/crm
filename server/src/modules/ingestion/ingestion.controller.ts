@@ -40,6 +40,7 @@ export class IngestionController {
         body: req.body || {},
         headers: req.headers,
         ip: clientIp,
+        context: res.locals.ingestionContext,
       });
 
       // If submission originated from a standard HTML form and has redirectUrl

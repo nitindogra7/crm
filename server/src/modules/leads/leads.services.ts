@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../prisma";
 import crypto from "crypto";
 import { WorkspaceAccessError } from "../../errors";
@@ -128,10 +129,12 @@ export class LeadsService {
     leadId: string,
     status: LeadStatus
   ): Promise<LeadRecord | null> {
-    const lead = await this.getLeadById(userId, leadId);
-    if (!lead) return null;
-
-    return this.repository.updateLeadStatus(leadId, status);
+    try {
+      return await prisma.lead.update({ where: { id: leadId, dashboard: { userId } }, data: { status } });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") return null;
+      throw error;
+    }
   }
 
   /**

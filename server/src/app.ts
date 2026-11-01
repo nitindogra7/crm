@@ -17,7 +17,10 @@ import { leadsRouter } from "./modules/leads/leads.routes";
 import { publicFormRateLimiter, publicFormBurstLimiter } from "./middleware/rateLimiter";
 import { dynamicFormCorsMiddleware } from "./middleware/corsOriginVerifier";
 
+import { responseTiming } from "./middleware/responseTiming";
+
 const app: Application = express();
+app.use(responseTiming);
 
 // Trust reverse proxy (Cloudflare, AWS ALB, Nginx) so client IP is accurately extracted for rate limiting
 app.set("trust proxy", 1);

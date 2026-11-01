@@ -1,3 +1,4 @@
+import type { IngestionContext } from "./ingestion-context";
 import { Prisma } from "@prisma/client";
 import { matchesAllowedOrigin } from "../../middleware/corsOriginVerifier";
 import { prisma } from "../../prisma";
@@ -32,15 +33,24 @@ export class IngestionService {
     body: Record<string, unknown>;
     headers: Record<string, string | string[] | undefined>;
     ip?: string;
+    context?: IngestionContext;
   }): Promise<IngestSubmissionResult> {
-    const { formSlug, formId, apiKey, body, headers, ip } = params;
+    const { formSlug, formId, apiKey, body, headers, ip, context } = params;
+    const cachedForm = context?.form;
+    const matchingForm = cachedForm && (formId ? cachedForm.id === formId : cachedForm.slug === formSlug)
+      ? cachedForm : undefined;
+    const [keyRecord, formRecord] = await Promise.all([
+      apiKey ? (context?.apiKey?.key === apiKey ? context.apiKey : this.repository.findApiKeyByKey(apiKey)) : null,
+      matchingForm ?? (formId ? this.repository.findFormById(formId)
+        : formSlug ? this.repository.findFormByGlobalSlug(formSlug) : null),
+    ]);
 
     // 1. Identify target form and/or API Key authentication
     let verifiedApiKey: ApiKeyRecord | null = null;
     let targetDashboardId: string | null = null;
 
     if (apiKey) {
-      verifiedApiKey = await this.repository.findApiKeyByKey(apiKey);
+      verifiedApiKey = keyRecord;
       if (!verifiedApiKey || verifiedApiKey.revoked) {
         return {
           status: "rejected",
@@ -48,17 +58,11 @@ export class IngestionService {
           message: "Invalid, expired, or revoked API key",
         };
       }
-      await this.repository.touchApiKeyLastUsed(verifiedApiKey.id);
       targetDashboardId = verifiedApiKey.dashboardId;
     }
 
     // Look up form by ID or Slug
-    let form: FormRecord | null = null;
-    if (formId) {
-      form = await this.repository.findFormById(formId);
-    } else if (formSlug) {
-      form = await this.repository.findFormByGlobalSlug(formSlug);
-    }
+    const form: FormRecord | null = formRecord;
 
     if ((formId || formSlug) && !form) {
       return { status: "rejected", statusCode: 404, message: "Target form not found" };
@@ -99,8 +103,10 @@ export class IngestionService {
       verifiedApiKey?.environment ||
       (verifiedApiKey?.keyPrefix?.includes("live") ? "production" : "development");
 
+    const cachedDashboard = matchingForm?.dashboard ?? context?.apiKey?.dashboard;
     const targetDashboard = targetDashboardId
-      ? await this.repository.findDashboardById(targetDashboardId)
+      ? cachedDashboard?.id === targetDashboardId ? cachedDashboard
+        : await this.repository.findDashboardById(targetDashboardId)
       : null;
 
     // ==========================================
@@ -206,6 +212,12 @@ export class IngestionService {
         statusCode: 404,
         message: "Target form endpoint or API key not found",
       };
+    }
+
+    // Last-used is informational; limit writes on hot keys to once per minute.
+    if (verifiedApiKey && (!verifiedApiKey.lastUsedAt ||
+      Date.now() - verifiedApiKey.lastUsedAt.getTime() >= 60_000)) {
+      await this.repository.touchApiKeyLastUsed(verifiedApiKey.id);
     }
 
     // Credentials authenticate the request; they must not become customer data.

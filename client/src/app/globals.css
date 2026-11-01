@@ -620,21 +620,32 @@ body:has(.auth-scroll-panel) {
    OTP 6-Digit Code Verification Screen Styling
    ========================================================================= */
 .cl-otpCodeField {
+  width: 100% !important;
+  min-width: 0 !important;
   margin: 1.125rem 0 !important;
 }
 
 .cl-otpCodeFieldInputs {
   display: flex !important;
-  gap: 0.5rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  gap: clamp(0.25rem, 1.5vw, 0.5rem) !important;
   justify-content: center !important;
-  padding: 0.25rem 0 !important;
+  padding: 0.25rem !important;
+  box-sizing: border-box !important;
 }
 
 .cl-otpCodeFieldInput {
-  width: min(3rem, 100%) !important;
+  /* Keep digits centered even when Clerk also applies regular input styles. */
+  width: 100% !important;
   min-width: 0 !important;
+  max-width: 3rem !important;
   flex: 1 1 0 !important;
-  height: 3.25rem !important;
+  height: 3rem !important;
+  padding: 0 !important;
+  line-height: normal !important;
+  letter-spacing: normal !important;
+  text-indent: 0 !important;
   border-radius: 0.75rem !important;
   background-color: #f8fafc !important;
   border: 1.5px solid #cbd5e1 !important;

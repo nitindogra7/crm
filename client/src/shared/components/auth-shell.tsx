@@ -59,10 +59,10 @@ export const clerkAuthAppearance = {
     identityPreviewText: "text-slate-800 font-sans text-xs font-semibold",
     identityPreviewEditButton:
       "text-[#303236] hover:text-blue-700 text-xs font-semibold transition-colors cursor-pointer",
-    otpCodeField: "my-2.5",
-    otpCodeFieldInputs: "flex gap-2 justify-center py-1",
+    otpCodeField: "my-2.5 w-full min-w-0",
+    otpCodeFieldInputs: "flex w-full min-w-0 gap-2 justify-center p-1",
     otpCodeFieldInput:
-      "w-11 h-11 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-600 focus:bg-white focus:ring-3 focus:ring-blue-500/10 text-slate-900 text-lg font-mono text-center shadow-2xs outline-none",
+      "w-full min-w-0 max-w-12 h-12 flex-1 p-0 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-600 focus:bg-white focus:ring-3 focus:ring-blue-500/10 text-slate-900 text-lg font-mono text-center shadow-2xs outline-none",
     internal: "font-sans",
   },
   variables: {

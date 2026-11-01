@@ -40,7 +40,8 @@ export default async function DashboardLayout({
       `${apiUrl}/api/onboarding/status?userId=${encodeURIComponent(userId)}`,
       {
         headers,
-        next: { revalidate: 120 },
+        // Onboarding can have completed just before this request.
+        cache: "no-store",
         signal: AbortSignal.timeout(1200),
       }
     );

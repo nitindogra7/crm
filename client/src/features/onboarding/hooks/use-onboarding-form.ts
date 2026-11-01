@@ -27,6 +27,17 @@ export function useOnboardingForm() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const redirectToDashboard = useCallback(() => {
+    // Start a fresh request after setup instead of reusing a prefetched redirect.
+    window.location.replace("/dashboard");
+  }, []);
+
+  useEffect(() => {
+    if (!isSuccess) return;
+    const timer = window.setTimeout(redirectToDashboard, 1200);
+    return () => window.clearTimeout(timer);
+  }, [isSuccess, redirectToDashboard]);
+
   // Redirect if user signs out while on onboarding
   useEffect(() => {
     if (isLoaded && !user) {
@@ -49,7 +60,7 @@ export function useOnboardingForm() {
       setSubmitError(null);
 
       const trimmedName = activeName.trim();
-      if (!trimmedName || isSubmitting) return;
+      if (!trimmedName || isSubmitting || isSuccess) return;
 
       setIsSubmitting(true);
 
@@ -97,24 +108,6 @@ export function useOnboardingForm() {
         const finalEmail = serverRecord?.ownerEmail || formData.ownerEmail;
         const finalTeamSize = serverRecord?.teamSize || teamSize;
 
-        setIsSuccess(true);
-
-        // Trigger celebratory confetti
-        try {
-          const confetti = (await import("canvas-confetti")).default;
-          confetti({
-            particleCount: 65,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ["#2563eb", "#38bdf8", "#6366f1", "#10b981", "#ffffff"],
-          });
-        } catch {
-          // Safe fallback
-        }
-
-        setIsSubmitting(false);
-        setIsSuccess(true);
-
         // Centrally update global store
         initWorkspace({
           name: finalName,
@@ -123,6 +116,19 @@ export function useOnboardingForm() {
           teamSize: finalTeamSize === "solo" ? "solo" : "team",
           avatarTone: "blue",
         });
+
+        setIsSubmitting(false);
+        setIsSuccess(true);
+
+        // Celebration is optional and must never delay navigation.
+        void import("canvas-confetti").then(({ default: confetti }) => {
+          confetti({
+            particleCount: 65,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ["#2563eb", "#38bdf8", "#6366f1", "#10b981", "#ffffff"],
+          });
+        }).catch(() => { /* Continue without confetti. */ });
 
       } catch (err: unknown) {
         console.error("❌ [Onboarding] Submission failed:", err);
@@ -138,6 +144,7 @@ export function useOnboardingForm() {
       getToken,
       initWorkspace,
       isSubmitting,
+      isSuccess,
       teamSize,
       useCase,
       user,
@@ -161,6 +168,6 @@ export function useOnboardingForm() {
     setUseCase,
     setTeamSize,
     handleSubmit,
-    redirectToDashboard: () => router.replace("/dashboard"),
+    redirectToDashboard,
   };
 }

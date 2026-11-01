@@ -38,7 +38,7 @@ export function GeneralSettings() {
     const changes = { name: name.trim(), ownerEmail: email.trim() };
     try {
       const token = await getToken();
-      const endpoint = activeDashboardId ? "/api/forms-and-api/dashboards/" + activeDashboardId : user?.id ? "/api/onboarding/" + user.id : null;
+      const endpoint = activeDashboardId ? "/api/dashboards/" + activeDashboardId : user?.id ? "/api/onboarding/" + user.id : null;
       if (!endpoint) throw new Error("Please sign in again to save your workspace.");
       await apiFetch(endpoint, { method: "PATCH", token, body: JSON.stringify(changes) });
       const current = useAppStore.getState();

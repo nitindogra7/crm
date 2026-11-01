@@ -19,6 +19,11 @@ import {
 } from "recharts";
 import { Download } from "lucide-react";
 
+import type { AnalyticsData } from "../data/route-data";
+const EMPTY_LEADS: AnalyticsData["leads"] = [];
+const EMPTY_SPAM: AnalyticsData["spam"] = [];
+const EMPTY_FORMS: AnalyticsData["forms"] = [];
+
 type TimeRange = "7d" | "30d" | "90d";
 
 const SOURCE_COLORS = ["#55a3f4", "#06b6d4", "#10b981", "#8b5cf6", "#f59e0b"];
@@ -69,7 +74,10 @@ function CustomTooltip({
 }
 
 export function AnalyticsView() {
-  const { leads: allLeads, spam: allSpam, forms, isLoading, addToast } = useDashboard(["leads","spam","forms","isLoading","addToast"]);
+  const { analytics, isLoading, addToast } = useDashboard(["analytics","isLoading","addToast"]);
+  const allLeads = analytics?.leads || EMPTY_LEADS;
+  const allSpam = analytics?.spam || EMPTY_SPAM;
+  const forms = analytics?.forms || EMPTY_FORMS;
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
   const isMounted = useHydrated();
 
@@ -91,16 +99,20 @@ export function AnalyticsView() {
   // 1. Calculate Daily Timeline Data
   const timelineData = useMemo(() => {
     const buckets = new Map(days.map(day => [day.toDateString(), { date: day.toLocaleDateString("en-US", { month: "short", day: "numeric" }), leads: 0, spam: 0, total: 0 }]));
-    leads.forEach(lead => { const bucket = buckets.get(new Date(lead.receivedAt).toDateString()); if (bucket) { bucket.leads++; bucket.total++; } });
-    spam.forEach(item => { const bucket = buckets.get(new Date(item.receivedAt).toDateString()); if (bucket) { bucket.spam++; bucket.total++; } });
+    leads.forEach(lead => { const bucket = buckets.get(new Date(lead.receivedAt).toDateString()); if (bucket) { bucket.leads += lead.count; bucket.total += lead.count; } });
+    spam.forEach(item => { const bucket = buckets.get(new Date(item.receivedAt).toDateString()); if (bucket) { bucket.spam += item.count; bucket.total += item.count; } });
     return Array.from(buckets.values());
   }, [leads, spam, days]);
 
   // 2. Calculate Form Performance Data
   const formData = useMemo(() => {
+    const leadCounts = new Map<string | null, number>();
+    const spamCounts = new Map<string | null, number>();
+    leads.forEach(row => leadCounts.set(row.formId, (leadCounts.get(row.formId) || 0) + row.count));
+    spam.forEach(row => spamCounts.set(row.formId, (spamCounts.get(row.formId) || 0) + row.count));
     return forms.map((form) => {
-      const formLeads = leads.filter((l) => l.formId === form.id).length;
-      const formSpam = spam.filter((s) => s.formId === form.id).length;
+      const formLeads = leadCounts.get(form.id) || 0;
+      const formSpam = spamCounts.get(form.id) || 0;
       return {
         name: form.name,
         leads: formLeads,
@@ -114,7 +126,7 @@ export function AnalyticsView() {
   const sourceData = useMemo(() => {
     const map = new Map<string, number>();
     leads.forEach((l) => {
-      map.set(l.source, (map.get(l.source) || 0) + 1);
+      map.set(l.source, (map.get(l.source) || 0) + l.count);
     });
 
     return Array.from(map.entries()).map(([name, value]) => ({
@@ -127,7 +139,7 @@ export function AnalyticsView() {
   const spamReasonData = useMemo(() => {
     const map = new Map<string, number>();
     spam.forEach((s) => {
-      map.set(s.reason, (map.get(s.reason) || 0) + 1);
+      map.set(s.reason, (map.get(s.reason) || 0) + s.count);
     });
 
     return Array.from(map.entries()).map(([name, value]) => ({
@@ -152,14 +164,14 @@ export function AnalyticsView() {
     leads.forEach((l) => {
       if (!l.receivedAt) return;
       const hour = new Date(l.receivedAt).getHours();
-      if (hour < 3) buckets["12 AM"]++;
-      else if (hour < 6) buckets["3 AM"]++;
-      else if (hour < 9) buckets["6 AM"]++;
-      else if (hour < 12) buckets["9 AM"]++;
-      else if (hour < 15) buckets["12 PM"]++;
-      else if (hour < 18) buckets["3 PM"]++;
-      else if (hour < 21) buckets["6 PM"]++;
-      else buckets["9 PM"]++;
+      if (hour < 3) buckets["12 AM"] += l.count;
+      else if (hour < 6) buckets["3 AM"] += l.count;
+      else if (hour < 9) buckets["6 AM"] += l.count;
+      else if (hour < 12) buckets["9 AM"] += l.count;
+      else if (hour < 15) buckets["12 PM"] += l.count;
+      else if (hour < 18) buckets["3 PM"] += l.count;
+      else if (hour < 21) buckets["6 PM"] += l.count;
+      else buckets["9 PM"] += l.count;
     });
 
     return Object.entries(buckets).map(([hour, count]) => ({ hour, count }));
@@ -172,11 +184,14 @@ export function AnalyticsView() {
     return found ? found.hour : null;
   }, [hourlyData]);
 
+  const leadCount = leads.reduce((sum, row) => sum + row.count, 0);
+  const spamCount = spam.reduce((sum, row) => sum + row.count, 0);
+
   // Summary Metrics
-  const totalSubmissions = leads.length + spam.length;
-  const cleanRate = totalSubmissions > 0 ? Math.round((leads.length / totalSubmissions) * 100) : 0;
-  const spamRate = totalSubmissions > 0 ? Math.round((spam.length / totalSubmissions) * 100) : 0;
-  const avgDaily = (leads.length / daysCount).toFixed(1);
+  const totalSubmissions = leadCount + spamCount;
+  const cleanRate = totalSubmissions > 0 ? Math.round((leadCount / totalSubmissions) * 100) : 0;
+  const spamRate = totalSubmissions > 0 ? Math.round((spamCount / totalSubmissions) * 100) : 0;
+  const avgDaily = (leadCount / daysCount).toFixed(1);
 
   const handleExportCSV = () => {
     const rows = [
@@ -473,7 +488,7 @@ export function AnalyticsView() {
             {sourceData.length > 0 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-xl font-heading font-bold text-slate-900 tabular-nums">
-                  {leads.length}
+                  {leadCount}
                 </span>
                 <span className="text-[10px] font-sans uppercase text-slate-500 font-semibold">
                   Total Leads
@@ -522,7 +537,7 @@ export function AnalyticsView() {
               </div>
             ) : (
               spamReasonData.map((item, idx) => {
-                const pct = spam.length > 0 ? Math.round((item.value / spam.length) * 100) : 0;
+                const pct = spamCount > 0 ? Math.round((item.value / spamCount) * 100) : 0;
                 return (
                   <div key={item.name} className="space-y-1 text-[13px]">
                     <div className="flex flex-wrap items-center justify-between gap-3">

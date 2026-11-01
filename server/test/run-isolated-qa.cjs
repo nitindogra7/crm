@@ -18,7 +18,7 @@ async function main() {
     console.log("Running QA in temporary schema " + schema);
     run("prisma/build/index.js", ["migrate", "deploy"]);
     run("prisma/build/index.js", ["migrate", "diff", "--from-schema-datasource", "prisma/schema.prisma", "--to-schema-datamodel", "prisma/schema.prisma", "--exit-code"]);
-    for (const file of ["leads-qa", "leads-http", "performance-regression", "security-and-spam", "environment-origin-verifier", "production-readiness"]) {
+    for (const file of ["leads-qa", "leads-http", "performance-regression", "security-and-spam", "environment-origin-verifier", "production-readiness", "dashboard-read-model"]) {
       run("tsx/cli", ["test/" + file + ".test.ts"]);
     }
   } finally {

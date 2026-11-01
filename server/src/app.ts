@@ -6,7 +6,13 @@ import { clerkMiddleware } from "@clerk/express";
 import { prisma } from "./prisma";
 import { onboardingRouter } from "./modules/onboarding/onboarding.routes";
 import { formsAndApiRouter } from "./modules/forms & api/formsAndApi.routes";
-import { formsAndApiController } from "./modules/forms & api/formsAndApi.controller";
+import { ingestionController } from "./modules/ingestion/ingestion.controller";
+import { formsRouter } from "./modules/forms/forms.routes";
+import { dashboardsRouter } from "./modules/dashboards/dashboards.routes";
+import { apikeysRouter } from "./modules/api-keys/api-keys.routes";
+import { spamRouter } from "./modules/spam/spam.routes";
+import { dashboardRouter } from "./modules/dashboard/dashboard.routes";
+import { statsRouter } from "./modules/stats/stats.routes";
 import { leadsRouter } from "./modules/leads/leads.routes";
 import { publicFormRateLimiter, publicFormBurstLimiter } from "./middleware/rateLimiter";
 import { dynamicFormCorsMiddleware } from "./middleware/corsOriginVerifier";
@@ -99,11 +105,17 @@ app.use((req, res, next) => {
 
 // Mounted Routes
 app.use("/api/onboarding", onboardingRouter);
+app.use("/api/dashboards", dashboardsRouter);
+app.use("/api/dashboard", dashboardRouter);
+app.use("/api/api-keys", apikeysRouter);
+app.use("/api/spam", spamRouter);
+app.use("/api/stats", statsRouter);
 app.use("/api/leads", leadsRouter);
 app.use("/api/forms-and-api/leads", leadsRouter);
 app.use("/api/forms/leads", leadsRouter);
 app.use("/api/forms-and-api", formsAndApiRouter);
 app.use("/api/forms", formsAndApiRouter);
+app.use("/api/forms", formsRouter);
 
 // Public form endpoint aliases for direct HTML form actions
 app.use("/api/v1/f", (req, res, next) => {
@@ -115,10 +127,10 @@ app.use("/api/f", (req, res, next) => {
   formsAndApiRouter(req, res, next);
 });
 app.post("/api/v1/leads", publicFormBurstLimiter, publicFormRateLimiter, (req, res) => {
-  formsAndApiController.submitForm(req, res);
+  ingestionController.submitForm(req, res);
 });
 app.post("/v1/leads", publicFormBurstLimiter, publicFormRateLimiter, (req, res) => {
-  formsAndApiController.submitForm(req, res);
+  ingestionController.submitForm(req, res);
 });
 
 app.all(["/api/v1/leads", "/v1/leads"], (_req, res) => {

@@ -29,7 +29,8 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
     simulateLeadSubmissionAsync,
     addToast,
     startTour,
-  } = useDashboard(["workspace","forms","simulateLeadSubmissionAsync","addToast","startTour"]);
+    ensureFormsLoaded,
+  } = useDashboard(["workspace","forms","simulateLeadSubmissionAsync","addToast","startTour","ensureFormsLoaded"]);
 
   const getPageTitle = () => {
     if (title) return title;
@@ -151,7 +152,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
           <button
             data-tour="simulate-lead-btn"
             type="button"
-            onClick={() => setIsQuickSimulateOpen(true)}
+            onClick={() => { setIsQuickSimulateOpen(true); void ensureFormsLoaded().catch(() => addToast("Error", "Could not load forms. Please try again.", "error")); }}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-blue-200/80 bg-blue-50/90 hover:bg-blue-100 text-blue-700 hover:text-blue-800 text-xs font-semibold transition-all shadow-2xs cursor-pointer"
             aria-label="Send a test lead"
             title="Simulate an incoming lead locally"

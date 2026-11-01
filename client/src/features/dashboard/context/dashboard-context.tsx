@@ -8,12 +8,16 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
+import { ResourceCache } from "../data/resource-cache";
+import { resourcesForRoute, resourceEndpoints, type OverviewData, type AnalyticsData } from "../data/route-data";
 import { useShallow } from "zustand/react/shallow";
 import type { AppStoreState } from "@/shared/store/types";
 import { useAuth } from "@clerk/nextjs";
 import { useAppStore, useStats } from "@/shared/store";
 import { optimisticUpdate } from "@/shared/lib/optimistic-update";
-import { apiFetch } from "@/shared/lib/api-client";
+import { apiFetch, getApiMutationVersion } from "@/shared/lib/api-client";
 import type {
   FormItem,
   ApiKeyItem,
@@ -23,9 +27,12 @@ import type {
   LeadStatus,
   WorkspaceEnvironment,
 } from "@/shared/types";
-import { CreateOrganizationModal } from "../components/create-organization-modal";
+const CreateOrganizationModal = dynamic(() => import("../components/create-organization-modal").then(m => m.CreateOrganizationModal), { ssr: false });
 
 interface DashboardContextType {
+  overview: OverviewData | null;
+  analytics: AnalyticsData | null;
+  ensureFormsLoaded: () => Promise<void>;
   // Direct access to state & store
   organizations: OrganizationDashboard[];
   activeDashboardId: string | null;
@@ -113,6 +120,12 @@ export function DashboardProvider({
   initialWorkspace,
 }: DashboardProviderProps) {
   const { getToken } = useAuth();
+  const pathname = usePathname();
+  const activePathRef = useRef(pathname);
+  const [overview, setOverview] = useState<OverviewData | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [loadedRoute, setLoadedRoute] = useState<string | null>(null);
+  const cacheRef = useRef(new ResourceCache());
   const organizations = useAppStore((state) => state.organizations);
   const activeDashboardId = useAppStore((state) => state.activeDashboardId);
   const currentEnvironment = useAppStore(
@@ -149,70 +162,83 @@ export function DashboardProvider({
     }
   }, [initialWorkspace]);
 
-  // Load specific organization's forms, keys, leads, and spam filtered by environment
   const loadDashboardData = useCallback(
-    async (dashboardId: string, envOverride?: WorkspaceEnvironment) => {
+    async function loadRouteData(dashboardId: string, envOverride?: WorkspaceEnvironment, force = false): Promise<void> {
+      // A mutation started on a previous page must not cancel the current page's load.
+      if (pathname !== activePathRef.current) return;
       const requestId = ++dataRequestRef.current;
+      cacheRef.current.cancelPending();
       setIsRefreshing(true);
       setLoadError(null);
-      const state = useAppStore.getState();
-      const activeEnv = envOverride || state.currentEnvironment || "development";
+      const activeEnv = envOverride || useAppStore.getState().currentEnvironment || "development";
       const scope = dashboardId + ":" + activeEnv;
       if (loadedScopeRef.current !== scope) {
         loadedScopeRef.current = scope;
+        cacheRef.current.clear();
+        setOverview(null);
+        setAnalytics(null);
         useAppStore.setState({ forms: [], apiKeys: [], leads: [], spam: [], selectedLeadId: null, selectedSpamId: null, selectedFormId: null });
       }
+      const revision = getApiMutationVersion();
+      const query = new URLSearchParams({ dashboardId, environment: activeEnv, utcOffsetMinutes: String(-new Date().getTimezoneOffset()) });
       try {
-        const token = await getToken();
-
-        const [formsRes, keysRes, leadsRes, spamRes] = await Promise.all([
-          apiFetch<{ success: boolean; data: FormItem[] }>(
-            `/api/forms-and-api/forms?dashboardId=${dashboardId}&environment=${activeEnv}`,
-            { token }
-          ).catch(() => ({ success: false, data: [] })),
-
-          apiFetch<{ success: boolean; data: ApiKeyItem[] }>(
-            `/api/forms-and-api/keys?dashboardId=${dashboardId}&environment=${activeEnv}`,
-            { token }
-          ).catch(() => ({ success: false, data: [] })),
-
-          apiFetch<{ success: boolean; data: LeadItem[] }>(
-            `/api/leads?dashboardId=${dashboardId}&environment=${activeEnv}`,
-            { token }
-          ).catch(() => ({ success: false, data: [] })),
-
-          apiFetch<{ success: boolean; data: SpamItem[] }>(
-            `/api/forms-and-api/spam?dashboardId=${dashboardId}&environment=${activeEnv}`,
-            { token }
-          ).catch(() => ({ success: false, data: [] })),
-        ]);
-
+        const resources = resourcesForRoute(pathname);
+        const token = resources.length ? await getToken() : null;
         if (requestId !== dataRequestRef.current) return;
-        const s = useAppStore.getState();
-        if (![formsRes, keysRes, leadsRes, spamRes].every((response) => response.success)) {
-          setLoadError("Some workspace data could not be loaded. Please try again.");
+        const results = await Promise.all(resources.map(async resource => {
+          const endpoint = resourceEndpoints[resource] + "?" + query;
+          const response = await cacheRef.current.get<{ success: boolean; data: unknown }>(endpoint, revision,
+            signal => apiFetch(endpoint, { token, signal }), force);
+          if (!response.success) throw new Error("Could not load " + resource);
+          return { resource, data: response.data };
+        }));
+        if (requestId !== dataRequestRef.current) return;
+        if (revision !== getApiMutationVersion()) return loadRouteData(dashboardId, activeEnv, true);
+        const state = useAppStore.getState();
+        if (state.activeDashboardId !== dashboardId || state.currentEnvironment !== activeEnv) return;
+        for (const { resource, data } of results) {
+          if (resource === "overview") {
+            const value = data as OverviewData;
+            setOverview(value);
+            state.setForms(value.forms);
+            state.setLeads(value.leads);
+            cacheRef.current.seed(resourceEndpoints.forms + "?" + query, { success: true, data: value.forms }, revision);
+          } else if (resource === "analytics") setAnalytics(data as AnalyticsData);
+          else if (resource === "forms") state.setForms(data as FormItem[]);
+          else if (resource === "keys") state.setApiKeys(data as ApiKeyItem[]);
+          else if (resource === "leads") state.setLeads(data as LeadItem[]);
+          else if (resource === "spam") state.setSpam(data as SpamItem[]);
         }
-        if (formsRes.success && formsRes.data) {
-          s.setForms(formsRes.data);
+      } catch (error) {
+        if (requestId === dataRequestRef.current) {
+          console.warn("Failed loading route data:", error);
+          setLoadError("Could not load this page. Please try again.");
         }
-        if (keysRes.success && keysRes.data) {
-          s.setApiKeys(keysRes.data);
-        }
-        if (leadsRes.success && leadsRes.data) {
-          s.setLeads(leadsRes.data);
-        }
-        if (spamRes.success && spamRes.data) {
-          s.setSpam(spamRes.data);
-        }
-      } catch (err) {
-        console.warn("Failed loading dashboard data:", err);
-        if (requestId === dataRequestRef.current) setLoadError("Could not load workspace data. Please try again.");
       } finally {
-        if (requestId === dataRequestRef.current) setIsRefreshing(false);
+        if (requestId === dataRequestRef.current) {
+          setIsRefreshing(false);
+          setLoadedRoute(scope + ":" + pathname);
+        }
       }
-    },
-    [getToken]
+    }, [getToken, pathname]
   );
+
+  const ensureFormsLoaded = useCallback(async () => {
+    const state = useAppStore.getState();
+    if (!state.activeDashboardId) return;
+    const { activeDashboardId: dashboardId, currentEnvironment: environment } = state;
+    const token = await getToken();
+    const query = new URLSearchParams({ dashboardId, environment, utcOffsetMinutes: String(-new Date().getTimezoneOffset()) });
+    const response = await cacheRef.current.get<{ success: boolean; data: FormItem[] }>(resourceEndpoints.forms + "?" + query, getApiMutationVersion(),
+      signal => apiFetch(resourceEndpoints.forms + "?" + query, { token, signal }));
+    const current = useAppStore.getState();
+    if (response.success && current.activeDashboardId === dashboardId && current.currentEnvironment === environment) current.setForms(response.data);
+  }, [getToken]);
+
+  const refreshOverviewAfterWrite = useCallback(async () => {
+    const state = useAppStore.getState();
+    if (pathname === "/dashboard" && state.activeDashboardId) await loadDashboardData(state.activeDashboardId, state.currentEnvironment, true);
+  }, [pathname, loadDashboardData]);
 
   // Load all user's organizations / dashboards from backend
   const loadDashboards = useCallback(async () => {
@@ -221,7 +247,7 @@ export function DashboardProvider({
       const res = await apiFetch<{
         success: boolean;
         data: OrganizationDashboard[];
-      }>("/api/forms-and-api/dashboards", { token }).catch(() => {
+      }>("/api/dashboards", { token }).catch(() => {
         setLoadError("Could not connect to your workspace. Please try again.");
         return null;
       });
@@ -273,10 +299,7 @@ export function DashboardProvider({
 
     async function init() {
       try {
-        const active = await loadDashboards();
-        if (active) {
-          await loadDashboardData(active.id, active.env);
-        }
+        await loadDashboards();
       } catch (err) {
         console.warn("Could not sync initial dashboard data:", err);
       } finally {
@@ -285,7 +308,15 @@ export function DashboardProvider({
     }
 
     init();
-  }, [loadDashboards, loadDashboardData]);
+  }, [loadDashboards]);
+
+  useEffect(() => {
+    const request = dataRequestRef;
+    const cache = cacheRef.current;
+    activePathRef.current = pathname;
+    if (!isLoading && activeDashboardId) void loadDashboardData(activeDashboardId, currentEnvironment);
+    return () => { request.current++; cache.cancelPending(); };
+  }, [activeDashboardId, currentEnvironment, loadDashboardData, isLoading, pathname]);
 
   // Switch Environment (Clerk-style Development <-> Production toggle)
   const switchEnvironment = useCallback(
@@ -295,18 +326,14 @@ export function DashboardProvider({
       s.updateWorkspace({ activeEnvironment: env });
 
       if (s.activeDashboardId) {
-        setIsLoading(true);
-        await loadDashboardData(s.activeDashboardId, env);
-
-        setIsLoading(false);
-
         // Persist the preference without blocking the freshly loaded view.
         void (async () => { try {
           const token = await getToken();
-          await apiFetch(`/api/forms-and-api/dashboards/${s.activeDashboardId}`, {
+          await apiFetch(`/api/dashboards/${s.activeDashboardId}`, {
             method: "PATCH",
             token,
             body: JSON.stringify({ activeEnvironment: env }),
+            invalidateResources: false,
           });
         } catch (err) {
           console.warn("Could not sync activeEnvironment to backend:", err);
@@ -320,7 +347,7 @@ export function DashboardProvider({
         );
       }
     },
-    [loadDashboardData, getToken]
+    [getToken]
   );
 
   // Update Production Origin
@@ -334,7 +361,7 @@ export function DashboardProvider({
       const res = await apiFetch<{
         success: boolean;
         data: OrganizationDashboard;
-      }>(`/api/forms-and-api/dashboards/${s.activeDashboardId}`, {
+      }>(`/api/dashboards/${s.activeDashboardId}`, {
         method: "PATCH",
         token,
         body: JSON.stringify({ productionOrigin: trimmed || null }),
@@ -370,7 +397,6 @@ export function DashboardProvider({
       const org = s.organizations.find((o) => o.id === id);
       if (!org) return;
 
-      setIsLoading(true);
       s.setActiveDashboardId(id);
       const orgEnv = org.activeEnvironment || "development";
       s.setCurrentEnvironment(orgEnv);
@@ -388,11 +414,10 @@ export function DashboardProvider({
         createdAt: org.createdAt,
       });
 
-      await loadDashboardData(id, orgEnv);
-      setIsLoading(false);
+
       s.addToast("Workspace switched", `Now viewing ${org.name}.`);
     },
-    [loadDashboardData]
+    []
   );
 
   // Create organization
@@ -408,7 +433,7 @@ export function DashboardProvider({
       const res = await apiFetch<{
         success: boolean;
         data: OrganizationDashboard;
-      }>("/api/forms-and-api/dashboards", {
+      }>("/api/dashboards", {
         method: "POST",
         token,
         body: JSON.stringify(input),
@@ -441,7 +466,7 @@ export function DashboardProvider({
       const targetEnv = input.environment || s.currentEnvironment || "development";
 
       const res = await apiFetch<{ success: boolean; data: FormItem }>(
-        "/api/forms-and-api/forms",
+        "/api/forms",
         {
           method: "POST",
           token,
@@ -465,18 +490,20 @@ export function DashboardProvider({
         ...latest.forms.filter((f) => f.id !== form.id && !f.id.startsWith("form_")),
       ]);
       latest.addToast("Form created", `Endpoint generated for ${form.name} in ${targetEnv} mode.`);
+      await refreshOverviewAfterWrite();
       return form;
     },
-    [getToken]
+    [getToken, refreshOverviewAfterWrite]
   );
 
   // Update form
   const updateFormAsync = useCallback(async (id: string, updates: Partial<FormItem>) => {
     await optimisticUpdate(() => useAppStore.setState(state => ({ forms: state.forms.map(form => form.id === id ? { ...form, ...updates } : form) })), async () => {
       const token = await getToken();
-      await apiFetch("/api/forms-and-api/forms/" + id, { method: "PATCH", token, body: JSON.stringify(updates) });
+      await apiFetch("/api/forms/" + id, { method: "PATCH", token, body: JSON.stringify(updates) });
     });
-  }, [getToken]);
+    await refreshOverviewAfterWrite();
+  }, [getToken, refreshOverviewAfterWrite]);
 
   const toggleFormEnabledAsync = useCallback(async (id: string) => {
     const form = useAppStore.getState().forms.find(item => item.id === id);
@@ -486,10 +513,11 @@ export function DashboardProvider({
   const deleteFormAsync = useCallback(async (id: string) => {
     await optimisticUpdate(() => useAppStore.setState(state => ({ forms: state.forms.filter(form => form.id !== id) })), async () => {
       const token = await getToken();
-      await apiFetch("/api/forms-and-api/forms/" + id, { method: "DELETE", token });
+      await apiFetch("/api/forms/" + id, { method: "DELETE", token });
     });
     useAppStore.getState().addToast("Form deleted", "The endpoint has been removed.");
-  }, [getToken]);
+    await refreshOverviewAfterWrite();
+  }, [getToken, refreshOverviewAfterWrite]);
 
   const createApiKeyAsync = useCallback(
     async (
@@ -504,7 +532,7 @@ export function DashboardProvider({
       const defaultName = targetEnv === "production" ? "Production API Key" : "Development API Key";
 
       const res = await apiFetch<{ success: boolean; data: ApiKeyItem }>(
-        "/api/forms-and-api/keys",
+        "/api/api-keys",
         {
           method: "POST",
           token,
@@ -542,7 +570,7 @@ export function DashboardProvider({
       const keyEnv = env || (targetEnv === "production" ? "live" : "test");
 
       const res = await apiFetch<{ success: boolean; data: ApiKeyItem }>(
-        "/api/forms-and-api/keys/regenerate",
+        "/api/api-keys/regenerate",
         {
           method: "POST",
           token,
@@ -560,6 +588,7 @@ export function DashboardProvider({
 
       const key = res.data;
       const latest = useAppStore.getState();
+      if (s.activeDashboardId !== latest.activeDashboardId || targetEnv !== latest.currentEnvironment) return key;
       latest.setApiKeys([key]);
       latest.addToast(
         "API Key rotated",
@@ -575,7 +604,7 @@ export function DashboardProvider({
     if (!keyId) return;
     await optimisticUpdate(() => useAppStore.setState(state => ({ apiKeys: state.apiKeys.map(key => key.id === keyId ? { ...key, revoked: true } : key) })), async () => {
       const token = await getToken();
-      await apiFetch("/api/forms-and-api/keys/" + keyId + "/revoke", { method: "POST", token });
+      await apiFetch("/api/api-keys/" + keyId + "/revoke", { method: "POST", token });
     });
   }, [getToken]);
 
@@ -596,14 +625,16 @@ export function DashboardProvider({
       forms: state.forms.map(form => form.id === formId ? { ...form, leadCount: form.leadCount + 1 } : form),
     }));
     current.addToast("Test lead received", "Open Leads to inspect the saved submission.");
-  }, [getToken]);
+    if (pathname === "/dashboard" && current.activeDashboardId) await loadDashboardData(current.activeDashboardId, current.currentEnvironment, true);
+  }, [getToken, pathname, loadDashboardData]);
 
   const updateLeadStatusAsync = useCallback(async (id: string, status: LeadStatus) => {
     await optimisticUpdate(() => useAppStore.setState(state => ({ leads: state.leads.map(lead => lead.id === id ? { ...lead, status } : lead) })), async () => {
       const token = await getToken();
       await apiFetch("/api/leads/" + id + "/status", { method: "PATCH", token, body: JSON.stringify({ status }) });
     });
-  }, [getToken]);
+    await refreshOverviewAfterWrite();
+  }, [getToken, refreshOverviewAfterWrite]);
 
   const deleteLeadAsync = useCallback(async (id: string) => {
     const lead = useAppStore.getState().leads.find(item => item.id === id);
@@ -617,7 +648,8 @@ export function DashboardProvider({
     const current = useAppStore.getState();
     if (current.selectedLeadId === id) current.setSelectedLeadId(null);
     current.addToast("Lead deleted", "The lead has been removed.");
-  }, [getToken]);
+    await refreshOverviewAfterWrite();
+  }, [getToken, refreshOverviewAfterWrite]);
 
   const batchDeleteLeadsAsync = useCallback(async (ids: string[]) => {
     const dashboardId = useAppStore.getState().activeDashboardId;
@@ -646,7 +678,7 @@ export function DashboardProvider({
   const rescueSpamLeadAsync = useCallback(async (spamId: string) => {
     const scope = useAppStore.getState();
     const token = await getToken();
-    const response = await apiFetch<{ success: boolean; data: LeadItem }>("/api/forms-and-api/spam/" + spamId + "/rescue", { method: "POST", token });
+    const response = await apiFetch<{ success: boolean; data: LeadItem }>("/api/spam/" + spamId + "/rescue", { method: "POST", token });
     if (!response.success || !response.data) throw new Error("The submission could not be rescued.");
     const current = useAppStore.getState();
     if (scope.activeDashboardId !== current.activeDashboardId || scope.currentEnvironment !== current.currentEnvironment) return;
@@ -661,19 +693,22 @@ export function DashboardProvider({
   const refreshDashboardData = useCallback(async () => {
     const s = useAppStore.getState();
     if (s.activeDashboardId) {
-      await loadDashboardData(s.activeDashboardId, s.currentEnvironment);
+      await loadDashboardData(s.activeDashboardId, s.currentEnvironment, true);
     } else {
       setIsRefreshing(true);
-      try { const active = await loadDashboards(); if (active) await loadDashboardData(active.id, active.env); }
+      try { await loadDashboards(); }
       finally { setIsRefreshing(false); }
     }
   }, [loadDashboardData, loadDashboards]);
 
   const value: DashboardContextType = {
+    overview,
+    analytics,
+    ensureFormsLoaded,
     organizations,
     activeDashboardId,
     currentEnvironment,
-    isLoading,
+    isLoading: isLoading || isRefreshing || (!!activeDashboardId && loadedRoute !== activeDashboardId + ":" + currentEnvironment + ":" + pathname),
     loadError,
     isRefreshing,
     isCreateOrgOpen,
@@ -701,10 +736,10 @@ export function DashboardProvider({
   return (
     <Context.Provider value={value}>
       {children}
-      <CreateOrganizationModal
+      {isCreateOrgOpen && <CreateOrganizationModal
         isOpen={isCreateOrgOpen}
         onClose={() => setIsCreateOrgOpen(false)}
-      />
+      />}
     </Context.Provider>
   );
 }
@@ -720,6 +755,9 @@ export function useDashboard(keys?: readonly (keyof AppStoreState | keyof Dashbo
     ...store,
     stats,
     ...(context || {
+      overview: null,
+      analytics: null,
+      ensureFormsLoaded: async () => {},
       organizations: store.organizations,
       activeDashboardId: store.activeDashboardId,
       currentEnvironment: (store.currentEnvironment || "development") as WorkspaceEnvironment,

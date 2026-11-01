@@ -116,6 +116,9 @@ export async function dynamicFormCorsMiddleware(
     let allowedOriginsList: string[] = [];
     let formAllowedDomains: string[] = [];
 
+    const context: import("../modules/ingestion/ingestion-context").IngestionContext = {};
+    res.locals.ingestionContext = context;
+
     // 1. If form slug or ID exists, lookup form and its parent dashboard
     if (formSlug || formId) {
       const form = formId
@@ -129,6 +132,7 @@ export async function dynamicFormCorsMiddleware(
           });
 
       if (form) {
+        context.form = form;
         targetEnvironment = form.environment || "development";
         productionOrigin = form.dashboard?.productionOrigin || null;
         allowedOriginsList = form.dashboard?.allowedOrigins || [];
@@ -142,6 +146,7 @@ export async function dynamicFormCorsMiddleware(
       });
 
       if (keyRecord) {
+        context.apiKey = keyRecord;
         targetEnvironment = keyRecord.environment || (keyRecord.keyPrefix.includes("live") ? "production" : "development");
         productionOrigin = keyRecord.dashboard?.productionOrigin || null;
         allowedOriginsList = keyRecord.dashboard?.allowedOrigins || [];

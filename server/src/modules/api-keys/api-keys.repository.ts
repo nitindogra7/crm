@@ -55,9 +55,14 @@ export class ApiKeysRepository {
     });
   }
   async touchApiKeyLastUsed(id: string): Promise<void> {
-    await prisma.apiKey.update({
-      where: { id },
-      data: { lastUsedAt: new Date() },
+    const now = new Date();
+    // The database predicate also suppresses duplicate writes from concurrent requests.
+    await prisma.apiKey.updateMany({
+      where: { id, revoked: false, OR: [
+        { lastUsedAt: null },
+        { lastUsedAt: { lte: new Date(now.getTime() - 60_000) } },
+      ] },
+      data: { lastUsedAt: now },
     });
   }
 }

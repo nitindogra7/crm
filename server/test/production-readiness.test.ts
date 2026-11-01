@@ -137,10 +137,10 @@ async function main() {
       let forwarded = false;
       await dynamicFormCorsMiddleware(
         { path: "/api/f/test", headers: {}, params: {}, query: {} } as Request,
-        { vary() {}, setHeader() {} } as unknown as Response,
+        { locals: {}, vary() {}, setHeader() {} } as unknown as Response,
         (error?: unknown) => { forwarded = true; forwardedError = error; }
       );
-      check(forwarded && forwardedError instanceof Error, "Origin lookup failures reach the error handler");
+      check(forwarded && forwardedError instanceof Error && forwardedError.message === "Injected lookup failure", "Origin lookup failures reach the error handler");
     } finally {
       prisma.form.findFirst = originalLookup;
     }

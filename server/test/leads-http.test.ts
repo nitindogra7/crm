@@ -29,6 +29,13 @@ async function runHttpTests() {
   const address = server.address() as { port: number };
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
+  let formReads = 0; let keyReads = 0; let dashboardReads = 0;
+  const originalFormRead = prisma.form.findFirst;
+  const originalKeyRead = prisma.apiKey.findUnique;
+  const originalDashboardRead = prisma.dashboard.findUnique;
+  prisma.form.findFirst = ((...args: any[]) => { formReads++; return (originalFormRead as any)(...args); }) as typeof originalFormRead;
+  prisma.apiKey.findUnique = ((...args: any[]) => { keyReads++; return (originalKeyRead as any)(...args); }) as typeof originalKeyRead;
+  prisma.dashboard.findUnique = ((...args: any[]) => { dashboardReads++; return (originalDashboardRead as any)(...args); }) as typeof originalDashboardRead;
   try {
     // Setup dashboard & API key
     const dashboard = await prisma.dashboard.create({
@@ -71,6 +78,8 @@ async function runHttpTests() {
       }),
     });
 
+    assert(formReads === 1 && dashboardReads === 0, "Public POST reuses CORS form/workspace lookup");
+    assert(/^app;dur=\d+\.\d+$/.test(res1.headers.get("server-timing") || ""), "Server-Timing includes application duration");
     assert(res1.status === 200, "1.1 Form submission HTTP status 200");
     const data1 = (await res1.json()) as any;
     assert(data1.success === true, "1.2 Form submission success is true");
@@ -104,6 +113,7 @@ async function runHttpTests() {
       }),
     });
 
+    assert(keyReads === 1 && dashboardReads === 0, "API-key POST reuses CORS key/workspace lookup");
     assert(res3.status === 200, "3.1 /api/v1/leads HTTP status 200 with API key");
     const data3 = (await res3.json()) as any;
     assert(data3.success === true, "3.2 /api/v1/leads success true");
@@ -158,6 +168,9 @@ async function runHttpTests() {
     console.error("HTTP QA TEST ERROR:", err);
     failed++;
   } finally {
+    prisma.form.findFirst = originalFormRead;
+    prisma.apiKey.findUnique = originalKeyRead;
+    prisma.dashboard.findUnique = originalDashboardRead;
     console.log("Cleaning up HTTP test data...");
     await prisma.lead.deleteMany({
       where: { dashboard: { userId: testUserId } },

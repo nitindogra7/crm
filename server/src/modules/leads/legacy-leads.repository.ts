@@ -16,22 +16,24 @@ export class LegacyLeadsRepository {
     extraFields?: Prisma.InputJsonValue;
     metadata?: Prisma.InputJsonValue;
   }): Promise<LeadRecord> {
+    const create = (tx: Prisma.TransactionClient) => tx.lead.create({
+      data: {
+        dashboardId: data.dashboardId,
+        formId: data.formId ?? null,
+        formName: data.formName,
+        name: data.name,
+        email: data.email,
+        message: data.message ?? "",
+        source: data.source ?? "Website embed",
+        status: data.status ?? "New",
+        environment: data.environment ?? "development",
+        extraFields: data.extraFields ?? Prisma.JsonNull,
+        metadata: data.metadata ?? Prisma.JsonNull,
+      },
+    });
+    if (!data.formId) return create(prisma);
     return prisma.$transaction(async (tx) => {
-      const lead = await tx.lead.create({
-        data: {
-          dashboardId: data.dashboardId,
-          formId: data.formId ?? null,
-          formName: data.formName,
-          name: data.name,
-          email: data.email,
-          message: data.message ?? "",
-          source: data.source ?? "Website embed",
-          status: data.status ?? "New",
-          environment: data.environment ?? "development",
-          extraFields: data.extraFields ?? Prisma.JsonNull,
-          metadata: data.metadata ?? Prisma.JsonNull,
-        },
-      });
+      const lead = await create(tx);
       if (lead.formId) {
         await tx.form.update({
           where: { id: lead.formId },

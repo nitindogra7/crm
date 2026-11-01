@@ -1,23 +1,37 @@
 import { Prisma } from "@prisma/client";
 import { prisma, sqlTable } from "../../prisma";
 import { FormsRepository } from "../forms/forms.repository";
-import { StatsRepository } from "../stats/stats.repository";
+import { statsWindow } from "../stats/stats-window";
 
 export class DashboardRepository {
   async overview(dashboardId: string, environment: string, utcOffsetMinutes?: number) {
     const where = { dashboardId, environment };
-    const [stats, forms, leads, sources, formCounts, newLeads] = await Promise.all([
-      new StatsRepository().getStats(dashboardId, environment, utcOffsetMinutes),
+    const { startOfToday, sevenDaysAgo } = statsWindow(utcOffsetMinutes);
+    const [groups, forms, leads] = await Promise.all([
+      prisma.$queryRaw<Array<{ grouping: number; source: string | null; formId: string | null; count: number;
+        leadsToday: number; leadsThisWeek: number; newLeads: number; spamFlagged: number;
+      }>>(Prisma.sql`
+        SELECT GROUPING("source", "formId") AS "grouping", "source", "formId", COUNT(*)::int AS "count",
+          COUNT(*) FILTER (WHERE "receivedAt" >= ${startOfToday})::int AS "leadsToday",
+          COUNT(*) FILTER (WHERE "receivedAt" >= ${sevenDaysAgo})::int AS "leadsThisWeek",
+          COUNT(*) FILTER (WHERE "status" = 'New')::int AS "newLeads",
+          (SELECT COUNT(*)::int FROM ${sqlTable("spam")} WHERE "dashboardId" = ${dashboardId}
+            AND "environment" = ${environment}) AS "spamFlagged"
+        FROM ${sqlTable("leads")} WHERE "dashboardId" = ${dashboardId} AND "environment" = ${environment}
+        GROUP BY GROUPING SETS ((), ("source"), ("formId"))
+      `),
       new FormsRepository().findFormsByDashboardId(dashboardId, environment),
       prisma.lead.findMany({ where, orderBy: [{ receivedAt: "desc" }, { id: "desc" }], take: 6 }),
-      prisma.lead.groupBy({ by: ["source"], where, _count: { _all: true } }),
-      prisma.lead.groupBy({ by: ["formId"], where, _count: { _all: true } }),
-      prisma.lead.count({ where: { ...where, status: "New" } }),
     ]);
-    const counts = new Map(formCounts.map(row => [row.formId, row._count._all]));
+    const totals = groups.find(row => row.grouping === 3)!;
+    const counts = new Map(groups.filter(row => row.grouping === 2).map(row => [row.formId, row.count]));
     return {
-      stats, forms, leads, newLeads,
-      sourceCounts: sources.map(row => ({ source: row.source, count: row._count._all })).sort((a, b) => b.count - a.count),
+      stats: { totalLeads: totals.count, leadsToday: totals.leadsToday,
+        leadsThisWeek: totals.leadsThisWeek, spamFlagged: totals.spamFlagged },
+      forms, leads, newLeads: totals.newLeads,
+      sourceCounts: groups.filter(row => row.grouping === 1).map(row => ({
+        source: row.source!, count: row.count,
+      })).sort((a, b) => b.count - a.count),
       formCounts: forms.map(form => ({ id: form.id, name: form.name, count: counts.get(form.id) || 0 })).sort((a, b) => b.count - a.count),
     };
   }

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
+import styles from "./onboarding.module.css";
 import { USE_CASES, TEAM_SIZES } from "../constants";
 import { TeamSize } from "../types";
 
@@ -34,7 +35,7 @@ export function OnboardingForm({
   onSubmit,
 }: OnboardingFormProps) {
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className={styles.form}>
       {/* 1. Workspace Name */}
       <div className="space-y-1">
         <label
@@ -54,9 +55,9 @@ export function OnboardingForm({
             className="bg-transparent border-0 text-slate-900 placeholder:text-slate-400 text-[13.5px] transition-all outline-none font-sans w-full h-full shadow-none"
           />
         </div>
-        <p className="text-[11.5px] text-slate-400 font-sans flex items-center gap-1 pt-0.5">
+        <p className="text-[11.5px] text-slate-400 font-sans flex flex-wrap items-center gap-1 pt-0.5">
           <span>Your routing handle:</span>
-          <span className="text-slate-600 font-medium font-mono">
+          <span className="text-slate-600 font-medium font-mono break-all">
             infraly.com/w/{activeSlug}
           </span>
         </p>
@@ -67,7 +68,7 @@ export function OnboardingForm({
         <label className="text-[12.5px] font-sans font-semibold text-slate-700 block">
           What describes your business best?
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {USE_CASES.map((uc) => {
             const isSelected = useCase === uc.id;
             const Icon = uc.icon;
@@ -77,7 +78,7 @@ export function OnboardingForm({
                 type="button"
                 onClick={() => onSelectUseCase(uc.id)}
                 aria-pressed={isSelected}
-                className={`p-3 rounded-xl border text-left transition-all flex items-start gap-2.5 cursor-pointer ${
+                className={`${styles.choice} p-3 rounded-xl border text-left transition-all flex items-start gap-2.5 cursor-pointer ${
                   isSelected
                     ? "bg-blue-50/80 border-blue-600 text-slate-900 ring-2 ring-blue-500/20 shadow-xs"
                     : "bg-slate-50/60 hover:bg-slate-50 border-slate-200/90 text-slate-700 hover:border-slate-300"
@@ -86,7 +87,7 @@ export function OnboardingForm({
                 <div
                   className={`p-1.5 rounded-lg border shrink-0 mt-0.5 transition-colors ${
                     isSelected
-                      ? "bg-blue-600 border-blue-600 text-white"
+                      ? "bg-[var(--ui-action)] border-blue-600 text-white"
                       : "bg-white border-slate-200 text-slate-500"
                   }`}
                 >
@@ -100,7 +101,7 @@ export function OnboardingForm({
                   >
                     {uc.label}
                   </div>
-                  <p className="text-[11px] text-slate-500 font-sans mt-0.5 line-clamp-1 leading-normal">
+                  <p className={`${styles.choiceDescription} text-[11px] text-slate-500 font-sans mt-0.5`}>
                     {uc.description}
                   </p>
                 </div>
@@ -126,7 +127,7 @@ export function OnboardingForm({
                 aria-pressed={isSelected}
                 className={`py-2 px-1.5 rounded-xl border text-center transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-blue-600 border-blue-600 text-white font-semibold shadow-xs ring-2 ring-blue-500/20"
+                    ? "bg-[var(--ui-action)] border-blue-600 text-white font-semibold shadow-xs ring-2 ring-blue-500/20"
                     : "bg-slate-50/60 hover:bg-slate-50 border-slate-200/90 text-slate-700 hover:border-slate-300 font-medium"
                 }`}
               >
@@ -151,7 +152,7 @@ export function OnboardingForm({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full bg-[#2563eb] hover:bg-blue-700 text-white font-semibold text-[13.5px] rounded-xl h-[42px] transition-all shadow-md shadow-blue-500/25 active:scale-[0.99] cursor-pointer mt-3 flex items-center justify-center gap-2 font-sans disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full bg-[var(--ui-action)] hover:bg-[var(--ui-action-hover)] text-white font-semibold text-[13.5px] rounded-xl h-[42px] transition-all shadow-md shadow-blue-500/25 active:scale-[0.99] cursor-pointer mt-3 flex items-center justify-center gap-2 font-sans disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isSubmitting ? (
           <>

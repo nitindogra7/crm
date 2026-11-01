@@ -267,7 +267,7 @@ export function Topbar({ onOpenMobileMenu, title }: TopbarProps) {
                 <button
                   type="submit"
                   disabled={forms.length === 0 || isSimulating}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--ui-action)] hover:bg-[var(--ui-action-hover)] text-white font-semibold text-xs shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
                 >
                   {isSimulating ? (
                     <span className="sr-only">Working</span>

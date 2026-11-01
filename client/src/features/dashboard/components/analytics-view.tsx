@@ -21,7 +21,7 @@ import { Download } from "lucide-react";
 
 type TimeRange = "7d" | "30d" | "90d";
 
-const SOURCE_COLORS = ["#2563eb", "#06b6d4", "#10b981", "#8b5cf6", "#f59e0b"];
+const SOURCE_COLORS = ["#55a3f4", "#06b6d4", "#10b981", "#8b5cf6", "#f59e0b"];
 const SPAM_COLORS = ["#f59e0b", "#ef4444", "#f97316", "#eab308"];
 
 function useHydrated() {
@@ -308,7 +308,7 @@ export function AnalyticsView() {
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] font-sans">
             <span className="flex items-center gap-1.5 text-slate-700 font-medium">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[var(--ui-action)]" />
               Verified Leads
             </span>
             <span className="flex items-center gap-1.5 text-slate-700 font-medium">
@@ -324,8 +324,8 @@ export function AnalyticsView() {
               <AreaChart data={timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="leadGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#55a3f4" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#55a3f4" stopOpacity={0.0} />
                   </linearGradient>
                   <linearGradient id="spamGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
@@ -352,7 +352,7 @@ export function AnalyticsView() {
                   type="monotone"
                   dataKey="leads"
                   name="Verified Leads"
-                  stroke="#2563eb"
+                  stroke="#55a3f4"
                   strokeWidth={2.5}
                   fillOpacity={1}
                   fill="url(#leadGradient)"
@@ -419,7 +419,7 @@ export function AnalyticsView() {
                     allowDecimals={false}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar isAnimationActive={false} dataKey="leads" name="Verified Leads" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                  <Bar isAnimationActive={false} dataKey="leads" name="Verified Leads" fill="#55a3f4" radius={[6, 6, 0, 0]} />
                   <Bar isAnimationActive={false} dataKey="spam" name="Blocked Spam" fill="#f59e0b" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -595,7 +595,7 @@ export function AnalyticsView() {
                     allowDecimals={false}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar isAnimationActive={false} dataKey="count" name="Submissions" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                  <Bar isAnimationActive={false} dataKey="count" name="Submissions" fill="#55a3f4" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : null}

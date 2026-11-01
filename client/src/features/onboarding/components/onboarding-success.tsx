@@ -39,7 +39,7 @@ export function OnboardingSuccess({
       <button
         type="button"
         onClick={onEnterDashboard}
-        className="w-full h-[42px] rounded-xl bg-[#2563eb] hover:bg-blue-700 text-white font-semibold text-[13px] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-blue-500/25 active:scale-[0.99] font-sans"
+        className="w-full h-[42px] rounded-xl bg-[var(--ui-action)] hover:bg-[var(--ui-action-hover)] text-white font-semibold text-[13px] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-blue-500/25 active:scale-[0.99] font-sans"
       >
         <span>Open Dashboard Now</span>
         <ArrowRight className="w-4 h-4" />

@@ -3,12 +3,14 @@
 import styles from "./sidebar.module.css";
 import React, { useState, useRef, useEffect, useSyncExternalStore } from "react";
 import Link from "@/shared/components/app-link";
-import Image from "next/image";
+import { Brand } from "@/shared/components/brand";
 import { usePathname, useSearchParams } from "next/navigation";
 import { SETTINGS_SECTIONS, getSettingsSection } from "./settings-navigation";
 import { useDashboard } from "../context/dashboard-context";
 import {
   ArrowLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
   LayoutDashboard,
   Inbox,
   FileCode2,
@@ -26,9 +28,11 @@ import { UserButton } from "@clerk/nextjs";
 
 interface SidebarProps {
   onClose?: () => void;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
 }
 
-export function Sidebar({ onClose }: SidebarProps) {
+export function Sidebar({ onClose, collapsed = false, onToggleCollapsed }: SidebarProps) {
   const pathname = usePathname();
   const params = useSearchParams();
   const isSettings = pathname.startsWith("/dashboard/settings");
@@ -112,25 +116,38 @@ export function Sidebar({ onClose }: SidebarProps) {
 
   const initial = (workspace.name.charAt(0) || "W").toUpperCase();
 
+  const header = (
+    <div className={styles.brandRow}>
+      <div className={styles.brand}><Brand /></div>
+      {onToggleCollapsed && <button type="button" onClick={onToggleCollapsed} className={styles.collapseButton}
+        aria-label={collapsed ? "Expand sidebar" : "Minimize sidebar"}
+        title={collapsed ? "Expand sidebar" : "Minimize sidebar"} aria-expanded={!collapsed}>
+        {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+      </button>}
+      {onClose && <button type="button" onClick={onClose} className={styles.closeButton} aria-label="Close sidebar"><X size={18} /></button>}
+    </div>
+  );
+
   if (isSettings) {
     return (
-      <aside className={styles.sidebar}>
+      <aside className={styles.sidebar} data-collapsed={collapsed}>
+        {header}
         <nav aria-label="Settings navigation" className={styles.nav}>
-          <Link navigation href="/dashboard" onClick={onClose} className={styles.backLink}>
+          <Link navigation href="/dashboard" onClick={onClose} className={styles.backLink} aria-label="Back to workspace" title="Back to workspace">
             <ArrowLeft className={styles.navIcon} />
-            <span>Back to workspace</span>
+            <span className={styles.linkLabel}>Back to workspace</span>
           </Link>
           {SETTINGS_SECTIONS.map(section => {
             const Icon = section.icon;
             if (!section.available) {
-              return <button key={section.id} type="button" disabled className={styles.navLink} title={`${section.label} is coming soon`}>
-                <div className="flex items-center gap-2.5 min-w-0"><Icon className={styles.navIcon} /><span>{section.label}</span></div>
+              return <button key={section.id} type="button" disabled className={styles.navLink} aria-label={`${section.label} is coming soon`} title={`${section.label} is coming soon`}>
+                <div className="flex items-center gap-2.5 min-w-0"><Icon className={styles.navIcon} /><span className={styles.linkLabel}>{section.label}</span></div>
                 <span className={styles.badge}>Soon</span>
               </button>;
             }
             const href = "/dashboard/settings?tab=" + section.id;
             return (
-              <Link key={section.id} href={href} prefetch={false}
+              <Link key={section.id} href={href} prefetch={false} aria-label={section.label} title={section.label}
                 aria-current={activeSection === section.id ? "page" : undefined}
                 onClick={event => {
                   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -140,7 +157,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 }} className={styles.navLink}>
                 <div className="flex items-center gap-2.5 min-w-0">
                   <Icon className={styles.navIcon} />
-                  <span>{section.label}</span>
+                  <span className={styles.linkLabel}>{section.label}</span>
                 </div>
               </Link>
             );
@@ -151,44 +168,11 @@ export function Sidebar({ onClose }: SidebarProps) {
   }
 
   return (
-    <aside className={styles.sidebar}>
-      {/* Top Brand Header */}
-      <div className={styles.brandRow}>
-        <Link navigation
-          href="/"
-          className={styles.brand}
-        >
-          {/* Infraly Brand Logo */}
-          <div className={styles.brandMark}>
-            <Image
-              src="/favicon.ico"
-              alt="Infraly"
-              width={28}
-              height={28}
-              unoptimized
-              className="w-6 h-6 object-contain group-hover:scale-105 transition-transform"
-              priority
-            />
-          </div>
-          <span className="font-heading font-semibold tracking-tight text-[17px] text-white">
-            infraly
-          </span>
-        </Link>
-
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="md:hidden text-blue-100 hover:text-white p-2 rounded-lg transition-colors"
-            aria-label="Close sidebar"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
-      </div>
+    <aside className={styles.sidebar} data-collapsed={collapsed}>
+      {header}
 
       {/* Workspace Context & Multi-Organization Switcher */}
-      <div className="px-3 pt-3 pb-2 relative" ref={dropdownRef}>
+      <div className={styles.workspaceContainer} ref={dropdownRef}>
         <button
           type="button"
           onClick={() => setIsOrgDropdownOpen((prev) => !prev)}
@@ -201,7 +185,7 @@ export function Sidebar({ onClose }: SidebarProps) {
             <div className={styles.workspaceAvatar}>
               {initial}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className={styles.workspaceDetails}>
               <span className={styles.workspaceName}>
                 {workspace.name}
               </span>
@@ -219,7 +203,7 @@ export function Sidebar({ onClose }: SidebarProps) {
 
         {/* Organization Switcher Dropdown */}
         {isOrgDropdownOpen && (
-          <div className="absolute left-3 right-3 top-full mt-1.5 z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-1.5 animate-in fade-in zoom-in-95 duration-100">
+          <div className={`${styles.orgDropdown} absolute left-3 right-3 top-full mt-1.5 z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-1.5 animate-in fade-in zoom-in-95 duration-100`}>
             <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
               Organizations ({organizations.length > 0 ? organizations.length : 1})
             </div>
@@ -315,6 +299,8 @@ export function Sidebar({ onClose }: SidebarProps) {
             <Link navigation
               key={item.href}
               href={item.href}
+              aria-label={item.label}
+              title={item.label}
               prefetch={true}
               aria-current={item.active ? "page" : undefined}
               onClick={onClose}
@@ -324,7 +310,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 <Icon
                   className={styles.navIcon}
                 />
-                <span className="truncate">{item.label}</span>
+                <span className={styles.linkLabel}>{item.label}</span>
               </div>
 
               {item.badge && (
@@ -341,7 +327,7 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       {/* Sidebar Footer */}
       <div className={styles.footer}>
-        <div className="flex items-center gap-3">
+        <div className={styles.docsLink}>
           <Link navigation
             href="/docs"
             className="hover:text-slate-800 text-[11px] font-medium transition-colors flex items-center gap-1"
@@ -351,7 +337,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           </Link>
 
         </div>
-        <div className="flex items-center gap-2 min-h-[20px] min-w-[20px]">
+        <div className={styles.footerActions}>
           <Link navigation href="/dashboard/settings" onClick={onClose} aria-label="Settings" title="Settings" aria-current={pathname.startsWith("/dashboard/settings") ? "page" : undefined} className={styles.settingsLink}><Settings size={17} /></Link>
           {mounted ? (
             <UserButton

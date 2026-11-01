@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#2563eb",
+  themeColor: "#24bce8",
   width: "device-width",
   initialScale: 1,
 };
@@ -30,7 +30,8 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
+      { url: "/logo.svg", sizes: "any", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32" },
     ],
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
@@ -43,7 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider appearance={{ variables: { colorPrimary: "#303236", colorForeground: "#303236", colorMutedForeground: "#6d7888", borderRadius: "0.875rem", fontFamily: "var(--font-inter), Arial, sans-serif" } }}>
       <html
         lang="en"
         className={`${figtree.variable} ${inter.variable} h-full antialiased`}

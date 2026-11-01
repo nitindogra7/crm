@@ -29,7 +29,11 @@ export function DocsView() {
       let hash = "";
       try { hash = decodeURIComponent(window.location.hash.slice(1)); } catch { /* Ignore a malformed fragment. */ }
       const target = hash ? document.getElementById(hash) : null;
-      if (target) target.scrollIntoView({ block: "start", behavior: "instant" });
+      if (target) {
+        const details = target.querySelector("details");
+        if (details) details.open = true;
+        target.scrollIntoView({ block: "start", behavior: "instant" });
+      }
       else main.current?.scrollTo({ top: 0, behavior: "instant" });
     });
     return () => cancelAnimationFrame(frame);
@@ -43,7 +47,10 @@ export function DocsView() {
   }, []);
 
   function section(id: string) {
-    document.getElementById(id)?.scrollIntoView({ behavior: "instant", block: "start" });
+    const target = document.getElementById(id);
+    const details = target?.querySelector("details");
+    if (details) details.open = true;
+    target?.scrollIntoView({ behavior: "instant", block: "start" });
     window.history.replaceState(null, "", window.location.pathname + window.location.search + "#" + encodeURIComponent(id));
   }
 

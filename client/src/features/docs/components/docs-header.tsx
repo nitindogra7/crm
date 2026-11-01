@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Image from "next/image";
+import { Brand } from "@/shared/components/brand";
 import Link from "@/shared/components/app-link";
 import { ArrowUpRight, Menu, Search, X } from "lucide-react";
 import styles from "./docs.module.css";
@@ -36,10 +36,7 @@ export function DocsHeader({ searchQuery, onSearch, onOpenMenu, onHome }: DocsHe
     <header className={styles.header}>
       <div className={styles.headerBrand}>
         <button type="button" className={styles.menuButton} onClick={onOpenMenu} aria-label="Open documentation navigation"><Menu size={19} /></button>
-        <Link navigation href="/" className={styles.brand} aria-label="Infraly home">
-          <Image src="/favicon.ico" width={25} height={25} alt="" unoptimized />
-          <span>infraly</span>
-        </Link>
+        <Brand />
         <span className={styles.brandDivider}>/</span>
         <Link href="/docs" className={styles.docsLabel} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); onHome(); }}>Docs</Link>
       </div>

@@ -773,3 +773,62 @@ button:disabled { cursor: not-allowed; }
  html { scroll-behavior: auto; }
  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Shared visual language from the marketing landing page. */
+:root {
+  --ui-text: #303236;
+  --ui-muted: #6d7888;
+  --ui-border: #e5e7e9;
+  --ui-soft: #f3f7fc;
+  --ui-action: #303236;
+  --ui-action-hover: #242629;
+  --ui-accent: #159fc8;
+  --ink: var(--ui-text);
+  --mute: var(--ui-muted);
+  --dim: #8c949e;
+  --line: var(--ui-border);
+  --line2: #d6e9f3;
+  --background: #fff;
+  --foreground: var(--ui-text);
+  --accent: var(--ui-accent);
+  --accent-dim: #ecf8fc;
+  --ink-on-accent: #fff;
+  --font-heading: var(--font-inter), "Inter", Arial, sans-serif;
+  --font-geist: var(--font-inter), "Inter", Arial, sans-serif;
+}
+@theme inline {
+  --font-heading: var(--font-inter), "Inter", Arial, sans-serif;
+  --color-slate-50: #fafbfc;
+  --color-slate-100: #f0f3f7;
+  --color-slate-200: #e5e7e9;
+  --color-slate-300: #d4dbe3;
+  --color-slate-400: #8c949e;
+  --color-slate-500: #6d7888;
+  --color-slate-600: #5d6673;
+  --color-slate-700: #414449;
+  --color-slate-800: #35383d;
+  --color-slate-900: #303236;
+  --color-slate-950: #242629;
+  --color-blue-50: #f0f8fc;
+  --color-blue-100: #e2f2fa;
+  --color-blue-200: #c8e8f5;
+  --color-blue-300: #9bd8ee;
+  --color-blue-400: #55bfe2;
+  --color-blue-500: #24a8d0;
+  --color-blue-600: #0786a8;
+  --color-blue-700: #096c88;
+  --color-blue-800: #15576e;
+  --color-blue-900: #214653;
+}
+@layer base {
+  h1,h2,h3,h4,h5,h6 { font-weight: 450; letter-spacing: -.045em; }
+  body { color: var(--ui-text); background: #fff; }
+}
+.cl-headerTitle { color: var(--ui-text) !important; font-weight: 450 !important; letter-spacing: -.045em !important; font-size: 1.75rem !important; }
+.cl-headerSubtitle { color: var(--ui-muted) !important; line-height: 1.7 !important; }
+.cl-formButtonPrimary { background: linear-gradient(#3e4144,#242629) !important; border: 1px solid #292b2d !important; border-radius: 30px !important; font-weight: 450 !important; box-shadow: inset 0 1px 1px #ffffff33,0 3px 6px #0000000a !important; }
+.cl-formButtonPrimary:hover { background: linear-gradient(#484c50,#303236) !important; box-shadow: 0 5px 14px #35496613 !important; }
+.cl-socialButtonsBlockButton { border-radius: 30px !important; border-color: var(--ui-border) !important; font-weight: 450 !important; background: linear-gradient(white,#fafafa) !important; }
+.cl-formFieldInputGroup:focus-within,.cl-formFieldInput:focus,.cl-otpCodeFieldInput:focus,.cl-otpCodeFieldInput[data-status="focused"] { border-color: #55a3f4 !important; box-shadow: 0 0 0 3px #55a3f419 !important; }
+.cl-formFieldAction,.cl-identityPreviewEditButton { color: #0786a8 !important; }
+.navigation-progress::after { background: linear-gradient(90deg,#55a3f4,#24bce8); }

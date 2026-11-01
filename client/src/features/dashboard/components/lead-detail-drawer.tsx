@@ -144,7 +144,7 @@ export function LeadDetailDrawer() {
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
                       lead.status === "New"
-                        ? "bg-blue-600"
+                        ? "bg-[var(--ui-action)]"
                         : lead.status === "Contacted"
                         ? "bg-emerald-600"
                         : lead.status === "Qualified"
@@ -288,7 +288,7 @@ export function LeadDetailDrawer() {
                       onClick={() => handleStatusChange(s)}
                       className={`px-2.5 py-1 rounded-lg text-[10.5px] font-mono transition-all cursor-pointer ${
                         lead.status === s
-                          ? "bg-blue-600 text-white font-semibold shadow-xs"
+                          ? "bg-[var(--ui-action)] text-white font-semibold shadow-xs"
                           : "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/60 font-medium"
                       }`}
                     >

@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef, useSyncExternalStore } from "react"
 import { usePathname } from "next/navigation";
 import styles from "./dashboard-shell.module.css";
 import dynamic from "next/dynamic";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useDashboard } from "../context/dashboard-context";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
@@ -52,6 +53,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const mainRef = useRef<HTMLElement>(null);
   useEffect(() => { mainRef.current?.scrollTo({ top: 0, behavior: "instant" }); }, [pathname]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const reduceMotion = useReducedMotion();
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 768px)");
     const closeOnDesktop = () => { if (desktop.matches) setMobileMenuOpen(false); };
@@ -64,22 +67,28 @@ export function DashboardShell({ children }: DashboardShellProps) {
       <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Desktop Sidebar */}
       {isDesktop && <div className="hidden md:flex h-full flex-none relative z-20">
-        <Sidebar />
+        <Sidebar collapsed={sidebarCollapsed} onToggleCollapsed={() => setSidebarCollapsed(value => !value)} />
       </div>}
 
       {/* Mobile Navigation Drawer */}
+      <AnimatePresence>
       {!isDesktop && mobileMenuOpen && (
-        <DialogLayer label="Navigation" onClose={() => setMobileMenuOpen(false)} className="fixed inset-0 z-50 md:hidden flex">
+        <DialogLayer key="mobile-navigation" label="Navigation" onClose={() => setMobileMenuOpen(false)} className="fixed inset-0 z-50 md:hidden flex">
           {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.2 }}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="relative flex-1 flex flex-col min-h-0 h-dvh max-w-xs w-full bg-white shadow-2xl border-r border-slate-200 animate-in slide-in-from-left duration-200 z-10">
+          <motion.div initial={{ x: reduceMotion ? 0 : "-100%" }} animate={{ x: 0 }} exit={{ x: reduceMotion ? 0 : "-100%" }}
+            transition={{ duration: reduceMotion ? 0 : 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="relative flex-1 flex flex-col min-h-0 h-dvh max-w-xs w-full shadow-2xl z-10">
             <Sidebar onClose={() => setMobileMenuOpen(false)} />
-          </div>
+          </motion.div>
         </DialogLayer>
       )}
+      </AnimatePresence>
 
       {/* Main Workspace Frame */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative z-10">

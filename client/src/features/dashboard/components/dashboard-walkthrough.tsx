@@ -195,7 +195,7 @@ export function DashboardWalkthrough() {
         particleCount: 70,
         spread: 60,
         origin: { y: 0.6 },
-        colors: ["#2563eb", "#3b82f6", "#60a5fa", "#93c5fd"],
+        colors: ["#55a3f4", "#3b82f6", "#60a5fa", "#93c5fd"],
       });
     } catch {
       // Safe fallback
@@ -307,7 +307,7 @@ export function DashboardWalkthrough() {
               className="w-4 h-4 object-contain"
             />
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200/80 text-[11px] font-mono font-medium text-blue-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--ui-action)] animate-ping" />
               <span>Step {tourStep + 1} of {TOUR_STEPS.length}</span>
             </span>
             <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
@@ -337,7 +337,7 @@ export function DashboardWalkthrough() {
               style={{
                 backgroundColor:
                   idx <= tourStep
-                    ? "#2563eb"
+                    ? "#55a3f4"
                     : "#e2e8f0",
                 boxShadow:
                   idx === tourStep
@@ -401,7 +401,7 @@ export function DashboardWalkthrough() {
               <button
                 type="button"
                 onClick={handleFinish}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors shadow-sm shadow-blue-500/20 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[var(--ui-action)] hover:bg-[var(--ui-action-hover)] text-white text-xs font-semibold transition-colors shadow-sm shadow-blue-500/20 cursor-pointer"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Get Started</span>
@@ -410,7 +410,7 @@ export function DashboardWalkthrough() {
               <button
                 type="button"
                 onClick={nextTourStep}
-                className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors shadow-sm shadow-blue-500/20 cursor-pointer"
+                className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-[var(--ui-action)] hover:bg-[var(--ui-action-hover)] text-white text-xs font-semibold transition-colors shadow-sm shadow-blue-500/20 cursor-pointer"
               >
                 <span>Next</span>
                 <ChevronRight className="w-3.5 h-3.5" />

@@ -1,0 +1,12 @@
+.layout { display: grid; gap: 28px; }
+.intro { display: grid; justify-items: start; gap: 10px; }
+.intro h1 { margin: 0; font-size: clamp(26px,2.2vw,34px); line-height: 1.2; }
+.intro p { margin: 0; max-width: 48ch; line-height: 1.7; }
+.form { display: grid; gap: 26px; }
+.choice { min-height: 82px; padding: 16px; align-items: center; }
+.choiceDescription { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.5; }
+.form > button[type="submit"] { margin-top: 0; height: 46px; }
+@media (max-height: 850px) { .layout { gap: 20px; } .form { gap: 18px; } .choice { min-height: 72px; padding: 12px; } }
+@media (max-width: 767px) { .layout { gap: 20px; } .form { gap: 20px; } .choice { padding: 12px; } }
+@media (max-height: 700px) { .layout { gap: 14px; } .intro { gap: 6px; } .intro h1 { font-size: 25px; } .form { gap: 12px; } .choice { min-height: 58px; padding: 10px; } .choiceDescription { -webkit-line-clamp: 1; } }
+@media (max-width: 400px) and (max-height: 700px) { .choice { gap: 8px; } .choiceDescription { display: none; } }

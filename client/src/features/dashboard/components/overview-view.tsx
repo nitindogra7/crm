@@ -82,7 +82,7 @@ export function OverviewView() {
             data-tour="create-form-btn"
             type="button"
             onClick={() => setIsCreateFormOpen(true)}
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[13px] shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--ui-action)] hover:bg-[var(--ui-action-hover)] text-white font-semibold text-[13px] shadow-sm shadow-blue-500/20 active:scale-[0.99] transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Create Form</span>
@@ -233,7 +233,7 @@ export function OverviewView() {
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
                               lead.status === "New"
-                                ? "bg-blue-600"
+                                ? "bg-[var(--ui-action)]"
                                 : lead.status === "Contacted"
                                 ? "bg-emerald-600"
                                 : lead.status === "Qualified"
@@ -302,7 +302,7 @@ export function OverviewView() {
                       </div>
                       <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
                         <div
-                          className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                          className="h-full bg-[var(--ui-action)] rounded-full transition-all duration-500"
                           style={{ width: `${pct}%` }}
                         />
                       </div>

@@ -10,6 +10,9 @@ export interface DocSection {
   paragraphs?: string[];
   steps?: { title: string; description: string }[];
   code?: DocCode;
+  agentPrompt?: boolean;
+  collapsible?: boolean;
+  links?: { title: string; description: string; href: string }[];
   table?: { columns: string[]; rows: string[][] };
   callout?: { title: string; text: string; tone?: "note" | "warning" };
 }
@@ -29,20 +32,238 @@ export const PUBLIC_FORM_URL = DOCS_API_BASE + PUBLIC_FORM_PATH;
 
 export const DOC_PAGES: DocPage[] = [
   {
-    id: "quickstart", title: "Get started", group: "Start here",
-    description: "Connect a form to Infraly, send a submission, and find it in your lead inbox.",
-    sections: [
-      { id: "create-a-form", title: "1. Create your endpoint", steps: [
-        { title: "Open Forms & APIs", description: "Choose your workspace and select Development while you build your integration." },
-        { title: "Create a form", description: "Give it a name, review the fields, and create the endpoint. The form belongs to the environment you choose." },
-        { title: "Copy the endpoint URL", description: "Copy the URL from the form card or its integration tab. Use that exact URL in place of YOUR_FORM_SLUG in these examples." },
-      ] },
-      { id: "send-a-submission", title: "2. Send a test submission", paragraphs: ["A public form endpoint accepts POST requests without a dashboard login or an API key. Start with an email address you control. Send JSON for API clients or URL-encoded data for a native HTML form."], code: {
-        language: "bash", filename: "Terminal", value: "curl --request POST \"" + PUBLIC_FORM_URL + "\" \\\n  --header \"Content-Type: application/json\" \\\n  --header \"Accept: application/json\" \\\n  --data '{\"name\":\"Alex Rivera\",\"email\":\"alex@example.com\",\"message\":\"Hello from my website\"}'",
-      }, callout: { title: "Use your copied endpoint", text: "The examples use the backend URL configured for this app. Your form endpoint in Forms & APIs is the source of truth for the host and slug." } },
-      { id: "check-your-inbox", title: "3. Check the result", paragraphs: ["A clean JSON submission returns HTTP 200 with status set to success. Open Leads in the same workspace and environment to inspect it. If the response is HTTP 202 with status quarantined, inspect Spam Shield instead.", "The dashboard does not subscribe to a live submission stream. Refresh the page if a submission sent from your website is not visible yet."] },
-      { id: "go-live", title: "4. Move to production", paragraphs: ["Configure your website origin in Settings, under Environments & Origins. Create or choose a Production form and copy its endpoint into your deployed site. Development and Production forms keep their submissions separate."] },
-    ],
+    "id": "quickstart",
+    "title": "Your first lead, in 3 steps",
+    "group": "Start here",
+    "description": "Send website enquiries straight to your Infraly inbox.",
+    "sections": [
+      {
+        "id": "how-it-works",
+        "title": "A simple journey",
+        "steps": [
+          {
+            "title": "Your website",
+            "description": "A visitor sends a message."
+          },
+          {
+            "title": "Infraly",
+            "description": "We receive the details."
+          },
+          {
+            "title": "Your inbox",
+            "description": "You follow up in Leads."
+          }
+        ]
+      },
+      {
+        "id": "create-a-form",
+        "title": "1. Create a form",
+        "paragraphs": [
+          "Open Forms & APIs, click Create form, and choose Development for testing. Copy the form URL."
+        ],
+        "links": [
+          {
+            "title": "Create a form",
+            "description": "In your dashboard",
+            "href": "/dashboard/forms"
+          }
+        ]
+      },
+      {
+        "id": "send-a-submission",
+        "title": "2. Connect your website",
+        "paragraphs": [
+          "Give that URL to your AI assistant or website designer. It tells your form where to send messages."
+        ],
+        "links": [
+          {
+            "title": "Use the AI prompt",
+            "description": "Paste your URL. Copy. Done.",
+            "href": "/docs?guide=ai-agent"
+          }
+        ]
+      },
+      {
+        "id": "check-your-inbox",
+        "title": "3. Send a test",
+        "paragraphs": [
+          "Send one message from your website. Open Leads in Development and refresh. Missing? Check Spam Shield."
+        ],
+        "links": [
+          {
+            "title": "Open Leads",
+            "description": "Find your test message",
+            "href": "/dashboard/leads"
+          }
+        ]
+      },
+      {
+        "id": "choose-your-path",
+        "title": "Another way to connect?",
+        "links": [
+          {
+            "title": "Website builder",
+            "description": "For visual website editors",
+            "href": "/docs?guide=website-builders"
+          },
+          {
+            "title": "Write your own code",
+            "description": "Copy the HTML example",
+            "href": "/docs?guide=html"
+          }
+        ]
+      },
+      {
+        "id": "go-live",
+        "title": "Ready for real visitors?",
+        "collapsible": true,
+        "steps": [
+          {
+            "title": "Add your website address",
+            "description": "Settings > Environments & Origins. Save an address like https://example.com, without a page path."
+          },
+          {
+            "title": "Use a Production form",
+            "description": "Create a form with Production selected. Replace the test URL on your live website with its URL."
+          },
+          {
+            "title": "Check one live message",
+            "description": "Publish your website, send a test, and look in Leads with Production selected."
+          }
+        ],
+        "links": [
+          {
+            "title": "Open website settings",
+            "description": "Add your live website address",
+            "href": "/dashboard/settings?tab=origins"
+          }
+        ]
+      },
+      {
+        "id": "need-help",
+        "title": "Need a hand?",
+        "links": [
+          {
+            "title": "Something isn?t working",
+            "description": "Quick fixes",
+            "href": "/docs?guide=troubleshooting"
+          },
+          {
+            "title": "What does that word mean?",
+            "description": "Simple definitions",
+            "href": "/docs?guide=glossary"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ai-agent",
+    "title": "Let AI connect your form",
+    "group": "Start here",
+    "description": "Paste your form URL. Copy the prompt. Give it to your website?s AI assistant.",
+    "sections": [
+      {
+        "id": "before-you-prompt",
+        "title": "1. Copy your form URL",
+        "paragraphs": [
+          "Find it on your form card in Forms & APIs. Use a Development form while testing."
+        ],
+        "links": [
+          {
+            "title": "Find my form URL",
+            "description": "Open Forms & APIs",
+            "href": "/dashboard/forms"
+          }
+        ]
+      },
+      {
+        "id": "copy-your-prompt",
+        "title": "2. Get your prompt",
+        "agentPrompt": true
+      },
+      {
+        "id": "after-the-ai-finishes",
+        "title": "3. Let your assistant do the work",
+        "paragraphs": [
+          "Paste the prompt into the AI tool that can edit your website. When it finishes, send a test and check Leads in the same environment."
+        ],
+        "links": [
+          {
+            "title": "Ready to go live?",
+            "description": "Follow the launch checklist",
+            "href": "/docs#go-live"
+          }
+        ]
+      },
+      {
+        "id": "ai-cannot-connect",
+        "title": "The AI needs help?",
+        "collapsible": true,
+        "paragraphs": [
+          "Share the exact error message with your assistant. Tell it which environment you used and whether you checked Spam Shield."
+        ],
+        "links": [
+          {
+            "title": "Find a fix",
+            "description": "Common connection problems",
+            "href": "/docs?guide=troubleshooting"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "website-builders",
+    "title": "Using a website builder?",
+    "group": "Integrations",
+    "description": "You need a form that can send messages to a custom URL.",
+    "sections": [
+      {
+        "id": "check-your-builder",
+        "title": "Check your form settings",
+        "paragraphs": [
+          "Look for ?form action? or ?custom HTML? in your website editor. If you cannot find either, ask your designer or builder?s support team."
+        ]
+      },
+      {
+        "id": "connect-builder",
+        "title": "Choose your option",
+        "links": [
+          {
+            "title": "I can add custom HTML",
+            "description": "Copy the example and replace its form URL.",
+            "href": "/docs?guide=html"
+          },
+          {
+            "title": "My designer will handle it",
+            "description": "Give them the short brief below.",
+            "href": "/docs?guide=website-builders#designer-handoff"
+          },
+          {
+            "title": "I need a server connection",
+            "description": "Technical setup for your developer.",
+            "href": "/docs?guide=server"
+          }
+        ]
+      },
+      {
+        "id": "designer-handoff",
+        "title": "Copy a brief for your designer",
+        "code": {
+          "language": "text",
+          "filename": "Designer brief",
+          "value": "Connect my website contact form to Infraly using the public form URL I provide.\n\nSend name, email, and message with POST using JSON or URL-encoded data. No public API key is needed. Keep my current design and add clear sending, success, and error feedback. File uploads are not supported.\n\nTreat HTTP 200 with status success as a lead; HTTP 202 with status quarantined means review in Spam Shield. Avoid automatic retries or duplicate clicks.\n\nHelp me check a test in Leads in the matching environment. Before launch, configure the Production website origin and use a Production form URL."
+        }
+      },
+      {
+        "id": "builder-test",
+        "title": "Check it works",
+        "paragraphs": [
+          "Send a message from your website. Refresh Leads in the matching environment. Check Spam Shield if it is missing."
+        ]
+      }
+    ]
   },
   {
     id: "html", title: "HTML forms", group: "Integrations",
@@ -119,19 +340,130 @@ export const DOC_PAGES: DocPage[] = [
     ],
   },
   {
-    id: "troubleshooting", title: "Troubleshooting", group: "Reference",
-    description: "Work through common integration problems with concrete checks.",
-    sections: [
-      { id: "missing-lead", title: "My submission is missing", steps: [
-        { title: "Inspect the HTTP response", description: "Confirm the request was actually sent. HTTP 200 with status success indicates a clean submission; HTTP 202 means quarantine." },
-        { title: "Check the workspace and environment", description: "The endpoint belongs to one form and environment. Select the same workspace and environment in the dashboard." },
-        { title: "Refresh the inbox", description: "Refresh after an external submission. Open Spam Shield if the message is not in Leads." },
-      ] },
-      { id: "forbidden", title: "My request returns 403", paragraphs: ["Make sure the form is enabled. In Production, save the Production Origin and verify the browser Origin matches it. For keyed requests, confirm that the API key and form belong to the same workspace and environment."] },
-      { id: "payload-format", title: "My fields are empty", paragraphs: ["Use name, email, and message as the core field names. For JSON, send Content-Type: application/json and JSON.stringify your payload. For HTML, use method=POST and the default URL-encoded encoding. Do not submit multipart data or files."] },
-      { id: "redirects", title: "My thank-you redirect is not working", paragraphs: ["Save the Redirect URL in the form details. _next is not used by the current ingestion handler. Fetch requests using JSON return JSON; handle navigation in your application after checking the response."] },
-      { id: "duplicate-submissions", title: "I see duplicate leads", paragraphs: ["The submission API currently has no idempotency key or automatic deduplication. Disable your submit control while a request is pending and avoid blind retries after timeouts."] },
-    ],
+  "id": "glossary",
+  "title": "Words explained",
+  "group": "Reference",
+  "description": "The terms you will see in Infraly, explained in everyday language.",
+  "sections": [
+    {
+      "id": "everyday-definitions",
+      "title": "What these words mean",
+      "table": {
+        "columns": [
+          "Word",
+          "Meaning"
+        ],
+        "rows": [
+          [
+            "Lead",
+            "A person who has contacted your business. Their submitted details appear in Leads."
+          ],
+          [
+            "Form URL / endpoint",
+            "The receiving address your website sends form details to. Copy it from a form card in Forms & APIs. Opening it like a normal web page does not submit a message."
+          ],
+          [
+            "Workspace",
+            "A space for one business or project, containing its forms, leads, and settings."
+          ],
+          [
+            "Submission",
+            "One set of details sent through a form, such as a name, email, and message."
+          ],
+          [
+            "Development",
+            "The environment for testing. Messages here stay separate from your live leads."
+          ],
+          [
+            "Production",
+            "The environment for real visitors on your published website."
+          ],
+          [
+            "Origin",
+            "Your website address including https:// and any port, without a page path. For example, https://example.com."
+          ],
+          [
+            "API key",
+            "A secret used by a server integration. A direct public website form does not need one."
+          ],
+          [
+            "Spam Shield / quarantine",
+            "A review area for messages flagged by spam checks. Rescue a legitimate message to move it to Leads."
+          ],
+          [
+            "POST",
+            "The request method a form uses to send details to its receiving address."
+          ],
+          [
+            "JSON",
+            "A text format code can use to send details as named values, such as email and message."
+          ],
+          [
+            "Redirect / thank-you page",
+            "A page visitors are taken to after sending a form."
+          ],
+          [
+            "CORS",
+            "Browser rules about sending data between website addresses. A blocked request may mean the live website address needs to be allowed."
+          ]
+        ]
+      }
+    },
+    {
+      "id": "back-to-setup",
+      "title": "Ready to try it?",
+      "links": [
+        {
+          "title": "Start the setup guide",
+          "description": "Create a form, connect your website, and find your first message.",
+          "href": "/docs"
+        }
+      ]
+    }
+  ]
+},
+  {
+    "id": "troubleshooting",
+    "title": "Quick fixes",
+    "group": "Reference",
+    "description": "Choose the problem you see.",
+    "sections": [
+      {
+        "id": "missing-lead",
+        "title": "My message is missing",
+        "paragraphs": [
+          "Select the same workspace and environment as your form, then refresh Leads. Still missing? Check Spam Shield and rescue the message if it is legitimate."
+        ]
+      },
+      {
+        "id": "forbidden",
+        "title": "The form says blocked or forbidden",
+        "paragraphs": [
+          "Check the form is Active in Forms & APIs. For a live site, save its exact website address in Settings > Environments & Origins, including https:// and www if used."
+        ]
+      },
+      {
+        "id": "payload-format",
+        "title": "Some details are empty",
+        "paragraphs": [
+          "Ask your designer or AI assistant to check the field names are name, email, and message. File uploads are not supported."
+        ]
+      },
+      {
+        "id": "redirects",
+        "title": "My thank-you page does not open",
+        "paragraphs": [
+          "Save the full thank-you page URL in the form settings. If the form uses JavaScript, ask your designer to open that page after a successful response."
+        ]
+      },
+      {
+        "id": "duplicate-submissions",
+        "title": "I see the same message twice",
+        "paragraphs": [
+          "Ask your designer to disable Send while the form is sending and remove automatic retries. A slow request may already have saved the message."
+        ]
+      }
+    ]
   },
 ];
 
@@ -143,7 +475,7 @@ export const GUIDE_ALIASES: Record<string, string> = {
   webflow: "html", framer: "html", wordpress: "html", python: "server",
   nodejs: "server", curl: "server", honeypot: "spam", checklist: "fields",
   architecture: "quickstart", "status-codes": "responses", cors: "environments",
-  nocode: "html", faq: "troubleshooting",
+  nocode: "website-builders", ai: "ai-agent", faq: "troubleshooting",
 };
 
 export function findDocPage(id: string | null): DocPage | undefined {

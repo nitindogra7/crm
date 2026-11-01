@@ -226,7 +226,7 @@ export function SpamShieldView() {
                         <button
                           type="button"
                           onClick={handleResetFilters}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-[13px] font-semibold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--ui-action)] text-white text-[13px] font-semibold hover:bg-[var(--ui-action-hover)] transition-colors shadow-sm shadow-blue-500/20"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span>Reset filters</span>

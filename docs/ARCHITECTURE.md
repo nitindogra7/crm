@@ -130,3 +130,25 @@ The backend service is designed as a lightweight, standalone Express 5 applicati
 - **Database**: Connects directly to any PostgreSQL instance (locally or cloud-hosted such as Neon/Supabase) via standard connection strings managed by Prisma ORM.
 - **Stateless Architecture**: The API server is completely stateless, enabling simple scaling across platforms (e.g. Render, Railway, AWS EC2, or direct VPS).
 
+## Route modules and dashboard reads
+
+Backend domains live under `server/src/modules/{dashboards,forms,api-keys,ingestion,leads,spam,stats,dashboard}`. Each owns its handlers, services, queries and contracts. `forms & api` contains compatibility exports and URL aliases for existing integrations. New management clients use `/api/dashboards`, `/api/forms`, `/api/api-keys`, `/api/leads`, `/api/spam`, and `/api/stats`. Public submission URLs are unchanged.
+
+The frontend loads route dependencies after resolving workspace identity:
+
+| Route | Page requests on a cold visit |
+| --- | --- |
+| Overview | `/api/dashboard/overview` |
+| Analytics | `/api/dashboard/analytics` |
+| Forms | `/api/forms`, `/api/api-keys` |
+| Leads | `/api/forms`, `/api/leads` |
+| Spam | `/api/forms`, `/api/spam` |
+| Settings | None |
+
+Workspace discovery and the server layout onboarding check are separate from these page requests. The quick simulator loads forms on demand. Overview returns six recent leads plus database totals and distributions; analytics returns counts grouped by local hour, form and source/reason for the supported 90-day window. Neither endpoint sends API keys or quarantined payloads. Lead and spam list pages retain their existing full-list filtering/export behavior.
+
+A provider-owned 30-second memory cache reuses recent reads. Successful API mutations invalidate its revision; explicit refresh bypasses freshness. Route changes cancel pending requests, and request IDs plus workspace/environment checks reject late responses. Workspace changes clear cached data. The provider is keyed by authenticated user ID. Modals and detail drawers mount only when opened.
+
+Verification: `npm run test --prefix client`, `npm run build:client`, `npm run build:server`, and `npm run test:isolated --prefix server`. The isolated runner applies migrations to a temporary schema, checks migration drift, and runs submission, HTTP, security, tenant, performance and dashboard read-model checks before removing that schema.
+
+For Windows workspaces with locked build output, `NEXT_BUILD_DIR` can select another dedicated, ignored Next.js build directory (for example `.next/qa-build`). This leaves the default development and production directories unchanged. Prisma generation requires its native engine DLL to be unlocked; backend TypeScript compilation can use the already generated client during local QA.

@@ -62,7 +62,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <DashboardProvider initialWorkspace={onboardingData}>
+    <DashboardProvider key={userId} initialWorkspace={onboardingData}>
       <DashboardShell>{children}</DashboardShell>
     </DashboardProvider>
   );

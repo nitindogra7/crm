@@ -18,7 +18,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // Raw queries need the same schema qualification as Prisma's generated queries.
-export function sqlTable(table: "forms" | "leads"): Prisma.Sql {
+export function sqlTable(table: "forms" | "leads" | "spam"): Prisma.Sql {
   const schema = new URL(process.env.DATABASE_URL || "postgresql://localhost/app")
     .searchParams.get("schema") || "public";
   const identifier = '"' + schema.replaceAll('"', '""') + '"."' + table + '"';

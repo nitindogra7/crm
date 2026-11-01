@@ -1,11 +1,14 @@
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
+let mutationVersion = 0;
+export const getApiMutationVersion = () => mutationVersion;
+
 export async function apiFetch<T>(
   endpoint: string,
-  options: RequestInit & { token?: string | null } = {}
+  options: RequestInit & { token?: string | null; invalidateResources?: boolean } = {}
 ): Promise<T> {
-  const { token, headers = {}, signal, ...rest } = options;
+  const { token, headers = {}, signal, invalidateResources = true, ...rest } = options;
   const mergedHeaders = new Headers(headers);
   if (!mergedHeaders.has("Content-Type")) {
     mergedHeaders.set("Content-Type", "application/json");
@@ -42,6 +45,7 @@ export async function apiFetch<T>(
     throw new Error(data?.error || `Request failed with status ${res.status}`);
   }
 
+  if (invalidateResources && rest.method && !["GET", "HEAD", "OPTIONS"].includes(rest.method.toUpperCase())) mutationVersion++;
   return data as T;
 }
 

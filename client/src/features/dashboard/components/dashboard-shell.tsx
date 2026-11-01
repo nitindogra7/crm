@@ -47,7 +47,7 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ children }: DashboardShellProps) {
-  const { activeDashboardId, currentEnvironment, loadError, isRefreshing, refreshDashboardData } = useDashboard(["activeDashboardId", "currentEnvironment"]);
+  const { activeDashboardId, currentEnvironment, loadError, isRefreshing, refreshDashboardData, selectedLeadId, selectedSpamId, selectedFormId, isCreateFormOpen, isTourOpen } = useDashboard(["activeDashboardId", "currentEnvironment", "selectedLeadId", "selectedSpamId", "selectedFormId", "isCreateFormOpen", "isTourOpen"]);
   const pathname = usePathname();
   const isDesktop = useSyncExternalStore(subscribeToViewport, getDesktopSnapshot, getServerDesktopSnapshot);
   const mainRef = useRef<HTMLElement>(null);
@@ -104,11 +104,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
       </div>
 
       {/* Global Modals & Drawers */}
-      <LeadDetailDrawer />
-      <SpamDetailDrawer />
-      <CreateFormModal />
-      <FormDetailModal />
-      <DashboardWalkthrough />
+      {selectedLeadId && <LeadDetailDrawer />}
+      {selectedSpamId && <SpamDetailDrawer />}
+      {isCreateFormOpen && <CreateFormModal />}
+      {selectedFormId && <FormDetailModal />}
+      {isTourOpen && <DashboardWalkthrough />}
       <ToastNotificationContainer />
     </div>
   );

@@ -12,7 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "test": "tsx test/leads-qa.test.ts && tsx test/leads-http.test.ts && tsx test/performance-regression.test.ts && tsx test/security-and-spam.test.ts && tsx test/environment-origin-verifier.test.ts && tsx test/production-readiness.test.ts",
+    "test": "tsx test/leads-qa.test.ts && tsx test/leads-http.test.ts && tsx test/performance-regression.test.ts && tsx test/security-and-spam.test.ts && tsx test/environment-origin-verifier.test.ts && tsx test/production-readiness.test.ts && tsx test/dashboard-read-model.test.ts",
     "test:isolated": "node test/run-isolated-qa.cjs"
   },
   "keywords": [],

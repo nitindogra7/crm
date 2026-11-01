@@ -44,10 +44,11 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapsed }: Sideb
     switchOrganization,
     setIsCreateOrgOpen,
     isLoading,
+    overview,
     leads,
     forms,
     spam,
-  } = useDashboard(["workspace","organizations","activeDashboardId","switchOrganization","setIsCreateOrgOpen","isLoading","leads","forms","spam"]);
+  } = useDashboard(["workspace","organizations","activeDashboardId","switchOrganization","setIsCreateOrgOpen","isLoading","leads","forms","spam","overview"]);
 
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [switchingOrgId, setSwitchingOrgId] = useState<string | null>(null);
@@ -75,8 +76,8 @@ export function Sidebar({ onClose, collapsed = false, onToggleCollapsed }: Sideb
     }
   }, [isOrgDropdownOpen]);
 
-  const newLeadsCount = leads.filter((l) => l.status === "New").length;
-  const spamCount = spam.length;
+  const newLeadsCount = pathname === "/dashboard" ? overview?.newLeads || 0 : pathname.startsWith("/dashboard/leads") ? leads.filter((l) => l.status === "New").length : 0;
+  const spamCount = pathname === "/dashboard" ? overview?.stats.spamFlagged || 0 : pathname.startsWith("/dashboard/spam") ? spam.length : 0;
 
   const workspaceItems = [
     {

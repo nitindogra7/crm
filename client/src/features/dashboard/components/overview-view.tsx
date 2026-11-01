@@ -20,14 +20,15 @@ import {
 
 export function OverviewView() {
   const {
-    stats,
+    stats: localStats,
+    overview,
     leads,
     forms,
     isLoading,
     setSelectedLeadId,
     setIsCreateFormOpen,
     setSelectedFormId,
-  } = useDashboard(["stats","leads","forms","isLoading","setSelectedLeadId","setIsCreateFormOpen","setSelectedFormId"]);
+  } = useDashboard(["overview","stats","leads","forms","isLoading","setSelectedLeadId","setIsCreateFormOpen","setSelectedFormId"]);
 
   if (isLoading) {
     return <OverviewSkeleton />;
@@ -36,22 +37,9 @@ export function OverviewView() {
   const recentLeads = leads.slice(0, 6);
   const isEmptyWorkspace = forms.length === 0 && leads.length === 0;
 
-  // Aggregate counts by form
-  const formCounts = forms.map((form) => ({
-    name: form.name,
-    count: leads.filter((l) => l.formId === form.id).length,
-    id: form.id,
-  })).sort((a, b) => b.count - a.count);
-
-  // Aggregate counts by source
-  const sourceMap = leads.reduce<Record<string, number>>((acc, lead) => {
-    acc[lead.source] = (acc[lead.source] || 0) + 1;
-    return acc;
-  }, {});
-  const sourceCounts = Object.entries(sourceMap).map(([source, count]) => ({
-    source,
-    count,
-  })).sort((a, b) => b.count - a.count);
+  const stats = overview?.stats || localStats;
+  const formCounts = overview?.formCounts || [];
+  const sourceCounts = overview?.sourceCounts || [];
 
   const maxFormCount = Math.max(...formCounts.map((f) => f.count), 1);
   const maxSourceCount = Math.max(...sourceCounts.map((s) => s.count), 1);

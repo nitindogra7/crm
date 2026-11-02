@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Figtree, Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -52,6 +53,7 @@ export default function RootLayout({
       >
         <body className="min-h-full bg-white text-slate-900 font-sans selection:bg-blue-500/20 selection:text-blue-900">
           {children}
+          <Analytics />
           <Script
             src="https://www.googletagmanager.com/gtag/js?id=G-NT8ZP868HF"
             strategy="afterInteractive"

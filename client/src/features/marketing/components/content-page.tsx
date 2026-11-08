@@ -1,0 +1,8 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { BreadcrumbData } from "@/shared/components/structured-data";
+import styles from "./content-page.module.css";
+export function ContentPage({ title, intro, path, children }: { title: string; intro: string; path: string; children: ReactNode }) {
+  return <div className={styles.page}><a href="#content" className="skip-link">Skip to content</a><header className={styles.nav}><Link href="/" className={styles.brand}>infraly.</Link><nav aria-label="Main navigation"><Link href="/docs">Documentation</Link><Link href="/#pricing">Pricing</Link><Link href="/sign-up" className={styles.button}>Get started free</Link></nav></header><main id="content" className={styles.main}><nav aria-label="Breadcrumb" className={styles.breadcrumb}><Link href="/">Home</Link><span aria-hidden="true">/</span><span>{title}</span></nav><h1>{title}</h1><p className={styles.intro}>{intro}</p>{children}<section className={styles.cta}><h2>Connect a form. Review your first enquiry.</h2><p>Create an account, copy your endpoint, and test the full journey.</p><Link href="/sign-up" className={styles.button}>Get started free</Link> <Link href="/docs">Read the setup guide</Link></section></main><footer className={styles.footer}><Link href="/">Infraly</Link><Link href="/lead-management">Lead management</Link><Link href="/docs/html">HTML contact forms</Link><Link href="/docs/react">React and Next.js</Link><Link href="/compare/formspree">Compare Formspree</Link></footer><BreadcrumbData items={[{ name: "Home", path: "/" }, { name: title, path }]} /></div>;
+}
+

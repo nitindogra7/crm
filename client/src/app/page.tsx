@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
 import { MarketingLandingPage } from "@/features/marketing";
-
-export const metadata: Metadata = {
-  title: "Infraly — Every enquiry, in one place",
-  description: "Bring your website enquiries into one organised inbox. Keep contact details together, filter spam, and track every conversation from hello to follow-up.",
-};
-
-export default function Home() {
-  return <MarketingLandingPage />;
-}
+import { pageMetadata } from "@/shared/lib/seo";
+import { SiteStructuredData } from "@/shared/components/structured-data";
+export const metadata = pageMetadata("Form backend and website lead management", "Connect HTML, React, and Next.js forms to Infraly. Capture enquiries, review spam, and manage lead statuses in one inbox without building a form backend.", "/");
+export default function Home() { return <><SiteStructuredData /><MarketingLandingPage /></>; }

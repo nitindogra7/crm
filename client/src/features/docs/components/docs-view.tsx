@@ -1,18 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { DialogLayer } from "@/shared/components/dialog-layer";
 import { DocsHeader } from "./docs-header";
 import { DocsSidebar } from "./docs-sidebar";
 import { DocsGuideView } from "./docs-guide-view";
 import { DocsHubView } from "./docs-hub-view";
-import { findDocPage } from "../data/docs-data";
+import { findDocPage, docHref } from "../data/docs-data";
 import styles from "./docs.module.css";
 
-export function DocsView() {
-  const params = useSearchParams();
-  const page = findDocPage(params.get("guide"));
+export function DocsView({ pageId }: { pageId: string }) {
+  const router = useRouter();
+  const page = findDocPage(pageId);
   const [query, setQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const main = useRef<HTMLElement>(null);
@@ -20,9 +20,9 @@ export function DocsView() {
   const navigate = useCallback((id: string) => {
     setQuery("");
     setMenuOpen(false);
-    window.history.pushState(null, "", id === "quickstart" ? "/docs" : "/docs?guide=" + encodeURIComponent(id));
+    router.push(docHref(id), { scroll: false });
     main.current?.scrollTo({ top: 0, behavior: "instant" });
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {

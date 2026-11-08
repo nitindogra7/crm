@@ -4,6 +4,7 @@ import { Figtree, Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import { site, SITE_DESCRIPTION } from "@/shared/lib/site-config";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -26,9 +27,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Infraly — Developer-First Form Backend & Modern CRM",
-  description:
-    "Capture every web lead without building a backend. Point your forms to Infraly for instant spam protection, real-time lead inbox, and pipeline tracking.",
+  metadataBase: site.origin ? new URL(site.origin) : undefined,
+  title: "Infraly | Form backend and lead management",
+  description: SITE_DESCRIPTION,
+  robots: { index: false, follow: true },
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

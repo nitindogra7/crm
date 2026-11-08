@@ -26,6 +26,7 @@ function setup({ fails = false } = {}) {
   let requests = 0;
   const hook = compile('features/onboarding/hooks/use-onboarding-form.ts', {
     require(id) {
+      if (id === '@/shared/lib/conversion-events') return { trackConversion() {} };
       if (id === 'react') return {
         useState(initial) {
           const index = cursor++;

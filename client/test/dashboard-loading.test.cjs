@@ -69,6 +69,7 @@ function setup() {
     "zustand/react/shallow": { useShallow: selector => selector }, "@clerk/nextjs": { useAuth: () => ({ getToken }) },
     "@/shared/store": { useAppStore, useStats: () => ({}) },
     "@/shared/lib/optimistic-update": { optimisticUpdate: async (apply, save) => { apply(); await save(); } },
+    "@/shared/lib/conversion-events": { trackConversion() {} },
     "@/shared/lib/api-client": { apiFetch, getApiMutationVersion: () => revision },
   });
   const render = () => { cursor = 0; const node = DashboardProvider({ children: null }); effects.splice(0).forEach(effect => effect()); return node.props.value; };

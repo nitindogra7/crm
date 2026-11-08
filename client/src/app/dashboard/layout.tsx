@@ -5,6 +5,7 @@ import { DashboardProvider } from "@/features/dashboard/context/dashboard-contex
 import { DashboardShell } from "@/features/dashboard/components/dashboard-shell";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: false },
   title: "Dashboard | Infraly",
   description:
     "Manage your incoming leads, protect form endpoints from spam, and inspect submission webhooks.",

@@ -1,4 +1,5 @@
 "use client";
+import { trackConversion } from "@/shared/lib/conversion-events";
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -119,6 +120,7 @@ export function useOnboardingForm() {
 
         setIsSubmitting(false);
         setIsSuccess(true);
+        trackConversion("onboarding_completed");
 
         // Celebration is optional and must never delay navigation.
         void import("canvas-confetti").then(({ default: confetti }) => {

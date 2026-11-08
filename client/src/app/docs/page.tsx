@@ -1,13 +1,8 @@
-import type { Metadata } from "next";
-import { Suspense } from "react";
 import { DocsView } from "@/features/docs";
-import { DocsSkeleton } from "@/features/docs/components/docs-skeleton";
-
-export const metadata: Metadata = {
-  title: "Documentation | Infraly",
-  description: "Set up Infraly form submissions. Guides for HTML, React, server API keys, environments, spam review, and response handling.",
-};
-
+import { pageMetadata } from "@/shared/lib/seo";
+import { BreadcrumbData } from "@/shared/components/structured-data";
+// Legacy query URLs are redirected in proxy before rendering, keeping this page static.
+export const metadata = pageMetadata("Form backend documentation and quickstart", "Create a form endpoint, connect your website, and review your first lead. Setup guides for HTML, React, Next.js, server requests, and spam protection.", "/docs");
 export default function DocsPage() {
-  return <Suspense fallback={<DocsSkeleton />}><DocsView /></Suspense>;
+  return <><BreadcrumbData items={[{ name: "Home", path: "/" }, { name: "Documentation", path: "/docs" }]} /><DocsView pageId="quickstart" /></>;
 }

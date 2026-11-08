@@ -1,4 +1,5 @@
 "use client";
+import { trackConversion } from "@/shared/lib/conversion-events";
 
 import React, {
   createContext,
@@ -483,6 +484,7 @@ export function DashboardProvider({
       }
 
       const form = res.data;
+      trackConversion("form_created");
       const latest = useAppStore.getState();
       if (s.activeDashboardId !== latest.activeDashboardId || targetEnv !== latest.currentEnvironment) return form;
       latest.setForms([

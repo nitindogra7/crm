@@ -1,0 +1,63 @@
+{
+  "conditions": "Chrome headless, 390x844, 4x CPU, 100ms RTT, 1.6Mbps down, cold cache; GA/Vercel collection blocked; single runs, not field CWV",
+  "reports": [
+    {
+      "url": "https://www.infraly.online/",
+      "title": "Infraly — Every enquiry, in one place",
+      "h1": [
+        "Turn website enquiriesinto your next customers."
+      ],
+      "viewport": 390,
+      "overflow": false,
+      "mainOverflow": false,
+      "links": 37,
+      "vitals": {
+        "lcp": 5056,
+        "cls": 0
+      },
+      "navigation": [
+        {
+          "ttfb": 2135,
+          "domContentLoaded": 3501,
+          "load": 5954
+        }
+      ],
+      "resources": {
+        "transferBytes": 750055,
+        "requests": 46,
+        "scripts": 23
+      },
+      "label": "live-home",
+      "errors": []
+    },
+    {
+      "url": "https://www.infraly.online/docs?guide=html",
+      "title": "Documentation | Infraly",
+      "h1": [
+        "HTML forms"
+      ],
+      "viewport": 390,
+      "overflow": false,
+      "mainOverflow": true,
+      "links": 25,
+      "vitals": {
+        "lcp": 2944,
+        "cls": 0
+      },
+      "navigation": [
+        {
+          "ttfb": 31,
+          "domContentLoaded": 1474,
+          "load": 2999
+        }
+      ],
+      "resources": {
+        "transferBytes": 656516,
+        "requests": 46,
+        "scripts": 25
+      },
+      "label": "live-docs",
+      "errors": []
+    }
+  ]
+}

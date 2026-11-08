@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
+import { site, canonicalRedirects } from "./src/shared/lib/site-config";
 
 const nextConfig: NextConfig = {
   // Keep production builds separate from an active development server.
   distDir: process.env.NEXT_BUILD_DIR || (process.env.NODE_ENV === "production" ? ".next-production" : ".next"),
+  trailingSlash: false,
   reactCompiler: true,
   devIndicators: false,
   compress: true,
@@ -25,6 +27,8 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      ...(!site.indexable ? [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, follow" }] }] : []),
+      ...["/dashboard/:path*", "/onboarding/:path*", "/sign-in/:path*", "/sign-up/:path*", "/api/:path*"].map(source => ({ source, headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] })),
       {
         source: "/(.*)",
         headers: [
@@ -50,6 +54,7 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      ...canonicalRedirects(site),
       {
         source: "/login",
         destination: "/sign-in",

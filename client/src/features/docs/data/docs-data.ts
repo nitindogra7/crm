@@ -26,7 +26,7 @@ export interface DocPage {
 }
 
 // Use the same configured backend as the dashboard. Do not assume a hosted API domain.
-export const DOCS_API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+export const DOCS_API_BASE = (process.env.NEXT_PUBLIC_API_URL && !/localhost|127\.0\.0\.1/.test(process.env.NEXT_PUBLIC_API_URL) ? process.env.NEXT_PUBLIC_API_URL : "YOUR_API_ORIGIN").replace(/\/+$/, "");
 export const PUBLIC_FORM_PATH = "/api/forms-and-api/f/YOUR_FORM_SLUG";
 export const PUBLIC_FORM_URL = DOCS_API_BASE + PUBLIC_FORM_PATH;
 
@@ -266,7 +266,7 @@ export const DOC_PAGES: DocPage[] = [
     ]
   },
   {
-    id: "html", title: "HTML forms", group: "Integrations",
+    id: "html", title: "HTML contact form without a backend", group: "Integrations",
     description: "Submit directly from your website with a standard HTML form and no client-side JavaScript.",
     sections: [
       { id: "form-markup", title: "Add the form", paragraphs: ["Set method to POST and action to your copied form endpoint. The browser sends application/x-www-form-urlencoded by default. Field names determine how values appear in the lead record."], code: {
@@ -277,7 +277,7 @@ export const DOC_PAGES: DocPage[] = [
     ],
   },
   {
-    id: "react", title: "React & JavaScript", group: "Integrations",
+    id: "react", title: "React and Next.js contact form integration", group: "Integrations",
     description: "Keep visitors on your page and handle accepted, quarantined, and failed submissions explicitly.",
     sections: [
       { id: "submit-with-fetch", title: "Submit with fetch", paragraphs: ["This React example also works in a Next.js client component. Replace the endpoint with the URL copied from Forms & APIs. Public browser forms do not need a secret API key."], code: {
@@ -426,7 +426,7 @@ export const DOC_PAGES: DocPage[] = [
     "id": "troubleshooting",
     "title": "Quick fixes",
     "group": "Reference",
-    "description": "Choose the problem you see.",
+    "description": "Fix missing form submissions, blocked origins, empty fields, thank-you redirects, and duplicate enquiries in Infraly.",
     "sections": [
       {
         "id": "missing-lead",
@@ -482,3 +482,20 @@ export function findDocPage(id: string | null): DocPage | undefined {
   const target = id ? GUIDE_ALIASES[id] || id : "quickstart";
   return DOC_PAGES.find(page => page.id === target);
 }
+
+export function docHref(id: string): string {
+  const target = GUIDE_ALIASES[id] || id;
+  return target === "quickstart" ? "/docs" : "/docs/" + encodeURIComponent(target);
+}
+export function normalizeDocHref(href: string): string {
+  if (!href.startsWith("/docs?guide=")) return href;
+  const [query, hash] = href.slice(6).split("#");
+  const id = new URLSearchParams(query).get("guide");
+  return docHref(id || "quickstart") + (hash ? "#" + hash : "");
+}
+// Links, the sidebar, canonical metadata, and sitemap share the same route ownership.
+for (const page of DOC_PAGES) for (const section of page.sections) for (const link of section.links || []) link.href = normalizeDocHref(link.href);
+const html = DOC_PAGES.find(page => page.id === "html")!;
+html.sections.unshift({ id: "prepare-endpoint", title: "Copy your form endpoint", paragraphs: ["Create an Infraly account, open Forms & APIs, and create a Development form. Copy its full endpoint URL. In the example below, replace YOUR_API_ORIGIN/api/forms-and-api/f/YOUR_FORM_SLUG with that URL; these are placeholders, not a live endpoint. Your static website keeps its existing hosting and styling."] });
+html.sections.push({ id: "validate-and-test", title: "Validate, test, and go live", paragraphs: ["The required and email input attributes provide browser validation. Browser validation can be bypassed. Infraly field definitions do not enforce the full required-field schema at ingestion; validate required values in a server integration you control when strict validation is needed. Keep the honeypot empty, submit one synthetic test, then check Leads and Spam Shield in the same workspace and environment.", "Before launch, save the exact Production website origin and use a Production form endpoint. A 403 usually means a disabled form or an origin mismatch; 413 means the payload exceeds the 1 MB parser limit; 429 means you should wait before trying again. Do not add file inputs: multipart uploads are not supported."], links: [{ title: "Response and error reference", description: "Interpret validation, spam review, and rate limits", href: "/docs/responses" }, { title: "Review and update your lead", description: "From website enquiry to follow-up", href: "/lead-management" }] });
+DOC_PAGES.find(page => page.id === "react")!.sections.push({ id: "test-and-publish", title: "Check validation and production origins", paragraphs: ["Use this component in a React page or import it into a Next.js App Router page. Client-side required fields help visitors. Infraly does not enforce the full configured field schema at ingestion; add validation in a server integration you control when strict checks are needed. Replace the sample endpoint with the full URL copied from Forms & APIs. Keep workspace API keys out of NEXT_PUBLIC variables and client components.", "Test an accepted message, a filled honeypot, and a failed request. Confirm the feedback changes and the Send button is re-enabled. Before publishing, register the exact Production origin and switch to a Production endpoint. Inspect Leads or Spam Shield after a timeout before manually retrying."], links: [{ title: "Troubleshoot form submissions", description: "Origin errors, missing leads, and duplicate messages", href: "/docs/troubleshooting" }, { title: "Manage captured leads", description: "Review enquiries and update their status", href: "/lead-management" }] });

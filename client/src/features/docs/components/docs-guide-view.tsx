@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ArrowRight, Hash } from "lucide-react";
 import type { DocPage, DocSection } from "../data/docs-data";
-import { DOC_PAGES } from "../data/docs-data";
+import { DOC_PAGES, docHref } from "../data/docs-data";
 import Link from "@/shared/components/app-link";
 import { DocsAgentPrompt } from "./docs-agent-prompt";
 import { DocsCode } from "./docs-code";
@@ -28,9 +28,9 @@ export function DocsGuideView({ page, onNavigate, onSection }: DocsGuideViewProp
               if (!link.href.startsWith("/docs") || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
               event.preventDefault();
               const target = new URL(link.href, window.location.origin);
-              if (target.hash && (target.searchParams.get("guide") || "quickstart") === page.id) onSection(target.hash.slice(1));
+              if (target.hash && (target.pathname.split("/")[2] || "quickstart") === page.id) onSection(target.hash.slice(1));
               else if (target.hash) window.location.assign(link.href);
-              else onNavigate(target.searchParams.get("guide") || "quickstart");
+              else onNavigate(target.pathname.split("/")[2] || "quickstart");
             }}><span><strong>{link.title}</strong><span>{link.description}</span></span><ArrowRight size={18} aria-hidden="true" /></Link>)}</div>}
             {section.agentPrompt && <DocsAgentPrompt />}
             {section.code && <DocsCode key={page.id + section.id} code={section.code} />}
@@ -43,7 +43,7 @@ export function DocsGuideView({ page, onNavigate, onSection }: DocsGuideViewProp
     <div className={styles.readingLayout}>
       <article className={page.id === "quickstart" ? `${styles.article} ${styles.startArticle}` : styles.article} aria-labelledby="doc-title">
         <header className={styles.articleHeader}>
-          <div className={styles.breadcrumb}><span>Documentation</span><span>/</span><span>{page.group}</span></div>
+          <div className={styles.breadcrumb}><Link href="/docs">Documentation</Link><span>/</span><span>{page.group}</span></div>
           <h1 id="doc-title">{page.title}</h1>
           <p>{page.description}</p>
         </header>
@@ -58,8 +58,8 @@ export function DocsGuideView({ page, onNavigate, onSection }: DocsGuideViewProp
         ))}
         </div>
         <footer className={styles.pageFooter}>
-          {previous ? <a href={"/docs?guide=" + previous.id} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); onNavigate(previous.id); }}><span><ArrowLeft size={14} /> Previous</span><strong>{previous.title}</strong></a> : <span />}
-          {next && <a href={"/docs?guide=" + next.id} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); onNavigate(next.id); }}><span>Next <ArrowRight size={14} /></span><strong>{next.title}</strong></a>}
+          {previous ? <a href={docHref(previous.id)} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); onNavigate(previous.id); }}><span><ArrowLeft size={14} /> Previous</span><strong>{previous.title}</strong></a> : <span />}
+          {next && <a href={docHref(next.id)} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); onNavigate(next.id); }}><span>Next <ArrowRight size={14} /></span><strong>{next.title}</strong></a>}
         </footer>
         <p className={styles.articleEnd}>Infraly documentation</p>
       </article>

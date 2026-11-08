@@ -21,6 +21,10 @@ import { responseTiming } from "./middleware/responseTiming";
 
 const app: Application = express();
 app.use(responseTiming);
+app.use((_req, res, next) => {
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  next();
+});
 
 // Trust reverse proxy (Cloudflare, AWS ALB, Nginx) so client IP is accurately extracted for rate limiting
 app.set("trust proxy", 1);

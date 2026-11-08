@@ -1,0 +1,200 @@
+{
+  "mode": "production",
+  "reports": [
+    {
+      "url": "/",
+      "status": 200,
+      "title": "Form backend and website lead management | Infraly",
+      "description": "Connect HTML, React, and Next.js forms to Infraly. Capture enquiries, review spam, and manage lead statuses in one inbox without building a form backend.",
+      "canonical": "https://www.infraly.online",
+      "robots": "index, follow",
+      "h1": "Your website forms.  Your leads, in one place. ",
+      "bytes": 83494,
+      "ms": 256,
+      "links": 39
+    },
+    {
+      "url": "/docs",
+      "status": 200,
+      "title": "Form backend documentation and quickstart | Infraly",
+      "description": "Create a form endpoint, connect your website, and review your first lead. Setup guides for HTML, React, Next.js, server requests, and spam protection.",
+      "canonical": "https://www.infraly.online/docs",
+      "robots": "index, follow",
+      "h1": "Your first lead, in 3 steps",
+      "bytes": 34461,
+      "ms": 105,
+      "links": 42
+    },
+    {
+      "url": "/lead-management",
+      "status": 200,
+      "title": "Website lead management for form submissions | Infraly",
+      "description": "Turn website form submissions into a clear follow-up list. Review contact details, filter leads, update statuses, and keep spam separate with Infraly.",
+      "canonical": "https://www.infraly.online/lead-management",
+      "robots": "index, follow",
+      "h1": "Website lead management, from enquiry to follow-up",
+      "bytes": 25944,
+      "ms": 87,
+      "links": 18
+    },
+    {
+      "url": "/compare/formspree",
+      "status": 200,
+      "title": "Infraly vs Formspree: choosing a form backend | Infraly",
+      "description": "Compare Infraly's website lead workflow with Formspree's form backend, submission inbox, exports, and integrations. A source-backed comparison of different needs.",
+      "canonical": "https://www.infraly.online/compare/formspree",
+      "robots": "index, follow",
+      "h1": "Infraly vs Formspree: choose your form workflow",
+      "bytes": 29783,
+      "ms": 160,
+      "links": 20
+    },
+    {
+      "url": "/docs/ai-agent",
+      "status": 200,
+      "title": "Let AI connect your form | Infraly",
+      "description": "Paste your form URL. Copy the prompt. Give it to your website?s AI assistant.",
+      "canonical": "https://www.infraly.online/docs/ai-agent",
+      "robots": "index, follow",
+      "h1": "Let AI connect your form",
+      "bytes": 28546,
+      "ms": 63,
+      "links": 30
+    },
+    {
+      "url": "/docs/website-builders",
+      "status": 200,
+      "title": "Using a website builder? | Infraly",
+      "description": "You need a form that can send messages to a custom URL.",
+      "canonical": "https://www.infraly.online/docs/website-builders",
+      "robots": "index, follow",
+      "h1": "Using a website builder?",
+      "bytes": 29645,
+      "ms": 56,
+      "links": 31
+    },
+    {
+      "url": "/docs/html",
+      "status": 200,
+      "title": "HTML contact form without a backend | Infraly",
+      "description": "Submit directly from your website with a standard HTML form and no client-side JavaScript.",
+      "canonical": "https://www.infraly.online/docs/html",
+      "robots": "index, follow",
+      "h1": "HTML contact form without a backend",
+      "bytes": 34792,
+      "ms": 43,
+      "links": 34
+    },
+    {
+      "url": "/docs/react",
+      "status": 200,
+      "title": "React and Next.js contact form integration | Infraly",
+      "description": "Keep visitors on your page and handle accepted, quarantined, and failed submissions explicitly.",
+      "canonical": "https://www.infraly.online/docs/react",
+      "robots": "index, follow",
+      "h1": "React and Next.js contact form integration",
+      "bytes": 34683,
+      "ms": 47,
+      "links": 32
+    },
+    {
+      "url": "/docs/server",
+      "status": 200,
+      "title": "Server integrations | Infraly",
+      "description": "Send submissions from a backend with an environment-specific API key.",
+      "canonical": "https://www.infraly.online/docs/server",
+      "robots": "index, follow",
+      "h1": "Server integrations",
+      "bytes": 28990,
+      "ms": 51,
+      "links": 28
+    },
+    {
+      "url": "/docs/fields",
+      "status": 200,
+      "title": "Fields & payloads | Infraly",
+      "description": "Understand core fields, custom values, and the difference between a form definition and submission validation.",
+      "canonical": "https://www.infraly.online/docs/fields",
+      "robots": "index, follow",
+      "h1": "Fields &amp; payloads",
+      "bytes": 28023,
+      "ms": 93,
+      "links": 24
+    },
+    {
+      "url": "/docs/environments",
+      "status": 200,
+      "title": "Environments & origins | Infraly",
+      "description": "Keep test data separate and configure which websites can submit to production endpoints.",
+      "canonical": "https://www.infraly.online/docs/environments",
+      "robots": "index, follow",
+      "h1": "Environments &amp; origins",
+      "bytes": 27240,
+      "ms": 61,
+      "links": 24
+    },
+    {
+      "url": "/docs/spam",
+      "status": 200,
+      "title": "Spam protection | Infraly",
+      "description": "Understand which submissions are quarantined and how to review legitimate messages.",
+      "canonical": "https://www.infraly.online/docs/spam",
+      "robots": "index, follow",
+      "h1": "Spam protection",
+      "bytes": 27507,
+      "ms": 60,
+      "links": 24
+    },
+    {
+      "url": "/docs/responses",
+      "status": 200,
+      "title": "Responses & errors | Infraly",
+      "description": "Reference for JSON submission responses and the steps to take when a request is rejected.",
+      "canonical": "https://www.infraly.online/docs/responses",
+      "robots": "index, follow",
+      "h1": "Responses &amp; errors",
+      "bytes": 29013,
+      "ms": 95,
+      "links": 24
+    },
+    {
+      "url": "/docs/glossary",
+      "status": 200,
+      "title": "Words explained | Infraly",
+      "description": "The terms you will see in Infraly, explained in everyday language.",
+      "canonical": "https://www.infraly.online/docs/glossary",
+      "robots": "index, follow",
+      "h1": "Words explained",
+      "bytes": 27803,
+      "ms": 63,
+      "links": 25
+    },
+    {
+      "url": "/docs/troubleshooting",
+      "status": 200,
+      "title": "Quick fixes | Infraly",
+      "description": "Fix missing form submissions, blocked origins, empty fields, thank-you redirects, and duplicate enquiries in Infraly.",
+      "canonical": "https://www.infraly.online/docs/troubleshooting",
+      "robots": "index, follow",
+      "h1": "Quick fixes",
+      "bytes": 26176,
+      "ms": 75,
+      "links": 24
+    },
+    {
+      "url": "/sign-in",
+      "status": 200,
+      "title": "Sign in | Infraly",
+      "description": "Sign in to access your Infraly form endpoints and workspace.",
+      "robots": "noindex, nofollow"
+    },
+    {
+      "url": "/sign-up",
+      "status": 200,
+      "title": "Sign up | Infraly",
+      "description": "Create your Infraly developer account and generate form endpoints.",
+      "robots": "noindex, nofollow"
+    }
+  ],
+  "checkedInternalLinks": 21
+}

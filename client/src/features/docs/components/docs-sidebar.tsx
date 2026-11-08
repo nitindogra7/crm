@@ -2,7 +2,7 @@
 
 import { ArrowUpRight, X } from "lucide-react";
 import Link from "@/shared/components/app-link";
-import { DOC_GROUPS, DOC_PAGES } from "../data/docs-data";
+import { DOC_GROUPS, DOC_PAGES, docHref } from "../data/docs-data";
 import styles from "./docs.module.css";
 
 interface DocsSidebarProps {
@@ -20,7 +20,7 @@ export function DocsSidebar({ activeId, onNavigate, onClose }: DocsSidebarProps)
           <div key={group} className={styles.navGroup}>
             <p>{group}</p>
             {DOC_PAGES.filter(page => page.group === group).map(page => (
-              <a key={page.id} href={page.id === "quickstart" ? "/docs" : "/docs?guide=" + page.id} aria-current={activeId === page.id ? "page" : undefined} onClick={event => {
+              <a key={page.id} href={docHref(page.id)} aria-current={activeId === page.id ? "page" : undefined} onClick={event => {
                 if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
                 event.preventDefault(); onNavigate(page.id); onClose?.();
               }}>{page.title}</a>
